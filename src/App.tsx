@@ -13,6 +13,10 @@ import OwnerRegister from "./pages/owner/OwnerRegister";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import OwnerPOS from "./pages/owner/OwnerPOS";
 import OwnerProfile from "./pages/owner/OwnerProfile";
+import OwnerInventory from "./pages/owner/OwnerInventory";
+import OwnerStaff from "./pages/owner/OwnerStaff";
+import OwnerReports from "./pages/owner/OwnerReports";
+import OwnerShopSettings from "./pages/owner/OwnerShopSettings";
 
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
@@ -65,6 +69,10 @@ const App = () => (
           <Route path="/owner/dashboard" element={<OwnerDashboard />} />
           <Route path="/owner/pos" element={<OwnerPOS />} />
           <Route path="/owner/profile" element={<OwnerProfile />} />
+          <Route path="/owner/inventory" element={<OwnerInventory />} />
+          <Route path="/owner/staff" element={<OwnerStaff />} />
+          <Route path="/owner/reports" element={<OwnerReports />} />
+          <Route path="/owner/settings" element={<OwnerShopSettings />} />
 
           {/* Cashier Portal */}
           <Route path="/cashier/login" element={<CashierLogin />} />

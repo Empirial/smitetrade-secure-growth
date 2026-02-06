@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -16,6 +16,10 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const ownerLinks = [
         { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/owner/pos", label: "POS System", icon: ShoppingCart },
+        { href: "/owner/inventory", label: "Inventory", icon: Package },
+        { href: "/owner/staff", label: "Staff", icon: Users },
+        { href: "/owner/reports", label: "Reports", icon: BarChart3 },
+        { href: "/owner/settings", label: "Settings", icon: Settings },
         { href: "/owner/profile", label: "Profile", icon: User },
     ];
 

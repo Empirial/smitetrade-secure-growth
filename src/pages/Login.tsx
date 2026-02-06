@@ -19,13 +19,7 @@ const Login = () => {
             link: "/cashier/login",
             color: "text-green-500",
         },
-        {
-            title: "Customer Portal",
-            description: "Shop for products and track your orders.",
-            icon: ShoppingBag,
-            link: "/customer/login",
-            color: "text-purple-500",
-        },
+
         {
             title: "Driver Portal",
             description: "View and deliver assigned orders.",
@@ -54,8 +48,8 @@ const Login = () => {
                 </Link>
 
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl mb-4">Select Your Portal</h1>
-                    <p className="text-lg text-muted-foreground">Choose the appropriate portal to log in to your account.</p>
+                    <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl mb-4">Staff Access</h1>
+                    <p className="text-lg text-muted-foreground">Select your role to access the internal portal.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

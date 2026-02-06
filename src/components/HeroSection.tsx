@@ -1,73 +1,102 @@
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import logo from "@/assets/smitetrade-logo.jpeg";
+import { ArrowRight, Shield, Store, Zap } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
-      {/* Background glow effects */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-emerald/10 blur-[120px]" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full bg-electric/5 blur-[100px]" />
-        <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] rounded-full bg-gold/5 blur-[80px]" />
+    <div className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-slate-900 pb-20 pt-32">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-emerald-500/10 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/10 blur-[120px] animate-pulse delay-1000" />
+        <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] rounded-full bg-amber-500/10 blur-[100px] animate-bounce duration-[10s]" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto"
-      >
-        <img
-          src={logo}
-          alt="SMITETRADE Shield Logo"
-          className="w-40 h-40 md:w-56 md:h-56 object-contain mb-8 drop-shadow-2xl rounded-2xl"
-        />
-
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
-        >
-          The Sword and Shield for{" "}
-          <span className="text-gradient-gold">Your Spaza's Future.</span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed"
-        >
-          Stop guessing your profits. Start securing your growth. SMITETRADE is the all-in-one digital partner that turns your mobile phone into a powerful business command center.
-        </motion.p>
-
+      <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-8">
+        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4"
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-300 backdrop-blur-sm"
         >
-          <button className="px-8 py-4 rounded-xl bg-accent text-accent-foreground font-semibold text-lg glow-gold hover:scale-105 transition-transform duration-200">
-            Register My Business — Join the SaaS Revolution
-          </button>
-          <button className="px-8 py-4 rounded-xl border-2 border-electric text-electric font-semibold text-lg glow-blue hover:bg-electric/10 hover:scale-105 transition-all duration-200">
-            Customer Portal — Access Your SS-ID Wallet
-          </button>
+          <span className="flex h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-ping" />
+          The Future of Townships
         </motion.div>
-      </motion.div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ repeat: Infinity, duration: 2 }}
-        className="absolute bottom-8 z-10"
-      >
-        <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-1.5">
-          <div className="w-1.5 h-3 rounded-full bg-gold" />
-        </div>
-      </motion.div>
-    </section>
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl max-w-5xl"
+        >
+          The <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Sword & Shield</span> for Your Spaza's Future
+        </motion.h1>
+
+        {/* Subheadline */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="max-w-[800px] text-lg text-slate-300 md:text-xl/relaxed lg:text-2xl/relaxed"
+        >
+          Empowering Owners, Cashiers, and Communities with secure growth, smart inventory, and seamless credit.
+        </motion.p>
+
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="flex flex-col gap-4 sm:flex-row min-w-[300px]"
+        >
+          <Link to="/owner/login">
+            <Button size="lg" className="h-14 px-8 text-lg w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-500/25">
+              <Store className="mr-2 h-5 w-5" /> Owner Portal
+            </Button>
+          </Link>
+          <Link to="/cashier/login">
+            <Button size="lg" variant="outline" className="h-14 px-8 text-lg w-full sm:w-auto border-emerald-500/50 text-emerald-400 hover:bg-emerald-950/50">
+              Cashier Login
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* Features Grid Mockup */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-3 w-full max-w-4xl pt-12 text-left"
+        >
+          <div className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 p-6 backdrop-blur-sm transition-all hover:bg-slate-800/50 hover:border-emerald-500/50">
+            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-500/10 blur-2xl transition-all group-hover:bg-emerald-500/20" />
+            <Shield className="h-10 w-10 text-emerald-400 mb-4" />
+            <h3 className="text-xl font-bold text-white">Secure Growth</h3>
+            <p className="text-slate-400 mt-2">Bank-ready reports and verified credit profiling.</p>
+          </div>
+
+          <div className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 p-6 backdrop-blur-sm transition-all hover:bg-slate-800/50 hover:border-blue-500/50">
+            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl transition-all group-hover:bg-blue-500/20" />
+            <Zap className="h-10 w-10 text-blue-400 mb-4" />
+            <h3 className="text-xl font-bold text-white">Fast POS</h3>
+            <p className="text-slate-400 mt-2">Lightning fast checkout with integrated scanner.</p>
+          </div>
+
+          <div className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 p-6 backdrop-blur-sm transition-all hover:bg-slate-800/50 hover:border-amber-500/50">
+            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/10 blur-2xl transition-all group-hover:bg-amber-500/20" />
+            <Store className="h-10 w-10 text-amber-400 mb-4" />
+            <h3 className="text-xl font-bold text-white">Local Connect</h3>
+            <p className="text-slate-400 mt-2">Discovery map bringing customers to your door.</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Bottom Gradient Fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-950 to-transparent z-20" />
+    </div>
   );
 };
 

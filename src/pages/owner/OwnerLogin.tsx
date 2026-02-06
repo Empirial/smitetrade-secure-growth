@@ -4,7 +4,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
+import { useNavigate } from "react-router-dom";
+
 const OwnerLogin = () => {
+    const navigate = useNavigate();
+
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        navigate("/owner/dashboard");
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
             <Card className="w-full max-w-sm shadow-lg">
@@ -14,30 +23,32 @@ const OwnerLogin = () => {
                         Login to manage your business
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="owner@smitetrade.com" required />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input id="password" type="password" required />
-                    </div>
-                </CardContent>
-                <CardFooter className="flex flex-col gap-4">
-                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Sign in</Button>
-                    <div className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
-                        <div>
-                            Don't have an account?{" "}
-                            <Link to="/owner/register" className="text-primary underline underline-offset-4 hover:text-primary/80">
-                                Sign up
+                <form onSubmit={handleLogin}>
+                    <CardContent className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" placeholder="owner@smitetrade.com" required />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input id="password" type="password" required />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex flex-col gap-4">
+                        <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">Sign in</Button>
+                        <div className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
+                            <div>
+                                Don't have an account?{" "}
+                                <Link to="/owner/register" className="text-primary underline underline-offset-4 hover:text-primary/80">
+                                    Sign up
+                                </Link>
+                            </div>
+                            <Link to="/" className="text-xs hover:text-primary">
+                                ← Back to Main Site
                             </Link>
                         </div>
-                        <Link to="/" className="text-xs hover:text-primary">
-                            ← Back to Main Site
-                        </Link>
-                    </div>
-                </CardFooter>
+                    </CardFooter>
+                </form>
             </Card>
         </div>
     );

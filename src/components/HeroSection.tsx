@@ -48,14 +48,9 @@ const HeroSection = () => {
           transition={{ duration: 0.5, delay: 0.6 }}
           className="flex flex-col gap-4 sm:flex-row min-w-[300px] items-center justify-center"
         >
-          <Link to="/owner/login">
+          <Link to="/login">
             <Button size="lg" className="h-14 px-8 text-lg w-full sm:w-auto bg-foreground text-background hover:bg-foreground/90 rounded-full">
-              <Store className="mr-2 h-5 w-5" /> Owner Portal
-            </Button>
-          </Link>
-          <Link to="/cashier/login">
-            <Button size="lg" variant="outline" className="h-14 px-8 text-lg w-full sm:w-auto border-foreground/20 hover:bg-foreground/5 rounded-full">
-              Cashier Login
+              Login to Portal <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
         </motion.div>

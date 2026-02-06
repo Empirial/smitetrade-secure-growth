@@ -136,53 +136,103 @@ const OwnerInventory = () => {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Product Name</TableHead>
-                                    <TableHead>Category</TableHead>
-                                    <TableHead>Price</TableHead>
-                                    <TableHead>Stock Level</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredProducts.map((product) => (
-                                    <TableRow key={product.id}>
-                                        <TableCell className="font-medium flex items-center gap-2">
-                                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center">
-                                                <Package className="h-4 w-4 text-muted-foreground" />
+                        {/* Mobile View: Cards */}
+                        <div className="md:hidden grid gap-4">
+                            {filteredProducts.map((product) => (
+                                <div key={product.id} className="border rounded-lg p-4 space-y-3 bg-card shadow-sm">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded bg-muted flex items-center justify-center text-lg">
+                                                {product.image}
                                             </div>
-                                            {product.name}
-                                        </TableCell>
-                                        <TableCell>{product.category}</TableCell>
-                                        <TableCell>R {product.price.toFixed(2)}</TableCell>
-                                        <TableCell>{product.stock}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className={getStatusColor(product.status)}>
-                                                {product.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-destructive"
-                                                    onClick={() => deleteProduct(product.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                            <div>
+                                                <h3 className="font-semibold">{product.name}</h3>
+                                                <p className="text-xs text-muted-foreground">{product.category}</p>
                                             </div>
-                                        </TableCell>
+                                        </div>
+                                        <Badge variant="outline" className={getStatusColor(product.status)}>
+                                            {product.status}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                        <div className="flex flex-col">
+                                            <span className="text-muted-foreground text-xs">Price</span>
+                                            <span className="font-medium">R {product.price.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-muted-foreground text-xs">Stock</span>
+                                            <span className="font-medium">{product.stock} units</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 pt-2">
+                                        <Button variant="outline" size="sm" className="flex-1" onClick={() => setIsAddOpen(true)}>
+                                            <Edit className="h-3 w-3 mr-2" /> Edit
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => deleteProduct(product.id)}
+                                        >
+                                            <Trash2 className="h-3 w-3 mr-2" /> Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop View: Table */}
+                        <div className="hidden md:block">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Product Name</TableHead>
+                                        <TableHead>Category</TableHead>
+                                        <TableHead>Price</TableHead>
+                                        <TableHead>Stock Level</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredProducts.map((product) => (
+                                        <TableRow key={product.id}>
+                                            <TableCell className="font-medium flex items-center gap-2">
+                                                <div className="h-8 w-8 rounded bg-muted flex items-center justify-center">
+                                                    <Package className="h-4 w-4 text-muted-foreground" />
+                                                </div>
+                                                {product.name}
+                                            </TableCell>
+                                            <TableCell>{product.category}</TableCell>
+                                            <TableCell>R {product.price.toFixed(2)}</TableCell>
+                                            <TableCell>{product.stock}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className={getStatusColor(product.status)}>
+                                                    {product.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-destructive"
+                                                        onClick={() => deleteProduct(product.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

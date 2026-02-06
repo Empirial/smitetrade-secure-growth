@@ -69,6 +69,7 @@ interface StoreContextType {
     placeOrder: (customerDetails: { name: string; address: string }) => void;
     updateOrderStatus: (orderId: string, status: Order['status']) => void;
     assignDriver: (orderId: string, driverId: string) => void;
+    isLoading: boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -106,6 +107,14 @@ const INITIAL_ORDERS: Order[] = [
 
 export const StoreProvider = ({ children }: { children: ReactNode }) => {
     // --- State Initialization (Lazy Load from LocalStorage) ---
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Simulate initial data fetch
+    useEffect(() => {
+        const timer = setTimeout(() => setIsLoading(false), 800);
+        return () => clearTimeout(timer);
+    }, []);
+
     const [user, setUser] = useState<User | null>(() => {
         const saved = localStorage.getItem('smite_user');
         return saved ? JSON.parse(saved) : null;
@@ -241,7 +250,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             user, login, logout,
             products, addProduct, updateProduct, deleteProduct,
             cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
-            orders, placeOrder, updateOrderStatus, assignDriver
+            orders, placeOrder, updateOrderStatus, assignDriver, isLoading
         }}>
             {children}
         </StoreContext.Provider>

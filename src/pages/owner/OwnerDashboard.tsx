@@ -2,24 +2,29 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { DollarSign, TrendingUp, AlertTriangle, Users } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useStore } from "@/context/StoreContext";
 
 // Reusable Stat Card Component
-const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
+const StatCard = ({ title, value, subtext, icon: Icon, color, isLoading }: any) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
             <Icon className={`h-4 w-4 ${color}`} />
         </CardHeader>
         <CardContent>
-            <div className="text-2xl font-bold">{value}</div>
+            {isLoading ? (
+                <Skeleton className="h-8 w-1/2 mb-1" />
+            ) : (
+                <div className="text-2xl font-bold">{value}</div>
+            )}
             <p className="text-xs text-muted-foreground">{subtext}</p>
         </CardContent>
     </Card>
 );
 
 const OwnerDashboard = () => {
-    const { orders, products } = useStore();
+    const { orders, products, isLoading } = useStore();
 
     // --- Calculate Metrics ---
 

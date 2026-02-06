@@ -11,15 +11,17 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, ShoppingCart, Plus, Filter, X } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/context/StoreContext";
 
 const categories = ["All", "Staples", "Pantry", "Beverages", "Dairy", "Bakery", "Household"];
 
 const CustomerProducts = () => {
     // Access Global State
-    const { products, addToCart, cart } = useStore();
+    const { products, addToCart, cart, isLoading } = useStore();
 
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState("All");
@@ -125,7 +127,25 @@ const CustomerProducts = () => {
 
                 {/* Product Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {sortedProducts.length === 0 ? (
+                    {isLoading ? (
+                        Array.from({ length: 8 }).map((_, i) => (
+                            <Card key={i} className="overflow-hidden">
+                                <div className="aspect-square bg-muted flex items-center justify-center">
+                                    <Skeleton className="h-full w-full" />
+                                </div>
+                                <CardHeader className="p-4 pb-0 space-y-2">
+                                    <Skeleton className="h-4 w-1/2" />
+                                    <Skeleton className="h-4 w-3/4" />
+                                </CardHeader>
+                                <CardContent className="p-4 pt-2">
+                                    <Skeleton className="h-6 w-1/3" />
+                                </CardContent>
+                                <CardFooter className="p-4 pt-0">
+                                    <Skeleton className="h-9 w-full" />
+                                </CardFooter>
+                            </Card>
+                        ))
+                    ) : sortedProducts.length === 0 ? (
                         <div className="col-span-full flex flex-col items-center justify-center py-12 text-muted-foreground">
                             <Filter className="h-12 w-12 mb-4 opacity-20" />
                             <p className="text-lg font-medium">No products found</p>
@@ -139,39 +159,46 @@ const CustomerProducts = () => {
                             </Button>
                         </div>
                     ) : (
-                        sortedProducts.map((product) => (
-                            <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow group">
-                                <div className="aspect-square bg-white flex items-center justify-center text-6xl group-hover:scale-105 transition-transform duration-300">
-                                    {product.image}
-                                </div>
-                                <CardHeader className="p-4 pb-0">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
-                                            {product.category}
-                                        </Badge>
-                                        {product.status === "Low Stock" && (
-                                            <Badge variant="destructive" className="text-[10px] h-5 px-1.5 bg-orange-500">
-                                                Low Stock
-                                            </Badge>
-                                        )}
+                        sortedProducts.map((product, index) => (
+                            <motion.div
+                                key={product.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.05 }}
+                            >
+                                <Card className="overflow-hidden hover:shadow-md transition-shadow group h-full flex flex-col">
+                                    <div className="aspect-square bg-white flex items-center justify-center text-6xl group-hover:scale-105 transition-transform duration-300">
+                                        {product.image}
                                     </div>
-                                    <CardTitle className="text-base font-medium line-clamp-1" title={product.name}>
-                                        {product.name}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-4 pt-2">
-                                    <p className="font-bold text-lg text-primary">R {product.price.toFixed(2)}</p>
-                                </CardContent>
-                                <CardFooter className="p-4 pt-0">
-                                    <Button
-                                        className="w-full"
-                                        size="sm"
-                                        onClick={() => addToCart(product)}
-                                    >
-                                        <Plus className="h-4 w-4 mr-2" /> Add to Cart
-                                    </Button>
-                                </CardFooter>
-                            </Card>
+                                    <CardHeader className="p-4 pb-0">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                                                {product.category}
+                                            </Badge>
+                                            {product.status === "Low Stock" && (
+                                                <Badge variant="destructive" className="text-[10px] h-5 px-1.5 bg-orange-500">
+                                                    Low Stock
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <CardTitle className="text-base font-medium line-clamp-1" title={product.name}>
+                                            {product.name}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-2 flex-1">
+                                        <p className="font-bold text-lg text-primary">R {product.price.toFixed(2)}</p>
+                                    </CardContent>
+                                    <CardFooter className="p-4 pt-0">
+                                        <Button
+                                            className="w-full"
+                                            size="sm"
+                                            onClick={() => addToCart(product)}
+                                        >
+                                            <Plus className="h-4 w-4 mr-2" /> Add to Cart
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            </motion.div>
                         ))
                     )}
                 </div>

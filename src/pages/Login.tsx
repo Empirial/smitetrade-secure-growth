@@ -1,76 +1,135 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Store, CreditCard, ShoppingBag, Truck, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Store, CreditCard, ShoppingBag, Truck, ShieldCheck, ArrowLeft, User } from "lucide-react";
+import { useStore, UserRole } from "@/context/StoreContext";
 
 const Login = () => {
-    const portals = [
-        {
-            title: "Owner Portal",
-            description: "Manage your spaza shop, inventory, and sales.",
-            icon: Store,
-            link: "/owner/login",
-            color: "text-blue-500",
-        },
-        {
-            title: "Cashier Portal",
-            description: "Process sales and handle customer transactions.",
-            icon: CreditCard,
-            link: "/cashier/login",
-            color: "text-green-500",
-        },
+    const { login } = useStore();
+    const navigate = useNavigate();
 
-        {
-            title: "Driver Portal",
-            description: "View and deliver assigned orders.",
-            icon: Truck,
-            link: "/driver/login",
-            color: "text-orange-500",
-        },
-        {
-            title: "Admin Portal",
-            description: "System administration and monitoring.",
-            icon: ShieldCheck,
-            link: "/admin/login",
-            color: "text-red-500",
-        },
-    ];
+    const handleLogin = (role: UserRole, path: string) => {
+        // Simple mock login logic for prototype
+        // In a real app, this would be a form with email/password
+        const mockEmails = {
+            owner: "owner@spaza.com",
+            customer: "customer@gmail.com",
+            driver: "driver@logistics.com",
+            cashier: "cashier@spaza.com",
+            admin: "admin@smitetrade.com"
+        };
+
+        login(mockEmails[role] || "user@test.com", role);
+        navigate(path);
+    };
 
     return (
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="min-h-screen bg-background flex flex-col p-6">
+            <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-8 text-sm">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
+            </Link>
 
-            <div className="z-10 w-full max-w-5xl">
-                <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-8 transition-colors">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Home
-                </Link>
-
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl mb-4">Staff Access</h1>
-                    <p className="text-lg text-muted-foreground">Select your role to access the internal portal.</p>
+            <div className="max-w-4xl mx-auto w-full grid gap-8">
+                <div className="text-center space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight">Select your Portal</h1>
+                    <p className="text-muted-foreground">Who are you logging in as today?</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {portals.map((portal, index) => (
-                        <motion.div
-                            key={portal.title}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Owner */}
+                    <motion.div whileHover={{ y: -5 }} className="h-full">
+                        <button
+                            onClick={() => handleLogin('owner', '/owner/dashboard')}
+                            className="w-full text-left h-full"
                         >
-                            <Link to={portal.link}>
-                                <div className="group h-full bg-card hover:bg-accent/5 transition-all duration-300 border border-border/50 hover:border-foreground/20 rounded-xl p-6 flex flex-col items-center text-center cursor-pointer shadow-sm hover:shadow-md">
-                                    <div className={`p-4 rounded-full bg-background mb-4 group-hover:scale-110 transition-transform duration-300 ${portal.color} bg-opacity-10`}>
-                                        <portal.icon className={`h-8 w-8 ${portal.color}`} />
-                                    </div>
-                                    <h3 className="text-xl font-bold mb-2">{portal.title}</h3>
-                                    <p className="text-muted-foreground text-sm">{portal.description}</p>
+                            <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
+                                <div className="h-12 w-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
+                                    <Store size={24} />
                                 </div>
-                            </Link>
-                        </motion.div>
-                    ))}
+                                <h3 className="font-semibold text-lg mb-1">Store Owner</h3>
+                                <p className="text-sm text-muted-foreground mb-4 flex-1">
+                                    Manage inventory, staff, sales reports, and settings.
+                                </p>
+                                <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Owner Login</Button>
+                            </div>
+                        </button>
+                    </motion.div>
+
+                    {/* Cashier */}
+                    <motion.div whileHover={{ y: -5 }} className="h-full">
+                        <button
+                            onClick={() => handleLogin('cashier', '/cashier/pos')}
+                            className="w-full text-left h-full"
+                        >
+                            <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
+                                <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 mb-4">
+                                    <CreditCard size={24} />
+                                </div>
+                                <h3 className="font-semibold text-lg mb-1">Cashier</h3>
+                                <p className="text-sm text-muted-foreground mb-4 flex-1">
+                                    Process sales, scan items, and handle payments.
+                                </p>
+                                <Button className="w-full bg-blue-600 hover:bg-blue-700">Cashier Login</Button>
+                            </div>
+                        </button>
+                    </motion.div>
+
+                    {/* Customer */}
+                    <motion.div whileHover={{ y: -5 }} className="h-full">
+                        <button
+                            onClick={() => handleLogin('customer', '/customer/products')}
+                            className="w-full text-left h-full"
+                        >
+                            <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
+                                <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 mb-4">
+                                    <ShoppingBag size={24} />
+                                </div>
+                                <h3 className="font-semibold text-lg mb-1">Customer</h3>
+                                <p className="text-sm text-muted-foreground mb-4 flex-1">
+                                    Browse products, order delivery, and track packages.
+                                </p>
+                                <Button className="w-full bg-orange-600 hover:bg-orange-700">Customer Login</Button>
+                            </div>
+                        </button>
+                    </motion.div>
+
+                    {/* Driver */}
+                    <motion.div whileHover={{ y: -5 }} className="h-full">
+                        <button
+                            onClick={() => handleLogin('driver', '/driver/orders')}
+                            className="w-full text-left h-full"
+                        >
+                            <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
+                                <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 mb-4">
+                                    <Truck size={24} />
+                                </div>
+                                <h3 className="font-semibold text-lg mb-1">Delivery Driver</h3>
+                                <p className="text-sm text-muted-foreground mb-4 flex-1">
+                                    View delivery requests, navigation, and earnings.
+                                </p>
+                                <Button className="w-full bg-purple-600 hover:bg-purple-700">Driver Login</Button>
+                            </div>
+                        </button>
+                    </motion.div>
+
+                    {/* Admin */}
+                    <motion.div whileHover={{ y: -5 }} className="h-full">
+                        <button
+                            onClick={() => handleLogin('admin', '/admin/applications')}
+                            className="w-full text-left h-full"
+                        >
+                            <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
+                                <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-800 mb-4">
+                                    <ShieldCheck size={24} />
+                                </div>
+                                <h3 className="font-semibold text-lg mb-1">Admin</h3>
+                                <p className="text-sm text-muted-foreground mb-4 flex-1">
+                                    Approve shops, monitor system status, and user management.
+                                </p>
+                                <Button variant="outline" className="w-full">Admin Login</Button>
+                            </div>
+                        </button>
+                    </motion.div>
                 </div>
             </div>
         </div>

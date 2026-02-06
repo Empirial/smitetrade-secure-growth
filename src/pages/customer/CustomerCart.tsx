@@ -1,66 +1,99 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useStore } from "@/context/StoreContext";
 
 const CustomerCart = () => {
+    const { cart, removeFromCart, updateCartQuantity, cartTotal } = useStore();
+
     return (
         <DashboardLayout role="customer">
-            <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 space-y-6">
+            <div className="max-w-4xl mx-auto flex flex-col gap-6 h-[calc(100vh-8rem)]">
+                <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold tracking-tight">Your Cart</h1>
-
-                    <div className="space-y-4">
-                        {[1, 2].map((i) => (
-                            <Card key={i} className="flex flex-row items-center p-4 gap-4">
-                                <div className="h-20 w-20 bg-muted rounded-md flex items-center justify-center text-2xl">
-                                    {i === 1 ? "🌽" : "🌻"}
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-medium">{i === 1 ? "Maize Meal 10kg" : "Cooking Oil 2L"}</h3>
-                                    <p className="text-sm text-muted-foreground">R {i === 1 ? "120.00" : "85.00"} x 1</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-bold">R {i === 1 ? "120.00" : "85.00"}</p>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
+                    <span className="text-muted-foreground">{cart.length} Items</span>
                 </div>
 
-                <div className="md:col-span-1">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Order Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between text-sm">
-                                <span>Subtotal</span>
-                                <span>R 205.00</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span>Delivery Fee</span>
-                                <span>R 15.00</span>
-                            </div>
-                            <Separator />
-                            <div className="flex justify-between font-bold text-lg">
-                                <span>Total</span>
-                                <span>R 220.00</span>
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Link to="/customer/checkout" className="w-full">
-                                <Button className="w-full">
-                                    Checkout <ArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                            </Link>
-                        </CardFooter>
+                <div className="grid lg:grid-cols-3 gap-8 h-full overflow-hidden">
+                    <Card className="lg:col-span-2 flex flex-col h-full overflow-hidden border-0 shadow-none md:border md:shadow-sm bg-transparent md:bg-card">
+                        <ScrollArea className="flex-1">
+                            <CardContent className="p-0 md:p-6 space-y-4">
+                                {cart.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border-2 border-dashed rounded-xl">
+                                        <p className="text-lg font-medium mb-2">Your cart is empty</p>
+                                        <Link to="/customer/products">
+                                            <Button variant="link">Browse Products</Button>
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    cart.map((item) => (
+                                        <div key={item.id} className="flex gap-4 p-4 bg-white rounded-xl border shadow-sm items-center">
+                                            <div className="h-20 w-20 bg-muted rounded-lg flex items-center justify-center text-4xl shrink-0">
+                                                {item.image}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold truncate">{item.name}</h3>
+                                                <p className="text-sm text-muted-foreground">{item.category}</p>
+                                                <p className="font-bold text-emerald-600 mt-1">R {item.price.toFixed(2)}</p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-2">
+                                                <Button size="icon" variant="ghost" className="text-destructive h-8 w-8" onClick={() => removeFromCart(item.id)}>
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                                <div className="flex items-center border rounded-lg bg-background">
+                                                    <button
+                                                        className="px-3 py-1 hover:bg-muted rounded-l-lg transition-colors"
+                                                        onClick={() => updateCartQuantity(item.id, -1)}
+                                                    >-</button>
+                                                    <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                                                    <button
+                                                        className="px-3 py-1 hover:bg-muted rounded-r-lg transition-colors"
+                                                        onClick={() => updateCartQuantity(item.id, 1)}
+                                                    >+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </CardContent>
+                        </ScrollArea>
                     </Card>
+
+                    <div className="lg:col-span-1">
+                        <Card className="sticky top-6">
+                            <CardContent className="p-6 space-y-6">
+                                <h2 className="font-semibold text-lg">Order Summary</h2>
+
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Subtotal</span>
+                                        <span>R {cartTotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Delivery Fee</span>
+                                        <span>R 15.00</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Service Fee</span>
+                                        <span>R 5.00</span>
+                                    </div>
+                                    <div className="border-t pt-3 flex justify-between font-bold text-lg">
+                                        <span>Total</span>
+                                        <span>R {(cartTotal + 20).toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <Link to="/customer/checkout" >
+                                    <Button className="w-full h-12 text-lg mt-4" disabled={cart.length === 0}>
+                                        Checkout <ArrowRight className="ml-2 h-5 w-5" />
+                                    </Button>
+                                </Link>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </DashboardLayout>

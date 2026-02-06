@@ -8,25 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Edit, Trash2, Package } from "lucide-react";
 import { useState } from "react";
-
-// Mock data
-const initialProducts = [
-    { id: 1, name: "Brown Bread 700g", price: 18.00, category: "Bakery", stock: 45, status: "In Stock" },
-    { id: 2, name: "Full Cream Milk 2L", price: 28.00, category: "Dairy", stock: 12, status: "Low Stock" },
-    { id: 3, name: "Coca Cola 1.5L", price: 22.00, category: "Beverages", stock: 100, status: "In Stock" },
-    { id: 4, name: "Maize Meal 5kg", price: 55.00, category: "Staples", stock: 8, status: "Low Stock" },
-    { id: 5, name: "White Sugar 2kg", price: 38.00, category: "Pantry", stock: 3, status: "Critical" },
-    { id: 6, name: "Cooking Oil 750ml", price: 45.00, category: "Pantry", stock: 20, status: "In Stock" },
-    { id: 7, name: "Airtime R10", price: 10.00, category: "Services", stock: 999, status: "In Stock" },
-    { id: 8, name: "Lays Chips 120g", price: 19.00, category: "Snacks", stock: 0, status: "Out of Stock" },
-];
+import { useStore } from "@/context/StoreContext";
 
 const OwnerInventory = () => {
-    const [products, setProducts] = useState(initialProducts);
+    // Access Global State
+    const { products, addProduct, deleteProduct } = useStore();
+
     const [searchTerm, setSearchTerm] = useState("");
     const [isAddOpen, setIsAddOpen] = useState(false);
 
-    // Form state for add/edit
+    // Form state handling
     const [formData, setFormData] = useState({ name: "", category: "", price: "", stock: "" });
 
     const filteredProducts = products.filter(p =>
@@ -45,21 +36,15 @@ const OwnerInventory = () => {
     };
 
     const handleAddProduct = () => {
-        const newProduct = {
-            id: products.length + 1,
+        addProduct({
             name: formData.name,
             category: formData.category,
             price: parseFloat(formData.price),
             stock: parseInt(formData.stock),
-            status: parseInt(formData.stock) > 20 ? "In Stock" : parseInt(formData.stock) > 5 ? "Low Stock" : parseInt(formData.stock) > 0 ? "Critical" : "Out of Stock"
-        };
-        setProducts([...products, newProduct]);
+            image: "📦" // Default emoji for new products
+        });
         setIsAddOpen(false);
         setFormData({ name: "", category: "", price: "", stock: "" });
-    };
-
-    const handleDelete = (id: number) => {
-        setProducts(products.filter(p => p.id !== id));
     };
 
     return (
@@ -188,7 +173,7 @@ const OwnerInventory = () => {
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-8 w-8 text-destructive"
-                                                    onClick={() => handleDelete(product.id)}
+                                                    onClick={() => deleteProduct(product.id)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>

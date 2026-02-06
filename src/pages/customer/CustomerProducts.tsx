@@ -2,61 +2,178 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, ShoppingCart, Plus } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Search, ShoppingCart, Plus, Filter, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useStore } from "@/context/StoreContext";
 
-const products = [
-    { id: 1, name: "Maize Meal 10kg", price: 120.00, image: "🌽" },
-    { id: 2, name: "Cooking Oil 2L", price: 85.00, image: "🌻" },
-    { id: 3, name: "White Sugar 2kg", price: 45.00, image: "🍬" },
-    { id: 4, name: "Tea Bags 100s", price: 35.00, image: "☕" },
-    { id: 5, name: "Full Cream Milk 1L", price: 18.00, image: "🥛" },
-    { id: 6, name: "Brown Bread", price: 16.00, image: "🍞" },
-];
+const categories = ["All", "Staples", "Pantry", "Beverages", "Dairy", "Bakery", "Household"];
 
 const CustomerProducts = () => {
+    // Access Global State
+    const { products, addToCart, cart } = useStore();
+
+    const [search, setSearch] = useState("");
+    const [activeCategory, setActiveCategory] = useState("All");
+    const [sortOrder, setSortOrder] = useState("default");
+
+    // Derived State: Cart Count
+    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+    // Filter Logic
+    const filteredProducts = products.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
+        const matchesCategory = activeCategory === "All" || product.category === activeCategory;
+        const inStock = product.status !== "Out of Stock"; // Only show active items
+        return matchesSearch && matchesCategory && inStock;
+    });
+
+    // Sort Logic
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+        if (sortOrder === "price-asc") return a.price - b.price;
+        if (sortOrder === "price-desc") return b.price - a.price;
+        if (sortOrder === "name-asc") return a.name.localeCompare(b.name);
+        return 0; // default
+    });
+
     return (
         <DashboardLayout role="customer">
             <div className="flex flex-col gap-6">
+                {/* Header Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Shop</h1>
                         <p className="text-muted-foreground">Order essentials from your local Spaza</p>
                     </div>
                     <div className="flex gap-2 w-full md:w-auto">
-                        <div className="relative w-full md:w-64">
-                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Search products..." className="pl-8" />
-                        </div>
                         <Link to="/customer/cart">
-                            <Button variant="outline" className="relative">
+                            <Button variant="default" className="relative">
                                 <ShoppingCart className="h-4 w-4 mr-2" />
                                 Cart
-                                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary" />
+                                {cartCount > 0 && (
+                                    <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center border-2 border-background">
+                                        {cartCount}
+                                    </span>
+                                )}
                             </Button>
                         </Link>
                     </div>
                 </div>
 
+                {/* Controls Section */}
+                <div className="flex flex-col gap-4 bg-muted/30 p-4 rounded-xl border">
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search products..."
+                                className="pl-9 bg-background"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                            {search && (
+                                <button
+                                    onClick={() => setSearch("")}
+                                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
+                        <div className="w-full md:w-48">
+                            <Select value={sortOrder} onValueChange={setSortOrder}>
+                                <SelectTrigger className="bg-background">
+                                    <SelectValue placeholder="Sort By" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="default">Featured</SelectItem>
+                                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                                    <SelectItem value="name-asc">Name: A - Z</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Category Pills */}
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`
+                                    px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+                                    ${activeCategory === cat
+                                        ? "bg-primary text-primary-foreground shadow-sm"
+                                        : "bg-background border hover:bg-muted"
+                                    }
+                                `}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Product Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {products.map((product) => (
-                        <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="aspect-square bg-muted flex items-center justify-center text-4xl">
-                                {product.image}
-                            </div>
-                            <CardHeader className="p-4 pb-0">
-                                <CardTitle className="text-base font-medium line-clamp-1">{product.name}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-4 pt-2">
-                                <p className="font-bold">R {product.price.toFixed(2)}</p>
-                            </CardContent>
-                            <CardFooter className="p-4 pt-0">
-                                <Button className="w-full" size="sm">
-                                    <Plus className="h-4 w-4 mr-2" /> Add
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
+                    {sortedProducts.length === 0 ? (
+                        <div className="col-span-full flex flex-col items-center justify-center py-12 text-muted-foreground">
+                            <Filter className="h-12 w-12 mb-4 opacity-20" />
+                            <p className="text-lg font-medium">No products found</p>
+                            <p className="text-sm">Try adjusting your filters or search terms</p>
+                            <Button
+                                variant="link"
+                                onClick={() => { setSearch(""); setActiveCategory("All"); }}
+                                className="mt-2"
+                            >
+                                Clear all filters
+                            </Button>
+                        </div>
+                    ) : (
+                        sortedProducts.map((product) => (
+                            <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow group">
+                                <div className="aspect-square bg-white flex items-center justify-center text-6xl group-hover:scale-105 transition-transform duration-300">
+                                    {product.image}
+                                </div>
+                                <CardHeader className="p-4 pb-0">
+                                    <div className="flex justify-between items-start mb-1">
+                                        <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                                            {product.category}
+                                        </Badge>
+                                        {product.status === "Low Stock" && (
+                                            <Badge variant="destructive" className="text-[10px] h-5 px-1.5 bg-orange-500">
+                                                Low Stock
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <CardTitle className="text-base font-medium line-clamp-1" title={product.name}>
+                                        {product.name}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-4 pt-2">
+                                    <p className="font-bold text-lg text-primary">R {product.price.toFixed(2)}</p>
+                                </CardContent>
+                                <CardFooter className="p-4 pt-0">
+                                    <Button
+                                        className="w-full"
+                                        size="sm"
+                                        onClick={() => addToCart(product)}
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" /> Add to Cart
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))
+                    )}
                 </div>
             </div>
         </DashboardLayout>

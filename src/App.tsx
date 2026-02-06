@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import { StoreProvider } from "./context/StoreContext";
 
 // Owner
 import OwnerLogin from "./pages/owner/OwnerLogin";
@@ -57,58 +58,60 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
+      <StoreProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
 
 
-          {/* Owner Portal */}
-          <Route path="/owner/login" element={<OwnerLogin />} />
-          <Route path="/owner/register" element={<OwnerRegister />} />
-          <Route path="/owner/dashboard" element={<OwnerDashboard />} />
-          <Route path="/owner/pos" element={<OwnerPOS />} />
-          <Route path="/owner/profile" element={<OwnerProfile />} />
-          <Route path="/owner/inventory" element={<OwnerInventory />} />
-          <Route path="/owner/staff" element={<OwnerStaff />} />
-          <Route path="/owner/reports" element={<OwnerReports />} />
-          <Route path="/owner/settings" element={<OwnerShopSettings />} />
+            {/* Owner Portal */}
+            <Route path="/owner/login" element={<OwnerLogin />} />
+            <Route path="/owner/register" element={<OwnerRegister />} />
+            <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+            <Route path="/owner/pos" element={<OwnerPOS />} />
+            <Route path="/owner/profile" element={<OwnerProfile />} />
+            <Route path="/owner/inventory" element={<OwnerInventory />} />
+            <Route path="/owner/staff" element={<OwnerStaff />} />
+            <Route path="/owner/reports" element={<OwnerReports />} />
+            <Route path="/owner/settings" element={<OwnerShopSettings />} />
 
-          {/* Cashier Portal */}
-          <Route path="/cashier/login" element={<CashierLogin />} />
-          <Route path="/cashier/register" element={<CashierRegister />} />
-          <Route path="/cashier/dashboard" element={<CashierDashboard />} />
-          <Route path="/cashier/pos" element={<CashierPOS />} />
-          <Route path="/cashier/scanner" element={<CashierScanner />} />
-          <Route path="/cashier/credit-review" element={<CashierCreditReview />} />
-          <Route path="/cashier/checkout" element={<CashierCheckout />} />
+            {/* Cashier Portal */}
+            <Route path="/cashier/login" element={<CashierLogin />} />
+            <Route path="/cashier/register" element={<CashierRegister />} />
+            <Route path="/cashier/dashboard" element={<CashierDashboard />} />
+            <Route path="/cashier/pos" element={<CashierPOS />} />
+            <Route path="/cashier/scanner" element={<CashierScanner />} />
+            <Route path="/cashier/credit-review" element={<CashierCreditReview />} />
+            <Route path="/cashier/checkout" element={<CashierCheckout />} />
 
-          {/* Customer Portal */}
-          <Route path="/customer/login" element={<CustomerLogin />} />
-          <Route path="/customer/signup" element={<CustomerRegister />} />
-          <Route path="/customer/products" element={<CustomerProducts />} />
-          <Route path="/customer/cart" element={<CustomerCart />} />
-          <Route path="/customer/checkout" element={<CustomerCheckout />} />
-          <Route path="/customer/payment" element={<CustomerPayment />} />
-          <Route path="/customer/tracking" element={<CustomerTracking />} />
-          <Route path="/customer/credit-review" element={<CustomerCreditReview />} />
-          <Route path="/customer/profile" element={<CustomerProfile />} />
+            {/* Customer Portal */}
+            <Route path="/customer/login" element={<CustomerLogin />} />
+            <Route path="/customer/signup" element={<CustomerRegister />} />
+            <Route path="/customer/products" element={<CustomerProducts />} />
+            <Route path="/customer/cart" element={<CustomerCart />} />
+            <Route path="/customer/checkout" element={<CustomerCheckout />} />
+            <Route path="/customer/payment" element={<CustomerPayment />} />
+            <Route path="/customer/tracking" element={<CustomerTracking />} />
+            <Route path="/customer/credit-review" element={<CustomerCreditReview />} />
+            <Route path="/customer/profile" element={<CustomerProfile />} />
 
-          {/* Driver Portal */}
-          <Route path="/driver/login" element={<DriverLogin />} />
-          <Route path="/driver/register" element={<DriverRegister />} />
-          <Route path="/driver/orders" element={<DriverOrders />} />
-          <Route path="/driver/out-to-deliver" element={<DriverOutToDeliver />} />
-          <Route path="/driver/delivered" element={<DriverDelivered />} />
+            {/* Driver Portal */}
+            <Route path="/driver/login" element={<DriverLogin />} />
+            <Route path="/driver/register" element={<DriverRegister />} />
+            <Route path="/driver/orders" element={<DriverOrders />} />
+            <Route path="/driver/out-to-deliver" element={<DriverOutToDeliver />} />
+            <Route path="/driver/delivered" element={<DriverDelivered />} />
 
-          {/* Admin Portal */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/applications" element={<AdminApplications />} />
-          <Route path="/admin/pos-monitor" element={<AdminPOSMonitor />} />
+            {/* Admin Portal */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/applications" element={<AdminApplications />} />
+            <Route path="/admin/pos-monitor" element={<AdminPOSMonitor />} />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </StoreProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

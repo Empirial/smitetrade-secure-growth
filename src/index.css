@@ -1,55 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
-
 @layer base {
   :root {
-    --background: 160 50% 6%;
-    --foreground: 160 10% 90%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
 
-    --card: 160 40% 10%;
-    --card-foreground: 160 10% 90%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
 
-    --popover: 160 40% 10%;
-    --popover-foreground: 160 10% 90%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 160 55% 21%;
-    --primary-foreground: 46 100% 70%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 100% 50%;
-    --secondary-foreground: 160 50% 6%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 160 30% 14%;
-    --muted-foreground: 160 10% 60%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 46 100% 55%;
-    --accent-foreground: 160 50% 6%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 160 30% 18%;
-    --input: 160 30% 18%;
-    --ring: 46 100% 55%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 0%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    --emerald: 160 55% 21%;
-    --emerald-deep: 160 50% 12%;
-    --electric-blue: 195 100% 50%;
-    --gold: 46 100% 55%;
-    --gold-glow: 46 100% 70%;
+    /* Custom Grayscale Palette overrides */
+    --emerald: 0 0% 20%;
+    /* Rewire to Dark Gray */
+    --emerald-deep: 0 0% 10%;
+    /* Rewire to Almost Black */
+    --electric-blue: 0 0% 40%;
+    /* Rewire to Mid Gray */
+    --gold: 0 0% 0%;
+    /* Rewire to Black */
+    --gold-glow: 0 0% 80%;
+    /* Rewire to Light Gray */
 
-    --sidebar-background: 160 40% 8%;
-    --sidebar-foreground: 160 10% 90%;
-    --sidebar-primary: 195 100% 50%;
+    /* Sidebar overrides for minimalist look */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 0 0% 0%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 30% 14%;
-    --sidebar-accent-foreground: 160 10% 90%;
-    --sidebar-border: 160 30% 18%;
-    --sidebar-ring: 195 100% 50%;
+    --sidebar-accent: 0 0% 92%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 0%;
+  }
+
+  /* Dark mode (if requested, but user asked for "Black and White", usually implies Light Minimalist or High Contrast Dark)
+     I'll keep a minimalist dark mode just in case system prefs switch, or map it similarly */
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 80%;
   }
 }
 
@@ -63,42 +102,45 @@
     font-family: 'Inter', sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Orbitron', sans-serif;
   }
 }
 
 @layer utilities {
   .glass-card {
-    @apply bg-card/40 backdrop-blur-xl border border-border/50 rounded-xl;
-    box-shadow: 
-      0 8px 32px 0 hsla(160, 55%, 21%, 0.15),
-      inset 0 1px 0 0 hsla(0, 0%, 100%, 0.05);
+    @apply bg-background/50 backdrop-blur-md border border-border sm:rounded-xl shadow-sm;
+    /* Removed colorful shadows */
   }
 
-  .glow-gold {
-    box-shadow: 0 0 30px hsla(46, 100%, 55%, 0.3), 0 0 60px hsla(46, 100%, 55%, 0.1);
-  }
-
-  .glow-blue {
-    box-shadow: 0 0 30px hsla(195, 100%, 50%, 0.3), 0 0 60px hsla(195, 100%, 50%, 0.1);
-  }
-
-  .glow-emerald {
-    box-shadow: 0 0 30px hsla(160, 55%, 21%, 0.4), 0 0 60px hsla(160, 55%, 21%, 0.2);
+  .minimal-card {
+    @apply bg-card border border-border shadow-sm rounded-lg p-6 hover:shadow-md transition-shadow duration-200;
   }
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, hsl(46, 100%, 55%), hsl(46, 100%, 70%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    /* Replaced gradient with solid primary */
+    @apply text-foreground;
   }
 
   .text-gradient-blue {
-    background: linear-gradient(135deg, hsl(195, 100%, 50%), hsl(195, 80%, 70%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply text-foreground;
+  }
+
+  .glow-gold {
+    /* Subtle gray shadow */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .glow-emerald {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
   }
 }

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
-    role: "owner" | "cashier";
+    role: "owner" | "cashier" | "customer" | "driver" | "admin";
 }
 
 const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
@@ -26,15 +26,40 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
         { href: "/cashier/credit-review", label: "Credit Review", icon: CreditCard },
     ];
 
-    const links = role === "owner" ? ownerLinks : cashierLinks;
+    // Placeholder links for new roles - will populate as I implement them
+    const customerLinks = [
+        { href: "/customer/products", label: "Shop", icon: ShoppingCart },
+        { href: "/customer/tracking", label: "Tracking", icon: Truck },
+        { href: "/customer/credit-review", label: "Credit Score", icon: ShieldCheck },
+        { href: "/customer/profile", label: "Profile", icon: User },
+    ];
+
+    const driverLinks = [
+        { href: "/driver/orders", label: "My Orders", icon: Box },
+        { href: "/driver/out-to-deliver", label: "Active Deliveries", icon: Truck },
+    ];
+
+    const adminLinks = [
+        { href: "/admin/applications", label: "Applications", icon: User },
+        { href: "/admin/pos-monitor", label: "POS Monitor", icon: LayoutDashboard },
+    ];
+
+
+    let links = ownerLinks;
+    if (role === "cashier") links = cashierLinks;
+    if (role === "customer") links = customerLinks;
+    if (role === "driver") links = driverLinks;
+    if (role === "admin") links = adminLinks;
 
     const NavContent = () => (
-        <div className="flex flex-col h-full bg-slate-900 text-white p-4">
+        <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border text-sidebar-foreground p-4">
             <div className="mb-8 p-2">
-                <h1 className="text-xl font-bold tracking-wider font-[Orbitron] text-emerald-400">SMITETRADE</h1>
-                <p className="text-xs text-slate-400 uppercase tracking-widest">{role} Portal</p>
+                <Link to="/">
+                    <h1 className="text-xl font-bold tracking-wider font-[Orbitron] text-primary">SMITETRADE</h1>
+                </Link>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">{role} Portal</p>
             </div>
-            <nav className="space-y-2 flex-1">
+            <nav className="space-y-1 flex-1">
                 {links.map((link) => {
                     const Icon = link.icon;
                     const isActive = location.pathname === link.href;
@@ -43,20 +68,20 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
                             key={link.href}
                             to={link.href}
                             onClick={() => setIsOpen(false)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                    ? "bg-emerald-600 text-white font-medium shadow-md shadow-emerald-900/20"
-                                    : "text-slate-300 hover:bg-white/10 hover:text-white"
+                            className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 border border-transparent ${isActive
+                                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                                : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                                 }`}
                         >
-                            <Icon size={20} />
-                            {link.label}
+                            <Icon size={18} />
+                            <span className="text-sm">{link.label}</span>
                         </Link>
                     );
                 })}
             </nav>
-            <div className="pt-4 border-t border-slate-800">
-                <Link to={role === "owner" ? "/owner/login" : "/cashier/login"}>
-                    <Button variant="ghost" className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-950/30 gap-2">
+            <div className="pt-4 border-t border-sidebar-border">
+                <Link to="/">
+                    <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-sidebar-accent gap-2">
                         <LogOut size={18} />
                         Logout
                     </Button>
@@ -66,22 +91,22 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="min-h-screen bg-background flex">
             {/* Desktop Sidebar */}
-            <div className="hidden md:block w-64 shrink-0 shadow-xl z-20">
+            <div className="hidden md:block w-64 shrink-0 z-20">
                 <NavContent />
             </div>
 
             {/* Mobile Sidebar */}
-            <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 z-30 flex items-center px-4 justify-between shadow-md">
-                <span className="font-bold text-emerald-400">SMITETRADE</span>
+            <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-30 flex items-center px-4 justify-between">
+                <span className="font-bold text-primary font-[Orbitron]">SMITETRADE</span>
                 <Sheet open={isOpen} onOpenChange={setIsOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white">
+                        <Button variant="ghost" size="icon">
                             <Menu />
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="p-0 w-64 border-r-slate-800 bg-slate-900 border-none">
+                    <SheetContent side="left" className="p-0 w-64 bg-sidebar border-r-border">
                         <NavContent />
                     </SheetContent>
                 </Sheet>
@@ -89,7 +114,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto md:pt-0 pt-16">
-                <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
+                <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
                     {children}
                 </div>
             </main>

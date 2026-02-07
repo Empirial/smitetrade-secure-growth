@@ -35,7 +35,12 @@ const CustomerLogin = () => {
                             <Input id="email" type="email" placeholder="you@example.com" required className="bg-background" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="password">Password</Label>
+                                <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                                    Forgot password?
+                                </Link>
+                            </div>
                             <Input id="password" type="password" required className="bg-background" />
                         </div>
                     </CardContent>

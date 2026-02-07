@@ -2,18 +2,35 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Circle, Truck, Package } from "lucide-react";
 
+import { useStore } from "@/context/StoreContext";
+
 const CustomerTracking = () => {
+    const { orders } = useStore();
+    const latestOrder = orders.length > 0 ? orders[0] : null;
+
+    if (!latestOrder) {
+        return (
+            <DashboardLayout role="customer">
+                <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+                    <Package className="h-16 w-16 text-muted-foreground opacity-20" />
+                    <h1 className="text-2xl font-bold">No Orders Found</h1>
+                    <p className="text-muted-foreground">You haven't placed any orders yet.</p>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     const steps = [
-        { label: "Order Received", status: "completed", time: "10:30 AM" },
-        { label: "Preparing Order", status: "completed", time: "10:45 AM" },
-        { label: "Out for Delivery", status: "current", time: "11:15 AM" },
-        { label: "Delivered", status: "pending", time: "Est. 11:45 AM" },
+        { label: "Order Received", status: "completed", time: new Date(latestOrder.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+        { label: "Preparing Order", status: latestOrder.status === 'Pending' ? 'current' : 'completed', time: "Est. 10 mins" },
+        { label: "Out for Delivery", status: latestOrder.status === 'Out for Delivery' ? 'current' : latestOrder.status === 'Delivered' ? 'completed' : 'pending', time: "Est. 20 mins" },
+        { label: "Delivered", status: latestOrder.status === 'Delivered' ? 'completed' : 'pending', time: "Est. 30 mins" },
     ];
 
     return (
         <DashboardLayout role="customer">
             <div className="max-w-2xl mx-auto space-y-8">
-                <h1 className="text-3xl font-bold tracking-tight">Track Order #Ord-992</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Track Order #{latestOrder.id}</h1>
 
                 <Card>
                     <CardHeader>
@@ -29,7 +46,7 @@ const CustomerTracking = () => {
                             {steps.map((step, index) => (
                                 <div key={index} className="relative flex items-center gap-6">
                                     <div className={`relative z-10 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-4 ring-background ${step.status === "completed" ? "text-primary" :
-                                            step.status === "current" ? "text-primary animate-pulse" : "text-muted-foreground"
+                                        step.status === "current" ? "text-primary animate-pulse" : "text-muted-foreground"
                                         }`}>
                                         {step.status === "completed" ? (
                                             <CheckCircle2 className="h-6 w-6 fill-background" />
@@ -60,7 +77,9 @@ const CustomerTracking = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground">Maize Meal 10kg, Cooking Oil 2L</p>
+                        <p className="text-muted-foreground">
+                            {latestOrder.items.map(i => `${i.name} x${i.quantity}`).join(', ')}
+                        </p>
                     </CardContent>
                 </Card>
             </div>

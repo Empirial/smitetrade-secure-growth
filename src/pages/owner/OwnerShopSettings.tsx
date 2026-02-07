@@ -8,7 +8,21 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Clock, MapPin, Store, Bell } from "lucide-react";
 
+import { toast } from "sonner";
+import { useState } from "react";
+
 const OwnerShopSettings = () => {
+    const [loading, setLoading] = useState(false);
+
+    const handleSave = () => {
+        setLoading(true);
+        // Simulate API
+        setTimeout(() => {
+            setLoading(false);
+            toast.success("Shop settings saved successfully.");
+        }, 1000);
+    };
+
     return (
         <DashboardLayout role="owner">
             <div className="space-y-6">
@@ -117,7 +131,9 @@ const OwnerShopSettings = () => {
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button className="w-full">Save All Changes</Button>
+                            <Button className="w-full" onClick={handleSave} disabled={loading}>
+                                {loading ? "Saving..." : "Save All Changes"}
+                            </Button>
                         </CardFooter>
                     </Card>
                 </div>

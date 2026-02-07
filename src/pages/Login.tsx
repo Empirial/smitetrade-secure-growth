@@ -9,17 +9,7 @@ const Login = () => {
     const navigate = useNavigate();
 
     const handleLogin = (role: UserRole, path: string) => {
-        // Simple mock login logic for prototype
-        // In a real app, this would be a form with email/password
-        const mockEmails = {
-            owner: "owner@spaza.com",
-            customer: "customer@gmail.com",
-            driver: "driver@logistics.com",
-            cashier: "cashier@spaza.com",
-            admin: "admin@smitetrade.com"
-        };
-
-        login(mockEmails[role] || "user@test.com", role);
+        // Navigate to the specific login page for the selected role
         navigate(path);
     };
 
@@ -39,7 +29,7 @@ const Login = () => {
                     {/* Owner */}
                     <motion.div whileHover={{ y: -5 }} className="h-full">
                         <button
-                            onClick={() => handleLogin('owner', '/owner/dashboard')}
+                            onClick={() => handleLogin('owner', '/owner/login')}
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
@@ -58,7 +48,7 @@ const Login = () => {
                     {/* Cashier */}
                     <motion.div whileHover={{ y: -5 }} className="h-full">
                         <button
-                            onClick={() => handleLogin('cashier', '/cashier/pos')}
+                            onClick={() => handleLogin('cashier', '/cashier/login')}
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
@@ -77,7 +67,7 @@ const Login = () => {
                     {/* Customer */}
                     <motion.div whileHover={{ y: -5 }} className="h-full">
                         <button
-                            onClick={() => handleLogin('customer', '/customer/products')}
+                            onClick={() => handleLogin('customer', '/customer/login')}
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
@@ -96,7 +86,7 @@ const Login = () => {
                     {/* Driver */}
                     <motion.div whileHover={{ y: -5 }} className="h-full">
                         <button
-                            onClick={() => handleLogin('driver', '/driver/orders')}
+                            onClick={() => handleLogin('driver', '/driver/login')}
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
@@ -115,7 +105,7 @@ const Login = () => {
                     {/* Admin */}
                     <motion.div whileHover={{ y: -5 }} className="h-full">
                         <button
-                            onClick={() => handleLogin('admin', '/admin/applications')}
+                            onClick={() => handleLogin('admin', '/admin/login')}
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">

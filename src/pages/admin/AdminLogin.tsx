@@ -32,7 +32,12 @@ const AdminLogin = () => {
                             <Input id="id" placeholder="sysadmin" required className="bg-gray-950 border-gray-800" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="password">Password</Label>
+                                <Link to="/forgot-password" className="text-xs text-gray-400 hover:text-white">
+                                    Forgot password?
+                                </Link>
+                            </div>
                             <Input id="password" type="password" required className="bg-gray-950 border-gray-800" />
                         </div>
                     </CardContent>

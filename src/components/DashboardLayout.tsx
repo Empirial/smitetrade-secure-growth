@@ -16,9 +16,13 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const ownerLinks = [
         { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/owner/pos", label: "POS System", icon: ShoppingCart },
+        { href: "/owner/orders", label: "Orders", icon: Box },
         { href: "/owner/inventory", label: "Inventory", icon: Package },
+        { href: "/owner/pricing", label: "Pricing", icon: CreditCard },
+        { href: "/owner/suppliers", label: "Suppliers", icon: Truck },
         { href: "/owner/staff", label: "Staff", icon: Users },
         { href: "/owner/reports", label: "Reports", icon: BarChart3 },
+        { href: "/owner/alerts", label: "Alerts", icon: ShieldCheck },
         { href: "/owner/settings", label: "Settings", icon: Settings },
         { href: "/owner/profile", label: "Profile", icon: User },
     ];
@@ -27,6 +31,8 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
         { href: "/cashier/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/cashier/pos", label: "POS System", icon: ShoppingCart },
         { href: "/cashier/scanner", label: "Scanner", icon: Scan },
+        { href: "/cashier/shift", label: "Shift Mgmt", icon: User },
+        { href: "/cashier/receipts", label: "Receipts", icon: Box },
         { href: "/cashier/credit-review", label: "Credit Review", icon: CreditCard },
     ];
 
@@ -34,18 +40,24 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const customerLinks = [
         { href: "/customer/products", label: "Shop", icon: ShoppingCart },
         { href: "/customer/tracking", label: "Tracking", icon: Truck },
+        { href: "/customer/cart", label: "My Cart", icon: ShoppingCart },
         { href: "/customer/credit-review", label: "Credit Score", icon: ShieldCheck },
+        { href: "/customer/support", label: "Support", icon: Users },
         { href: "/customer/profile", label: "Profile", icon: User },
     ];
 
     const driverLinks = [
         { href: "/driver/orders", label: "My Orders", icon: Box },
         { href: "/driver/out-to-deliver", label: "Active Deliveries", icon: Truck },
+        { href: "/driver/issues", label: "Report Issue", icon: ShieldCheck },
     ];
 
     const adminLinks = [
         { href: "/admin/applications", label: "Applications", icon: User },
         { href: "/admin/pos-monitor", label: "POS Monitor", icon: LayoutDashboard },
+        { href: "/admin/users", label: "Users", icon: Users },
+        { href: "/admin/audit-logs", label: "Audit Logs", icon: ShieldCheck },
+        { href: "/admin/disputes", label: "Disputes", icon: ShieldCheck },
     ];
 
 

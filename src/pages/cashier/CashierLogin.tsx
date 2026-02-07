@@ -33,7 +33,12 @@ const CashierLogin = () => {
                             <Input id="id" placeholder="C-12345" required />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="pin">PIN Code</Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="pin">PIN Code</Label>
+                                <Link to="/forgot-password" className="text-xs text-primary underline underline-offset-4 hover:text-primary/80">
+                                    Forgot PIN?
+                                </Link>
+                            </div>
                             <Input id="pin" type="password" placeholder="••••" required maxLength={4} className="tracking-widest" />
                         </div>
                     </CardContent>

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, MapPin, Store } from "lucide-react";
+import { toast } from "sonner";
 
 const AdminApplications = () => {
     const applications = [
@@ -10,6 +11,10 @@ const AdminApplications = () => {
         { id: 2, name: "Mama Grace Provisions", owner: "Grace Nkosi", location: "Diepkloof", date: "2024-02-04", status: "Pending" },
         { id: 3, name: "Alex Corner Store", owner: "David Zulu", location: "Alexandra", date: "2024-02-03", status: "Rejected" },
     ];
+
+    const handleAction = (id: number, action: string) => {
+        toast.info(`Application #${id} ${action}`);
+    };
 
     return (
         <DashboardLayout role="admin">
@@ -38,10 +43,10 @@ const AdminApplications = () => {
                                 </div>
                                 {app.status === "Pending" && (
                                     <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/20">
+                                        <Button size="sm" variant="outline" className="text-destructive hover:bg-destructive/10 border-destructive/20" onClick={() => handleAction(app.id, "Rejected")}>
                                             <X className="h-4 w-4 mr-1" /> Reject
                                         </Button>
-                                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleAction(app.id, "Approved")}>
                                             <Check className="h-4 w-4 mr-1" /> Approve
                                         </Button>
                                     </div>

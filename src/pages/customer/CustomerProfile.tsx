@@ -5,7 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+import { toast } from "sonner";
+
 const CustomerProfile = () => {
+    const handleSave = () => {
+        toast.success("Profile updated successfully");
+    };
+
     return (
         <DashboardLayout role="customer">
             <div className="max-w-2xl mx-auto space-y-6">
@@ -44,7 +50,7 @@ const CustomerProfile = () => {
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
                         <Button variant="outline">Cancel</Button>
-                        <Button>Save Changes</Button>
+                        <Button onClick={handleSave}>Save Changes</Button>
                     </CardFooter>
                 </Card>
 

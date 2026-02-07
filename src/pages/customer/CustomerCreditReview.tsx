@@ -1,7 +1,9 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ShieldCheck, TrendingUp, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { ShieldCheck, TrendingUp, AlertCircle, ArrowRight } from "lucide-react";
 
 const CustomerCreditReview = () => {
     return (
@@ -34,6 +36,14 @@ const CustomerCreditReview = () => {
                                 <span>0 - 850</span>
                             </div>
                             <Progress value={88} className="h-3" />
+                        </div>
+
+                        <div className="pt-4">
+                            <Link to="/customer/apply-credit">
+                                <Button className="w-full" size="lg">
+                                    Request Limit Increase <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                            </Link>
                         </div>
                     </CardContent>
                 </Card>
@@ -73,7 +83,7 @@ const CustomerCreditReview = () => {
                     </CardContent>
                 </Card>
             </div>
-        </DashboardLayout>
+        </DashboardLayout >
     );
 };
 

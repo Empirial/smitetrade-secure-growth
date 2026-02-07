@@ -49,6 +49,7 @@ import CustomerCheckout from "./pages/customer/CustomerCheckout";
 import CustomerPayment from "./pages/customer/CustomerPayment";
 import CustomerTracking from "./pages/customer/CustomerTracking";
 import CustomerCreditReview from "./pages/customer/CustomerCreditReview";
+import CustomerCreditApplication from "./pages/customer/CustomerCreditApplication";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import CustomerOrderDetails from "./pages/customer/CustomerOrderDetails";
 import CustomerSupport from "./pages/customer/CustomerSupport";
@@ -123,6 +124,7 @@ const App = () => (
             <Route path="/customer/payment" element={<CustomerPayment />} />
             <Route path="/customer/tracking" element={<CustomerTracking />} />
             <Route path="/customer/credit-review" element={<CustomerCreditReview />} />
+            <Route path="/customer/apply-credit" element={<CustomerCreditApplication />} />
             <Route path="/customer/profile" element={<CustomerProfile />} />
             <Route path="/customer/orders/:id" element={<CustomerOrderDetails />} />
             <Route path="/customer/support" element={<CustomerSupport />} />

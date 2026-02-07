@@ -37,66 +37,67 @@ const AdminUsers = () => {
                             className="pl-8"
                         />
                     </div>
-                    <UserCog className="mr-2 h-4 w-4" />
-                    Add User
-                </Button>
-            </div>
+                    <Button>
+                        <UserCog className="mr-2 h-4 w-4" />
+                        Add User
+                    </Button>
+                </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>System Users</CardTitle>
-                    <CardDescription>Total users: {users.length}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>User</TableHead>
-                                <TableHead>Role</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {users.map((user) => (
-                                <TableRow key={user.id}>
-                                    <TableCell>
-                                        <div className="flex flex-col">
-                                            <span className="font-medium">{user.name}</span>
-                                            <span className="text-xs text-muted-foreground">{user.email}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{user.role}</TableCell>
-                                    <TableCell>
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                            }`}>
-                                            {user.status}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => handleAction(user.name, "Edit Details")}>Edit Details</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleAction(user.name, "Password Reset")}>Reset Password</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-600" onClick={() => handleAction(user.name, user.status === 'Active' ? 'Account Suspended' : 'Account Activated')}>
-                                                    {user.status === 'Active' ? 'Suspend Account' : 'Activate Account'}
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>System Users</CardTitle>
+                        <CardDescription>Total users: {users.length}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>User</TableHead>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
+                            </TableHeader>
+                            <TableBody>
+                                {users.map((user) => (
+                                    <TableRow key={user.id}>
+                                        <TableCell>
+                                            <div className="flex flex-col">
+                                                <span className="font-medium">{user.name}</span>
+                                                <span className="text-xs text-muted-foreground">{user.email}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{user.role}</TableCell>
+                                        <TableCell>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                {user.status}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem onClick={() => handleAction(user.name, "Edit Details")}>Edit Details</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleAction(user.name, "Password Reset")}>Reset Password</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-red-600" onClick={() => handleAction(user.name, user.status === 'Active' ? 'Account Suspended' : 'Account Activated')}>
+                                                        {user.status === 'Active' ? 'Suspend Account' : 'Activate Account'}
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
         </DashboardLayout >
     );
 };

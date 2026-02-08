@@ -18,7 +18,7 @@ const products = [
 ];
 
 const OwnerPOS = () => {
-    const [cart, setCart] = useState<{ id: number; name: string; price: number; quantity: number }[]>([]);
+    const [cart, setCart] = useState<{ id: string; name: string; price: number; quantity: number }[]>([]);
     const [search, setSearch] = useState("");
 
     const addToCart = (product: typeof products[0]) => {
@@ -31,11 +31,11 @@ const OwnerPOS = () => {
         });
     };
 
-    const removeFromCart = (id: number) => {
+    const removeFromCart = (id: string) => {
         setCart(prev => prev.filter(p => p.id !== id));
     };
 
-    const updateQuantity = (id: number, delta: number) => {
+    const updateQuantity = (id: string, delta: number) => {
         setCart(prev => prev.map(p => {
             if (p.id === id) {
                 const newQty = Math.max(1, p.quantity + delta);

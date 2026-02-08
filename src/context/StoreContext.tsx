@@ -1,11 +1,34 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
+import { auth, db } from '@/lib/firebase';
+import {
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut,
+    createUserWithEmailAndPassword,
+    User as FirebaseUser
+} from 'firebase/auth';
+import {
+    collection,
+    onSnapshot,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    query,
+    orderBy,
+    setDoc,
+    getDoc,
+    runTransaction
+} from 'firebase/firestore';
 
 // --- Types ---
 export type UserRole = 'owner' | 'cashier' | 'customer' | 'driver' | 'admin';
 
 export interface User {
     id: string;
+    uid: string;
     name: string;
     email: string;
     role: UserRole;
@@ -13,7 +36,7 @@ export interface User {
 }
 
 export interface Product {
-    id: number;
+    id: string; // Changed to string for Firestore
     name: string;
     price: number;
     category: string;
@@ -27,7 +50,7 @@ export interface CartItem extends Product {
 }
 
 export interface OrderItem {
-    id: number;
+    id: string; // Changed to string
     name: string;
     quantity: number;
     price: number;
@@ -47,146 +70,179 @@ export interface Order {
 interface StoreContextType {
     // Auth
     user: User | null;
-    login: (email: string, role: UserRole) => void;
-    logout: () => void;
+    login: (email: string, password: string) => Promise<void>;
+    register: (email: string, password: string, name: string, role: UserRole, storeName?: string) => Promise<void>;
+    logout: () => Promise<void>;
 
     // Inventory
     products: Product[];
-    addProduct: (product: Omit<Product, 'id' | 'status'>) => void;
-    updateProduct: (id: number, updates: Partial<Product>) => void;
-    deleteProduct: (id: number) => void;
+    addProduct: (product: Omit<Product, 'id' | 'status'>) => Promise<void>;
+    updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
+    deleteProduct: (id: string) => Promise<void>;
 
-    // Cart
+    // Cart (Local for now)
     cart: CartItem[];
     addToCart: (product: Product) => void;
-    removeFromCart: (productId: number) => void;
-    updateCartQuantity: (productId: number, delta: number) => void;
+    removeFromCart: (productId: string) => void;
+    updateCartQuantity: (productId: string, delta: number) => void;
     clearCart: () => void;
     cartTotal: number;
 
     // Orders
     orders: Order[];
-    placeOrder: (customerDetails: { name: string; address: string }) => void;
-    updateOrderStatus: (orderId: string, status: Order['status']) => void;
-    assignDriver: (orderId: string, driverId: string) => void;
+    placeOrder: (customerDetails: { name: string; address: string }) => Promise<void>;
+    updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
+    assignDriver: (orderId: string, driverId: string) => Promise<void>;
     isLoading: boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-// --- Initial Mock Data ---
-const INITIAL_PRODUCTS: Product[] = [
-    { id: 1, name: "Maize Meal 10kg", price: 120.00, category: "Staples", stock: 50, image: "🌽", status: "In Stock" },
-    { id: 2, name: "Cooking Oil 2L", price: 85.00, category: "Pantry", stock: 20, image: "🌻", status: "In Stock" },
-    { id: 3, name: "White Sugar 2kg", price: 45.00, category: "Pantry", stock: 5, image: "🍬", status: "Critical" },
-    { id: 4, name: "Tea Bags 100s", price: 35.00, category: "Beverages", stock: 100, image: "☕", status: "In Stock" },
-    { id: 5, name: "Full Cream Milk 1L", price: 18.00, category: "Dairy", stock: 12, image: "🥛", status: "Low Stock" },
-    { id: 6, name: "Brown Bread", price: 16.00, category: "Bakery", stock: 0, image: "🍞", status: "Out of Stock" },
-];
-
-const INITIAL_ORDERS: Order[] = [
-    {
-        id: "ORD-101",
-        customerName: "Thabo Molefe",
-        customerAddress: "45 Zone 6, Diepkloof",
-        items: [{ id: 1, name: "Maize Meal 10kg", quantity: 1, price: 120.00 }],
-        total: 120.00,
-        status: "Pending",
-        date: new Date().toISOString()
-    },
-    {
-        id: "ORD-102",
-        customerName: "Lerato Nkosi",
-        customerAddress: "88 Fox St, JHB CBD",
-        items: [{ id: 2, name: "Cooking Oil 2L", quantity: 2, price: 85.00 }],
-        total: 170.00,
-        status: "Ready",
-        date: new Date().toISOString()
-    }
-];
-
 export const StoreProvider = ({ children }: { children: ReactNode }) => {
-    // --- State Initialization (Lazy Load from LocalStorage) ---
-    const [isLoading, setIsLoading] = useState(true);
-
-    // Simulate initial data fetch
-    useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 800);
-        return () => clearTimeout(timer);
-    }, []);
-
-    const [user, setUser] = useState<User | null>(() => {
-        const saved = localStorage.getItem('smite_user');
-        return saved ? JSON.parse(saved) : null;
-    });
-
-    const [products, setProducts] = useState<Product[]>(() => {
-        const saved = localStorage.getItem('smite_products');
-        return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-    });
-
+    const [user, setUser] = useState<User | null>(null);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [cart, setCart] = useState<CartItem[]>(() => {
         const saved = localStorage.getItem('smite_cart');
         return saved ? JSON.parse(saved) : [];
     });
+    const [isLoading, setIsLoading] = useState(true);
 
-    const [orders, setOrders] = useState<Order[]>(() => {
-        const saved = localStorage.getItem('smite_orders');
-        return saved ? JSON.parse(saved) : INITIAL_ORDERS;
-    });
+    // --- Auth Listener ---
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                // Fetch user profile from Firestore
+                const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+                if (userDoc.exists()) {
+                    setUser({ ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User);
+                } else {
+                    // Fallback or handle missing profile
+                    console.error("User profile not found");
+                }
+            } else {
+                setUser(null);
+            }
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
 
-    // --- Persistence Effects ---
-    useEffect(() => localStorage.setItem('smite_user', JSON.stringify(user)), [user]);
-    useEffect(() => localStorage.setItem('smite_products', JSON.stringify(products)), [products]);
+    // --- Real-time Data Listeners ---
+    useEffect(() => {
+        const q = query(collection(db, "products"), orderBy("name"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const productsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Product[];
+            setProducts(productsData);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        // In a real app, query based on role (Owner sees all, Customer sees theirs)
+        // For simple MVP, Fetch all orders sorted by date
+        const q = query(collection(db, "orders"), orderBy("date", "desc"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const ordersData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Order[];
+            setOrders(ordersData);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    // --- Persistence Effects for Cart ---
     useEffect(() => localStorage.setItem('smite_cart', JSON.stringify(cart)), [cart]);
-    useEffect(() => localStorage.setItem('smite_orders', JSON.stringify(orders)), [orders]);
 
     // --- Auth Actions ---
-    const login = (email: string, role: UserRole) => {
-        const fakeUser: User = {
-            id: Math.random().toString(36).substr(2, 9),
-            name: email.split('@')[0], // Mock name from email
-            email,
-            role,
-            storeName: role === 'owner' ? "My Spaza Shop" : undefined
-        };
-        setUser(fakeUser);
-        toast.success(`Welcome back, ${fakeUser.name}!`);
+    const login = async (email: string, password: string) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            toast.success("Welcome back!");
+        } catch (error: any) {
+            console.error("Login error:", error);
+            toast.error("Failed to login: " + error.message);
+            throw error;
+        }
     };
 
-    const logout = () => {
-        setUser(null);
-        toast.info("Logged out successfully");
+    const register = async (email: string, password: string, name: string, role: UserRole, storeName?: string) => {
+        try {
+            const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
+
+            // Create user profile in Firestore
+            const userData: Omit<User, 'id' | 'uid'> = {
+                name,
+                email,
+                role,
+                ...(storeName && { storeName })
+            };
+
+            await setDoc(doc(db, "users", firebaseUser.uid), userData);
+
+            // Force set user state immediately for better UX
+            setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
+            toast.success("Account created successfully!");
+        } catch (error: any) {
+            console.error("Registration error:", error);
+            toast.error("Failed to create account: " + error.message);
+            throw error;
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setCart([]); // Clear cart on logout
+            toast.info("Logged out successfully");
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
     };
 
     // --- Inventory Actions ---
-    const addProduct = (productData: Omit<Product, 'id' | 'status'>) => {
-        const newProduct: Product = {
-            ...productData,
-            id: Date.now(),
-            status: productData.stock > 20 ? 'In Stock' : productData.stock > 0 ? 'Low Stock' : 'Out of Stock'
-        };
-        setProducts(prev => [...prev, newProduct]);
-        toast.success("Product added to inventory");
+    const addProduct = async (productData: Omit<Product, 'id' | 'status'>) => {
+        try {
+            const status = productData.stock > 20 ? 'In Stock' : productData.stock > 0 ? 'Low Stock' : 'Out of Stock';
+            await addDoc(collection(db, "products"), {
+                ...productData,
+                status,
+                createdAt: new Date().toISOString()
+            });
+            toast.success("Product added to inventory");
+        } catch (error) {
+            toast.error("Failed to add product");
+            throw error;
+        }
     };
 
-    const updateProduct = (id: number, updates: Partial<Product>) => {
-        setProducts(prev => prev.map(p => {
-            if (p.id === id) {
-                const updated = { ...p, ...updates };
-                // Re-calc status if stock changed
-                if (updates.stock !== undefined) {
-                    updated.status = updated.stock > 20 ? 'In Stock' : updated.stock > 0 ? 'Low Stock' : 'Out of Stock';
-                }
-                return updated;
+    const updateProduct = async (id: string, updates: Partial<Product>) => {
+        try {
+            const productRef = doc(db, "products", id);
+            // Re-calc status if stock changed
+            if (updates.stock !== undefined) {
+                updates.status = updates.stock > 20 ? 'In Stock' : updates.stock > 0 ? 'Low Stock' : 'Out of Stock';
             }
-            return p;
-        }));
+            await updateDoc(productRef, updates);
+            toast.success("Product updated");
+        } catch (error) {
+            toast.error("Failed to update product");
+            throw error;
+        }
     };
 
-    const deleteProduct = (id: number) => {
-        setProducts(prev => prev.filter(p => p.id !== id));
-        toast.success("Product removed");
+    const deleteProduct = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "products", id));
+            toast.success("Product removed");
+        } catch (error) {
+            toast.error("Failed to delete product");
+            throw error;
+        }
     };
 
     // --- Cart Actions ---
@@ -201,11 +257,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         toast.success(`Added ${product.name} to cart`);
     };
 
-    const removeFromCart = (productId: number) => {
+    const removeFromCart = (productId: string) => {
         setCart(prev => prev.filter(item => item.id !== productId));
     };
 
-    const updateCartQuantity = (productId: number, delta: number) => {
+    const updateCartQuantity = (productId: string, delta: number) => {
         setCart(prev => prev.map(item => {
             if (item.id === productId) {
                 const newQty = Math.max(1, item.quantity + delta);
@@ -220,34 +276,87 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     // --- Order Actions ---
-    const placeOrder = (customerDetails: { name: string; address: string }) => {
-        const newOrder: Order = {
-            id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-            customerName: customerDetails.name,
-            customerAddress: customerDetails.address,
-            items: cart.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
-            total: cartTotal,
-            status: "Pending",
-            date: new Date().toISOString()
-        };
-        setOrders(prev => [newOrder, ...prev]);
-        clearCart();
-        toast.success(`Order ${newOrder.id} placed successfully!`);
+    const placeOrder = async (customerDetails: { name: string; address: string }) => {
+        try {
+            await runTransaction(db, async (transaction) => {
+                // 1. Check stock for all items
+                for (const item of cart) {
+                    const productRef = doc(db, "products", item.id);
+                    const productDoc = await transaction.get(productRef);
+
+                    if (!productDoc.exists()) {
+                        throw new Error(`Product ${item.name} not found`);
+                    }
+
+                    const currentStock = productDoc.data().stock;
+                    if (currentStock < item.quantity) {
+                        throw new Error(`Insufficient stock for ${item.name}. Available: ${currentStock}`);
+                    }
+                }
+
+                // 2. Decrement stock
+                for (const item of cart) {
+                    const productRef = doc(db, "products", item.id);
+                    const productDoc = await transaction.get(productRef); // cached read
+                    const newStock = productDoc.data()!.stock - item.quantity;
+                    const newStatus = newStock > 20 ? 'In Stock' : newStock > 0 ? 'Low Stock' : 'Out of Stock';
+
+                    transaction.update(productRef, {
+                        stock: newStock,
+                        status: newStatus
+                    });
+                }
+
+                // 3. Create Order
+                const orderData = {
+                    customerName: customerDetails.name,
+                    customerAddress: customerDetails.address,
+                    items: cart.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
+                    total: cartTotal,
+                    status: "Pending",
+                    date: new Date().toISOString(),
+                    userId: user?.uid || "guest"
+                };
+
+                const newOrderRef = doc(collection(db, "orders"));
+                transaction.set(newOrderRef, orderData);
+            });
+
+            clearCart();
+            toast.success(`Order placed successfully!`);
+        } catch (error: any) {
+            console.error("Order error:", error);
+            toast.error("Failed to place order: " + error.message);
+            throw error;
+        }
     };
 
-    const updateOrderStatus = (orderId: string, status: Order['status']) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
-        toast.info(`Order ${orderId} updated to ${status}`);
+    const updateOrderStatus = async (orderId: string, status: Order['status']) => {
+        try {
+            await updateDoc(doc(db, "orders", orderId), { status });
+            toast.info(`Order updated to ${status}`);
+        } catch (error) {
+            toast.error("Failed to update order");
+            throw error;
+        }
     };
 
-    const assignDriver = (orderId: string, driverId: string) => {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, driverId, status: 'Out for Delivery' } : o));
-        toast.info(`Order assigned to driver`);
+    const assignDriver = async (orderId: string, driverId: string) => {
+        try {
+            await updateDoc(doc(db, "orders", orderId), {
+                driverId,
+                status: 'Out for Delivery'
+            });
+            toast.info(`Order assigned to driver`);
+        } catch (error) {
+            toast.error("Failed to assign driver");
+            throw error;
+        }
     };
 
     return (
         <StoreContext.Provider value={{
-            user, login, logout,
+            user, login, register, logout,
             products, addProduct, updateProduct, deleteProduct,
             cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
             orders, placeOrder, updateOrderStatus, assignDriver, isLoading

@@ -4,21 +4,37 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useStore } from "@/context/StoreContext";
 
 const OwnerRegister = () => {
     const navigate = useNavigate();
+    const { register } = useStore();
     const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        storeName: "",
+        email: "",
+        password: ""
+    });
 
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            await register(
+                formData.email,
+                formData.password,
+                `${formData.firstName} ${formData.lastName}`,
+                'owner',
+                formData.storeName
+            );
+            navigate("/owner/dashboard");
+        } catch (error) {
+            // Error handled in context
+        } finally {
             setLoading(false);
-            toast.success("Store registered successfully! Please login.");
-            navigate("/owner/login");
-        }, 1500);
+        }
     };
 
     return (
@@ -35,24 +51,54 @@ const OwnerRegister = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="first-name">First name</Label>
-                                <Input id="first-name" required />
+                                <Input 
+                                    id="first-name" 
+                                    required 
+                                    value={formData.firstName}
+                                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="last-name">Last name</Label>
-                                <Input id="last-name" required />
+                                <Input 
+                                    id="last-name" 
+                                    required 
+                                    value={formData.lastName}
+                                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                                />
                             </div>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="store-name">Store Name</Label>
-                            <Input id="store-name" placeholder="My Spaza Shop" required />
+                            <Input 
+                                id="store-name" 
+                                placeholder="My Spaza Shop" 
+                                required 
+                                value={formData.storeName}
+                                onChange={(e) => setFormData({...formData, storeName: e.target.value})}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="owner@example.com" required />
+                            <Input 
+                                id="email" 
+                                type="email" 
+                                placeholder="owner@example.com" 
+                                required 
+                                value={formData.email}
+                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" required />
+                            <Input 
+                                id="password" 
+                                type="password" 
+                                required 
+                                minLength={6}
+                                value={formData.password}
+                                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                            />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">

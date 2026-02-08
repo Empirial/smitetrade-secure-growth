@@ -9,12 +9,13 @@ import { toast } from "sonner";
 const AdminDisputes = () => {
     // Mock disputes
     const disputes = [
-        { id: 1, type: "Fraud Flag", desc: "Multiple high-value transactions from same IP in 5 mins", status: "Pending", priority: "High" },
-        { id: 2, type: "Delivery Complaint", desc: "Customer claims driver never arrived (Order #1023)", status: "Investigating", priority: "Medium" },
-        { id: 3, type: "Payment Dispute", desc: "Chargeback received for R450.00", status: "Resolved", priority: "Low" },
+        { id: "1", type: "Fraud Flag", desc: "Multiple high-value transactions from same IP in 5 mins", status: "Pending", priority: "High" },
+        { id: "2", type: "Delivery Complaint", desc: "Customer claims driver never arrived (Order #1023)", status: "Investigating", priority: "Medium" },
+        { id: "3", user: "Customer A", issue: "Late Delivery", status: "Open" },
+        { id: "4", user: "Driver B", issue: "Wrong Address", status: "Resolved", priority: "Low" },
     ];
 
-    const handleAction = (id: number, action: string) => {
+    const handleAction = (id: string, action: string) => {
         toast.success(`Dispute #${id} marked as ${action}.`);
     };
 
@@ -77,7 +78,7 @@ const AdminDisputes = () => {
                                         <TableCell>{item.desc}</TableCell>
                                         <TableCell>
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${item.priority === 'High' ? 'bg-red-100 text-red-800' :
-                                                    item.priority === 'Medium' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
+                                                item.priority === 'Medium' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
                                                 }`}>
                                                 {item.priority}
                                             </span>

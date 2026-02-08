@@ -1,13 +1,15 @@
+
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Package, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "@/context/StoreContext";
 
 const DriverOrders = () => {
-    const { orders, updateOrderStatus, assignDriver, user } = useStore();
+    const navigate = useNavigate();
+    const { orders, assignDriver, user } = useStore();
 
     // Filter for orders relevant to drivers (Ready for pickup or already assigned to them)
     // In a real app, 'Ready' means the shop has packed it.
@@ -16,9 +18,11 @@ const DriverOrders = () => {
         (o.driverId === user?.id && o.status === "Out for Delivery")
     );
 
-    const handleAccept = (orderId: string) => {
+    const handleAccept = async (orderId: string) => {
         // Assign current user as driver and update status
-        assignDriver(orderId, user?.id || "driver-1");
+        await assignDriver(orderId, user?.id || "driver-1");
+        // Navigate to the route page
+        navigate(`/driver/route/${orderId}`);
     };
 
     return (
@@ -63,13 +67,11 @@ const DriverOrders = () => {
                             </CardContent>
                             <CardFooter>
                                 {order.status === "Ready" ? (
-                                    <Link to="/driver/out-to-deliver" className="w-full" onClick={() => handleAccept(order.id)}>
-                                        <Button className="w-full">
-                                            Accept & Deliver <ArrowRight className="ml-2 h-4 w-4" />
-                                        </Button>
-                                    </Link>
+                                    <Button className="w-full" onClick={() => handleAccept(order.id)}>
+                                        Accept & Deliver <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
                                 ) : (
-                                    <Link to="/driver/out-to-deliver" className="w-full">
+                                    <Link to={`/driver/route/${order.id}`} className="w-full">
                                         <Button variant="secondary" className="w-full">
                                             Continue Delivery <ArrowRight className="ml-2 h-4 w-4" />
                                         </Button>

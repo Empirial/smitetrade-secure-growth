@@ -17,30 +17,56 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 
-const initialStaff = [
-    { id: 1, name: "Thandiwe Zulu", role: "Cashier", email: "thandi@spaza.com", status: "Active", joined: "2023-11-12" },
-    { id: 2, name: "Bongani Mkhize", role: "Driver", email: "bongani@spaza.com", status: "Active", joined: "2024-01-05" },
-    { id: 3, name: "Sarah Khumalo", role: "Cashier", email: "sarah@spaza.com", status: "On Leave", joined: "2024-02-20" },
-    { id: 4, name: "David Naidoo", role: "Driver", email: "david@spaza.com", status: "Inactive", joined: "2023-10-01" },
-];
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot, addDoc } from "firebase/firestore";
+import { useEffect } from "react";
+import { useStore } from "@/context/StoreContext";
+
+// Define interface locally if not exported from context, or import it.
+// Assuming User interface matches mostly.
+interface StaffMember {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    status?: string; // Optional in User type?
+    joined?: string;
+}
 
 const OwnerStaff = () => {
-    const [staff, setStaff] = useState(initialStaff);
+    const [staff, setStaff] = useState<StaffMember[]>([]);
     const [isAddOpen, setIsAddOpen] = useState(false);
-    const [formData, setFormData] = useState({ name: "", email: "", role: "Cashier" });
+    const [formData, setFormData] = useState({ name: "", email: "", role: "cashier" }); // lowercase role to match types
+
+    useEffect(() => {
+        // Fetch users who are cashiers or drivers
+        // In a real app, we would filter by storeId as well
+        const q = query(collection(db, "users"), where("role", "in", ["cashier", "driver"]));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const staffData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    name: data.name,
+                    email: data.email,
+                    role: data.role,
+                    status: "Active", // Default for now
+                    joined: "2024-01-01" // Default
+                } as StaffMember;
+            });
+            setStaff(staffData);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleAddStaff = () => {
-        const newStaff = {
-            id: staff.length + 1,
-            name: formData.name,
-            email: formData.email,
-            role: formData.role,
-            status: "Active",
-            joined: new Date().toISOString().split('T')[0]
-        };
-        setStaff([...staff, newStaff]);
+        // In a real app, this should probably create a user invitation or 
+        // create a user document directly (if using a different auth flow).
+        // For now, we'll just close the dialog as we can't create Auth users 
+        // without their password here easily.
+        console.log("Add staff feature would send invite to:", formData.email);
         setIsAddOpen(false);
-        setFormData({ name: "", email: "", role: "Cashier" });
+        setFormData({ name: "", email: "", role: "cashier" });
     };
 
     const getRoleIcon = (role: string) => {
@@ -138,8 +164,8 @@ const OwnerStaff = () => {
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                                    {getRoleIcon(member.role)}
-                                    {member.role}
+                                    {getRoleIcon(member.role.charAt(0).toUpperCase() + member.role.slice(1))}
+                                    {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                                 </div>
                                 <div className="text-xs text-muted-foreground mb-4">
                                     Joined: {member.joined} <br />

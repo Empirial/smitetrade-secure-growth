@@ -28,6 +28,7 @@ import OwnerOrders from "./pages/owner/OwnerOrders";
 import OwnerPricing from "./pages/owner/OwnerPricing";
 import OwnerSuppliers from "./pages/owner/OwnerSuppliers";
 import OwnerAlerts from "./pages/owner/OwnerAlerts";
+import OwnerAnalytics from "./pages/owner/OwnerAnalytics";
 
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
@@ -103,6 +104,7 @@ const App = () => (
             <Route path="/owner/pricing" element={<OwnerPricing />} />
             <Route path="/owner/suppliers" element={<OwnerSuppliers />} />
             <Route path="/owner/alerts" element={<OwnerAlerts />} />
+            <Route path="/owner/analytics" element={<OwnerAnalytics />} />
 
             {/* Cashier Portal */}
             <Route path="/cashier/login" element={<CashierLogin />} />

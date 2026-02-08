@@ -13,6 +13,16 @@ const Login = () => {
         navigate(path);
     };
 
+    const handleSeed = async () => {
+        const { seedDatabase } = await import('@/lib/seed');
+        const success = await seedDatabase();
+        if (success) {
+            alert("Database seeded successfully!");
+        } else {
+            alert("Failed to seed database.");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-background flex flex-col p-6">
             <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-8 text-sm">
@@ -23,6 +33,9 @@ const Login = () => {
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold tracking-tight">Select your Portal</h1>
                     <p className="text-muted-foreground">Who are you logging in as today?</p>
+                    <Button variant="ghost" size="sm" onClick={handleSeed} className="mt-2 text-xs text-muted-foreground opacity-50 hover:opacity-100">
+                        (Dev: Seed DB)
+                    </Button>
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

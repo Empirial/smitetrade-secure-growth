@@ -4,20 +4,35 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useStore } from "@/context/StoreContext";
 
 const CashierRegister = () => {
     const navigate = useNavigate();
+    const { register } = useStore();
     const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: ""
+    });
 
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setTimeout(() => {
+        try {
+            await register(
+                formData.email,
+                formData.password,
+                `${formData.firstName} ${formData.lastName}`,
+                'cashier'
+            );
+            navigate("/cashier/dashboard");
+        } catch (error) {
+            // Error handled in context
+        } finally {
             setLoading(false);
-            toast.success("Cashier profile created! Your ID is C-9988.");
-            navigate("/cashier/login");
-        }, 1500);
+        }
     };
 
     return (
@@ -26,29 +41,51 @@ const CashierRegister = () => {
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold tracking-tight text-center">New Cashier Registration</CardTitle>
                     <CardDescription className="text-center">
-                        Link a new cashier profile to a store
+                        Create a cashier account
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleRegister}>
                     <CardContent className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="store-code">Store Code</Label>
-                            <Input id="store-code" placeholder="S-XXXXXX" required />
-                            <p className="text-xs text-muted-foreground">Ask the shop owner for the store code.</p>
-                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="first-name">First name</Label>
-                                <Input id="first-name" required />
+                                <Input
+                                    id="first-name"
+                                    required
+                                    value={formData.firstName}
+                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="last-name">Last name</Label>
-                                <Input id="last-name" required />
+                                <Input
+                                    id="last-name"
+                                    required
+                                    value={formData.lastName}
+                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                />
                             </div>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="pin">Create PIN</Label>
-                            <Input id="pin" type="password" placeholder="4-digit PIN" maxLength={4} required />
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                minLength={6}
+                                required
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">

@@ -7,37 +7,30 @@ import { Search, Plus, Trash2, ShoppingCart, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const products = [
-    { id: 1, name: "Brown Bread 700g", price: 18.00, color: "bg-orange-100 text-orange-700" },
-    { id: 2, name: "Full Cream Milk 2L", price: 28.00, color: "bg-blue-100 text-blue-700" },
-    { id: 3, name: "Coca Cola 1.5L", price: 22.00, color: "bg-red-100 text-red-700" },
-    { id: 4, name: "Maize Meal 5kg", price: 55.00, color: "bg-yellow-100 text-yellow-700" },
-    { id: 5, name: "White Sugar 2kg", price: 38.00, color: "bg-neutral-100 text-neutral-700" },
-    { id: 6, name: "Cooking Oil 750ml", price: 45.00, color: "bg-yellow-200 text-yellow-800" },
-    { id: 7, name: "Airtime R10", price: 10.00, color: "bg-green-100 text-green-700" },
-    { id: 8, name: "Lays Chips 120g", price: 19.00, color: "bg-red-200 text-red-800" },
-];
+import { useStore } from "@/context/StoreContext";
+import { Product } from "@/context/StoreContext";
 
 const CashierPOS = () => {
-    const [cart, setCart] = useState<{ id: number; name: string; price: number; quantity: number }[]>([]);
+    const { products } = useStore();
+    const [cart, setCart] = useState<{ id: string; name: string; price: number; quantity: number }[]>([]);
     const [search, setSearch] = useState("");
     const navigate = useNavigate();
 
-    const addToCart = (product: typeof products[0]) => {
+    const addToCart = (product: Product) => {
         setCart(prev => {
             const existing = prev.find(p => p.id === product.id);
             if (existing) {
                 return prev.map(p => p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p);
             }
-            return [...prev, { ...product, quantity: 1 }];
+            return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1 }];
         });
     };
 
-    const removeFromCart = (id: number) => {
+    const removeFromCart = (id: string) => {
         setCart(prev => prev.filter(p => p.id !== id));
     };
 
-    const updateQuantity = (id: number, delta: number) => {
+    const updateQuantity = (id: string, delta: number) => {
         setCart(prev => prev.map(p => {
             if (p.id === id) {
                 const newQty = Math.max(1, p.quantity + delta);
@@ -79,7 +72,7 @@ const CashierPOS = () => {
                                     onClick={() => addToCart(product)}
                                     className="group relative flex flex-col items-center justify-center p-4 rounded-xl border border-dashed hover:border-solid hover:border-emerald-500 bg-white hover:shadow-md transition-all h-28"
                                 >
-                                    <div className={`mb-2 h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm ${product.color}`}>
+                                    <div className={`mb-2 h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-100 text-emerald-700`}>
                                         {product.name.charAt(0)}
                                     </div>
                                     <span className="font-medium text-center text-sm line-clamp-2">{product.name}</span>

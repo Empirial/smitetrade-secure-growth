@@ -7,12 +7,12 @@ import { toast } from "sonner";
 
 const AdminApplications = () => {
     const applications = [
-        { id: 1, name: "Thabo's Spaza", owner: "Thabo Molefe", location: "Soweto, Zone 6", date: "2024-02-05", status: "Pending" },
-        { id: 2, name: "Mama Grace Provisions", owner: "Grace Nkosi", location: "Diepkloof", date: "2024-02-04", status: "Pending" },
-        { id: 3, name: "Alex Corner Store", owner: "David Zulu", location: "Alexandra", date: "2024-02-03", status: "Rejected" },
+        { id: "1", name: "Thabo's Spaza", owner: "Thabo Molefe", location: "Soweto, Zone 6", date: "2024-02-05", status: "Pending" },
+        { id: "2", name: "Mama Grace Provisions", owner: "Grace Nkosi", location: "Diepkloof", date: "2024-02-04", status: "Pending" },
+        { id: "3", name: "Alex Corner Store", owner: "David Zulu", location: "Alexandra", date: "2024-02-03", status: "Rejected" },
     ];
 
-    const handleAction = (id: number, action: string) => {
+    const handleAction = (id: string, action: string) => {
         toast.info(`Application #${id} ${action}`);
     };
 

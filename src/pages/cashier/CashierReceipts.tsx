@@ -19,7 +19,7 @@ const CashierReceipts = () => {
         order.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleReprint = (orderId: number) => {
+    const handleReprint = (orderId: string) => {
         toast.info(`Reprinting receipt for Order #${orderId}...`);
     };
 

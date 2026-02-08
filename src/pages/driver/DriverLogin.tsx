@@ -4,13 +4,26 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { Truck } from "lucide-react";
+import { useState } from "react";
+import { useStore } from "@/context/StoreContext";
 
 const DriverLogin = () => {
     const navigate = useNavigate();
+    const { login } = useStore();
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({ email: "", password: "" });
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        navigate("/driver/orders");
+        setLoading(true);
+        try {
+            await login(formData.email, formData.password);
+            navigate("/driver/orders");
+        } catch (error) {
+            // Error handled in context
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -28,8 +41,14 @@ const DriverLogin = () => {
                 <form onSubmit={handleLogin}>
                     <CardContent className="grid gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="email">Driver Email / ID</Label>
-                            <Input id="email" placeholder="D-5501" required />
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                placeholder="driver@smitetrade.com"
+                                required
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <div className="flex items-center justify-between">
@@ -38,11 +57,19 @@ const DriverLogin = () => {
                                     Forgot password?
                                 </Link>
                             </div>
-                            <Input id="password" type="password" required />
+                            <Input
+                                id="password"
+                                type="password"
+                                required
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">
-                        <Button type="submit" className="w-full">Start Shift</Button>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? "Starting Shift..." : "Start Shift"}
+                        </Button>
                         <div className="text-center text-sm text-muted-foreground">
                             New Driver?{" "}
                             <Link to="/driver/register" className="text-primary hover:underline font-medium">

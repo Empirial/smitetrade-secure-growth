@@ -5,25 +5,34 @@ import { Button } from "@/components/ui/button";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Package, Truck, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useStore } from "@/context/StoreContext";
 
 const CustomerOrderDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
     // Mock Order Data
-    const order = {
-        id: id || "1001",
-        date: new Date().toISOString(),
-        status: "Delivered",
-        items: [
-            { name: "Premium Widget", quantity: 2, price: 150.00 },
-            { name: "Service Pack", quantity: 1, price: 500.00 },
-        ],
-        subtotal: 800.00,
-        deliveryFee: 50.00,
-        total: 850.00,
-        address: "123 Main St, Suburbia, City"
-    };
+    const { orders } = useStore();
+    const order = orders.find(o => o.id === id);
+
+    if (!order) {
+        return (
+            <DashboardLayout role="customer">
+                <div className="flex flex-col items-center justify-center h-96">
+                    <h1 className="text-2xl font-bold">Order Not Found</h1>
+                    <Button onClick={() => navigate('/customer/orders')} className="mt-4">
+                        Back to Orders
+                    </Button>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    // Calculate derived values if not in order object (legacy mocked fields)
+    const subtotal = order.total; // Assuming total includes everything for now or is subtotal
+    const deliveryFee = 0; // standard for now or derived
+    // Real order object has `items`, `total`, `status`, `date`, `customerAddress`
+    // We can use those directly.
 
     const handleDownloadReceipt = () => {
         toast.success("Receipt downloading...");
@@ -71,11 +80,11 @@ const CustomerOrderDetails = () => {
                             <div className="pt-4 space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Subtotal</span>
-                                    <span>R {order.subtotal.toFixed(2)}</span>
+                                    <span>R {order.total.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Delivery Method</span>
-                                    <span>Standard Delivery (R {order.deliveryFee.toFixed(2)})</span>
+                                    <span>Standard Delivery (Included)</span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
                                     <span>Total</span>
@@ -125,7 +134,7 @@ const CustomerOrderDetails = () => {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {order.address}
+                                    {order.customerAddress}
                                 </p>
                             </CardContent>
                         </Card>

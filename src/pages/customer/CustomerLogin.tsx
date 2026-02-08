@@ -4,19 +4,25 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useStore } from "@/context/StoreContext";
 
 const CustomerLogin = () => {
     const navigate = useNavigate();
+    const { login } = useStore();
     const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({ email: "", password: "" });
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate login
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            await login(formData.email, formData.password);
             navigate("/customer/products");
-        }, 1000);
+        } catch (error) {
+            // Error handled in context
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -32,7 +38,15 @@ const CustomerLogin = () => {
                     <CardContent className="grid gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="you@example.com" required className="bg-background" />
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="you@example.com"
+                                required
+                                className="bg-background"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <div className="flex items-center justify-between">
@@ -41,7 +55,14 @@ const CustomerLogin = () => {
                                     Forgot password?
                                 </Link>
                             </div>
-                            <Input id="password" type="password" required className="bg-background" />
+                            <Input
+                                id="password"
+                                type="password"
+                                required
+                                className="bg-background"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">

@@ -1,52 +1,95 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, UserCog, MoreHorizontal } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { User, UserRole } from "@/context/StoreContext";
 import { toast } from "sonner";
+import { CheckCircle, XCircle, RefreshCw, Mail } from "lucide-react";
+
+// Extend User type locally if needed for extra fields like 'status' or 'createdAt'
+interface AdminUser extends User {
+    status?: 'active' | 'banned' | 'pending';
+    createdAt?: string;
+}
 
 const AdminUsers = () => {
-    // Mock user data
-    const users = [
-        { id: 1, name: "John Owner", email: "john@store.com", role: "Owner", status: "Active" },
-        { id: 2, name: "Sarah Cashier", email: "sarah@store.com", role: "Cashier", status: "Active" },
-        { id: 3, name: "Mike Driver", email: "mike@logistics.com", role: "Driver", status: "Active" },
-        { id: 4, name: "Old Employee", email: "old@store.com", role: "Cashier", status: "Suspended" },
-    ];
+    const [users, setUsers] = useState<AdminUser[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const handleAction = (user: string, action: string) => {
-        toast.info(`${action} for ${user}`);
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const fetchUsers = async () => {
+        setIsLoading(true);
+        try {
+            const querySnapshot = await getDocs(collection(db, "users"));
+            const usersData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as AdminUser[];
+            setUsers(usersData);
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            toast.error("Failed to load users.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleStatusChange = async (userId: string, newStatus: 'active' | 'banned') => {
+        try {
+            await updateDoc(doc(db, "users", userId), { status: newStatus });
+            setUsers(prev => prev.map(u => u.uid === userId || u.id === userId ? { ...u, status: newStatus } : u));
+            toast.success(`User ${newStatus === 'active' ? 'activated' : 'banned'} successfully.`);
+        } catch (error) {
+            toast.error("Failed to update user status.");
+        }
+    };
+
+    const handlePasswordReset = (email: string) => {
+        // In a real app, trigger Firebase sendPasswordResetEmail
+        toast.info(`Password reset email sent to ${email} (simulated)`);
+    };
+
+    const getRoleBadgeColor = (role: UserRole) => {
+        switch (role) {
+            case 'owner': return 'bg-purple-100 text-purple-800';
+            case 'admin': return 'bg-red-100 text-red-800';
+            case 'driver': return 'bg-blue-100 text-blue-800';
+            case 'cashier': return 'bg-green-100 text-green-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
     };
 
     return (
         <DashboardLayout role="admin">
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-                    <p className="text-muted-foreground">Manage system access and permissions.</p>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search users..."
-                            className="pl-8"
-                        />
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+                        <p className="text-muted-foreground">Oversee all registered users and their roles.</p>
                     </div>
-                    <Button>
-                        <UserCog className="mr-2 h-4 w-4" />
-                        Add User
+                    <Button onClick={fetchUsers} variant="outline">
+                        <RefreshCw className="mr-2 h-4 w-4" /> Refresh
                     </Button>
                 </div>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>System Users</CardTitle>
-                        <CardDescription>Total users: {users.length}</CardDescription>
+                        <CardTitle>All Users ({users.length})</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -55,50 +98,81 @@ const AdminUsers = () => {
                                     <TableHead>User</TableHead>
                                     <TableHead>Role</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
+                                    <TableHead>Store (if Owner)</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">{user.name}</span>
-                                                <span className="text-xs text-muted-foreground">{user.email}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{user.role}</TableCell>
-                                        <TableCell>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                {user.status}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => handleAction(user.name, "Edit Details")}>Edit Details</DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleAction(user.name, "Password Reset")}>Reset Password</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-600" onClick={() => handleAction(user.name, user.status === 'Active' ? 'Account Suspended' : 'Account Activated')}>
-                                                        {user.status === 'Active' ? 'Suspend Account' : 'Activate Account'}
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-8">Loading users...</TableCell>
                                     </TableRow>
-                                ))}
+                                ) : users.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-8">No users found.</TableCell>
+                                    </TableRow>
+                                ) : (
+                                    users.map((user) => (
+                                        <TableRow key={user.uid || user.id}>
+                                            <TableCell>
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium">{user.name}</span>
+                                                    <span className="text-xs text-muted-foreground">{user.email}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className={getRoleBadgeColor(user.role)} variant="secondary">
+                                                    {user.role}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={user.status === 'banned' ? 'destructive' : 'outline'}>
+                                                    {user.status || 'Active'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>{user.storeName || '-'}</TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => handlePasswordReset(user.email)}
+                                                        title="Reset Password"
+                                                    >
+                                                        <Mail className="h-4 w-4" />
+                                                    </Button>
+                                                    {user.status !== 'banned' ? (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                            onClick={() => handleStatusChange(user.uid || user.id, 'banned')}
+                                                            title="Ban User"
+                                                        >
+                                                            <XCircle className="h-4 w-4" />
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="text-green-500 hover:text-green-600 hover:bg-green-50"
+                                                            onClick={() => handleStatusChange(user.uid || user.id, 'active')}
+                                                            title="Activate User"
+                                                        >
+                                                            <CheckCircle className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
                 </Card>
             </div>
-        </DashboardLayout >
+        </DashboardLayout>
     );
 };
 

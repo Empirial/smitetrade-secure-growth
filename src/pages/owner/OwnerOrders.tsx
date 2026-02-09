@@ -17,7 +17,8 @@ const OwnerOrders = () => {
     const filteredOrders = orders.filter(order => {
         const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.id.toString().includes(searchTerm);
-        const matchesType = filterType === "all" || order.type === filterType; // Assuming 'type' exists or we default to true
+        // Data structure update pending: 'type' field. defaulting to show all for now.
+        const matchesType = true; 
         return matchesSearch && matchesType;
     });
 

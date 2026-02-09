@@ -6,7 +6,7 @@ const SpazaScoreGauge = () => {
   const rotation = (score / 100) * 180 - 90;
 
   return (
-    <div className="relative w-64 h-40 md:w-80 md:h-48">
+    <div className="relative w-48 h-32 md:w-80 md:h-48">
       {/* Gauge background arc */}
       <svg viewBox="0 0 200 120" className="w-full h-full">
         <defs>

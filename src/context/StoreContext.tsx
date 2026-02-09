@@ -65,6 +65,7 @@ export interface Order {
     status: 'Pending' | 'Paid' | 'Ready' | 'Out for Delivery' | 'Delivered';
     date: string;
     driverId?: string;
+    type?: 'instore' | 'online' | 'delivery';
 }
 
 interface StoreContextType {

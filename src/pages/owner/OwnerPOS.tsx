@@ -7,14 +7,14 @@ import { Search, Plus, Trash2, ShoppingCart, CreditCard, Banknote } from "lucide
 import { useState } from "react";
 
 const products = [
-    { id: 1, name: "Brown Bread 700g", price: 18.00, category: "Bakery", color: "bg-orange-100 text-orange-700" },
-    { id: 2, name: "Full Cream Milk 2L", price: 28.00, category: "Dairy", color: "bg-blue-100 text-blue-700" },
-    { id: 3, name: "Coca Cola 1.5L", price: 22.00, category: "Beverages", color: "bg-red-100 text-red-700" },
-    { id: 4, name: "Maize Meal 5kg", price: 55.00, category: "Staples", color: "bg-yellow-100 text-yellow-700" },
-    { id: 5, name: "White Sugar 2kg", price: 38.00, category: "Pantry", color: "bg-neutral-100 text-neutral-700" },
-    { id: 6, name: "Cooking Oil 750ml", price: 45.00, category: "Pantry", color: "bg-yellow-200 text-yellow-800" },
-    { id: 7, name: "Airtime R10", price: 10.00, category: "Services", color: "bg-green-100 text-green-700" },
-    { id: 8, name: "Lays Chips 120g", price: 19.00, category: "Snacks", color: "bg-red-200 text-red-800" },
+    { id: "1", name: "Brown Bread 700g", price: 18.00, category: "Bakery", color: "bg-orange-100 text-orange-700" },
+    { id: "2", name: "Full Cream Milk 2L", price: 28.00, category: "Dairy", color: "bg-blue-100 text-blue-700" },
+    { id: "3", name: "Coca Cola 1.5L", price: 22.00, category: "Beverages", color: "bg-red-100 text-red-700" },
+    { id: "4", name: "Maize Meal 5kg", price: 55.00, category: "Staples", color: "bg-yellow-100 text-yellow-700" },
+    { id: "5", name: "White Sugar 2kg", price: 38.00, category: "Pantry", color: "bg-neutral-100 text-neutral-700" },
+    { id: "6", name: "Cooking Oil 750ml", price: 45.00, category: "Pantry", color: "bg-yellow-200 text-yellow-800" },
+    { id: "7", name: "Airtime R10", price: 10.00, category: "Services", color: "bg-green-100 text-green-700" },
+    { id: "8", name: "Lays Chips 120g", price: 19.00, category: "Snacks", color: "bg-red-200 text-red-800" },
 ];
 
 const OwnerPOS = () => {

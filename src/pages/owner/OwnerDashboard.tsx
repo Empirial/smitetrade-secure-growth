@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { DollarSign, TrendingUp, AlertTriangle, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStore } from "@/context/StoreContext";
+import { Link } from "react-router-dom";
 
 // Reusable Stat Card Component
 const StatCard = ({ title, value, subtext, icon: Icon, color, isLoading }: any) => (
@@ -65,7 +66,7 @@ const OwnerDashboard = () => {
                 <p className="text-muted-foreground">Overview of your business performance.</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                 <StatCard
                     title="Total Revenue"
                     value={`R ${totalRevenue.toFixed(2)}`}
@@ -94,6 +95,18 @@ const OwnerDashboard = () => {
                     icon={Users}
                     color="text-blue-500"
                 />
+                <Link to="/cashier/credit-review">
+                    <Card className="hover:border-indigo-500 transition-all cursor-pointer h-full border-dashed border-2">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Credit Check</CardTitle>
+                            <Users className="h-4 w-4 text-indigo-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">Lookup</div>
+                            <p className="text-xs text-muted-foreground">Check SpazaScore</p>
+                        </CardContent>
+                    </Card>
+                </Link>
             </div>
 
             <div className="grid gap-4 md:grid-cols-7">

@@ -22,6 +22,7 @@ import {
     getDoc,
     runTransaction
 } from 'firebase/firestore';
+import { OrderSchema } from '@/lib/schemas';
 
 // --- Types ---
 export type UserRole = 'owner' | 'cashier' | 'customer' | 'driver' | 'admin';
@@ -318,6 +319,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     date: new Date().toISOString(),
                     userId: user?.uid || "guest"
                 };
+
+                // Validate with Zod
+                const validation = OrderSchema.safeParse(orderData);
+                if (!validation.success) {
+                    throw new Error("Validation Failed: " + validation.error.errors.map(e => e.message).join(", "));
+                }
 
                 const newOrderRef = doc(collection(db, "orders"));
                 transaction.set(newOrderRef, orderData);

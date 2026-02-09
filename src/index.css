@@ -114,8 +114,23 @@
 
 @layer utilities {
   .glass-card {
-    @apply bg-background/50 backdrop-blur-md border border-border sm:rounded-xl shadow-sm;
-    /* Removed colorful shadows */
+    @apply bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/20 shadow-lg sm:rounded-xl;
+    /* Deep Glass Effect */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  }
+
+  .glass-panel {
+    @apply bg-white/60 dark:bg-black/60 backdrop-blur-2xl border border-white/30 shadow-2xl;
+  }
+
+  /* Button Touch Feedback */
+  .btn-scale {
+    @apply active:scale-95 transition-transform duration-100;
+  }
+  
+  /* Apply to all Shadcn Buttons by default if possible, or add globally */
+  button {
+    @apply active:scale-[0.98] transition-transform duration-100;
   }
 
   .minimal-card {
@@ -123,7 +138,6 @@
   }
 
   .text-gradient-gold {
-    /* Replaced gradient with solid primary */
     @apply text-foreground;
   }
 
@@ -132,15 +146,14 @@
   }
 
   .glow-gold {
-    /* Subtle gray shadow */
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+     box-shadow: 0 0 40px -10px rgba(255, 215, 0, 0.3);
   }
 
   .glow-emerald {
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.3);
   }
 
   .glow-blue {
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0 40px -10px rgba(59, 130, 246, 0.3);
   }
 }

@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import PageTransition from "@/components/PageTransition";
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -130,8 +131,10 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto md:pt-0 pt-16">
-                <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
-                    {children}
+                <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+                    <PageTransition>
+                        {children}
+                    </PageTransition>
                 </div>
             </main>
         </div>

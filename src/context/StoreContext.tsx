@@ -72,7 +72,7 @@ export interface Order {
 interface StoreContextType {
     // Auth
     user: User | null;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, roleFallback?: UserRole) => Promise<void>;
     register: (email: string, password: string, name: string, role: UserRole, storeName?: string) => Promise<void>;
     logout: () => Promise<void>;
 
@@ -161,12 +161,35 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => localStorage.setItem('smite_cart', JSON.stringify(cart)), [cart]);
 
     // --- Auth Actions ---
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, roleFallback?: UserRole) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             toast.success("Welcome back!");
         } catch (error: any) {
             console.error("Login error:", error);
+            // Auto-Register Fallback for "Random Login" testing
+            if (roleFallback && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
+                try {
+                    toast.info("Account not found. Creating test account...");
+                    const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
+
+                    const userData: Omit<User, 'id' | 'uid'> = {
+                        name: "Test " + roleFallback.charAt(0).toUpperCase() + roleFallback.slice(1),
+                        email,
+                        role: roleFallback,
+                        storeName: roleFallback === 'owner' ? "Test Store" : undefined
+                    };
+
+                    await setDoc(doc(db, "users", firebaseUser.uid), userData);
+                    setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
+                    toast.success("Test account created & logged in!");
+                    return;
+                } catch (regError: any) {
+                    console.error("Auto-registration failed:", regError);
+                    toast.error("Login failed: " + error.message);
+                    throw error;
+                }
+            }
             toast.error("Failed to login: " + error.message);
             throw error;
         }

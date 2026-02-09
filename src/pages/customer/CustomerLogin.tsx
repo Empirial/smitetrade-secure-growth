@@ -16,7 +16,7 @@ const CustomerLogin = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await login(formData.email, formData.password);
+            await login(formData.email, formData.password, "customer");
             navigate("/customer/products");
         } catch (error) {
             // Error handled in context

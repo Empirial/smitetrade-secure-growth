@@ -17,7 +17,7 @@ const CashierLogin = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await login(formData.email, formData.password);
+            await login(formData.email, formData.password, "cashier");
             navigate("/cashier/dashboard");
         } catch (error) {
             // Error handled in context

@@ -14,19 +14,25 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
 
-    const ownerLinks = [
-        { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/owner/pos", label: "POS System", icon: ShoppingCart },
-        { href: "/owner/orders", label: "Orders", icon: Box },
-        { href: "/owner/inventory", label: "Inventory", icon: Package },
-        { href: "/owner/pricing", label: "Pricing", icon: CreditCard },
-        { href: "/owner/suppliers", label: "Suppliers", icon: Truck },
-        { href: "/owner/staff", label: "Staff", icon: Users },
-        { href: "/owner/reports", label: "Reports", icon: BarChart3 },
-        { href: "/owner/alerts", label: "Alerts", icon: ShieldCheck },
-        { href: "/owner/settings", label: "Settings", icon: Settings },
-        { href: "/owner/profile", label: "Profile", icon: User },
-    ];
+    const ownerLinks = {
+        Overview: [
+            { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
+            { href: "/owner/profile", label: "Profile", icon: User },
+            { href: "/owner/alerts", label: "Alerts", icon: ShieldCheck },
+        ],
+        Operations: [
+            { href: "/owner/pos", label: "POS System", icon: ShoppingCart },
+            { href: "/owner/orders", label: "Orders", icon: Box },
+            { href: "/owner/inventory", label: "Inventory", icon: Package },
+            { href: "/owner/suppliers", label: "Suppliers", icon: Truck },
+        ],
+        Management: [
+            { href: "/owner/staff", label: "Staff", icon: Users },
+            { href: "/owner/reports", label: "Reports", icon: BarChart3 },
+            { href: "/owner/pricing", label: "Pricing", icon: CreditCard },
+            { href: "/owner/settings", label: "Settings", icon: Settings },
+        ]
+    };
 
     const cashierLinks = [
         { href: "/cashier/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -61,8 +67,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
         { href: "/admin/disputes", label: "Disputes", icon: ShieldCheck },
     ];
 
-
-    let links = ownerLinks;
+    let links: any[] = [];
     if (role === "cashier") links = cashierLinks;
     if (role === "customer") links = customerLinks;
     if (role === "driver") links = driverLinks;
@@ -76,25 +81,51 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
                 </Link>
                 <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">{role} Portal</p>
             </div>
-            <nav className="space-y-1 flex-1">
-                {links.map((link) => {
-                    const Icon = link.icon;
-                    const isActive = location.pathname === link.href;
-                    return (
-                        <Link
-                            key={link.href}
-                            to={link.href}
-                            onClick={() => setIsOpen(false)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 border border-transparent ${isActive
-                                ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                                : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                }`}
-                        >
-                            <Icon size={18} />
-                            <span className="text-sm">{link.label}</span>
-                        </Link>
-                    );
-                })}
+            <nav className="space-y-1 flex-1 overflow-y-auto">
+                {role === 'owner' ? (
+                    Object.entries(ownerLinks).map(([category, items]) => (
+                        <div key={category} className="mb-4">
+                            <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-2">{category}</h3>
+                            {items.map((link) => {
+                                const Icon = link.icon;
+                                const isActive = location.pathname === link.href;
+                                return (
+                                    <Link
+                                        key={link.href}
+                                        to={link.href}
+                                        onClick={() => setIsOpen(false)}
+                                        className={`flex items-center gap-3 px-4 py-2 rounded-md transition-all duration-200 border border-transparent ${isActive
+                                            ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                                            : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                            }`}
+                                    >
+                                        <Icon size={18} />
+                                        <span className="text-sm">{link.label}</span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    ))
+                ) : (
+                    links.map((link) => {
+                        const Icon = link.icon;
+                        const isActive = location.pathname === link.href;
+                        return (
+                            <Link
+                                key={link.href}
+                                to={link.href}
+                                onClick={() => setIsOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 border border-transparent ${isActive
+                                    ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                    }`}
+                            >
+                                <Icon size={18} />
+                                <span className="text-sm">{link.label}</span>
+                            </Link>
+                        );
+                    })
+                )}
             </nav>
             <div className="pt-4 border-t border-sidebar-border">
                 <Link to="/">

@@ -64,6 +64,25 @@ const CashierPOS = () => {
                         </div>
                     </div>
 
+                    {/* Quick Access Grid */}
+                    {!search && (
+                        <div className="space-y-2">
+                            <h3 className="text-sm font-medium text-muted-foreground">Quick Access</h3>
+                            <div className="grid grid-cols-4 gap-2">
+                                {products.slice(0, 4).map(product => (
+                                    <button
+                                        key={`quick-${product.id}`}
+                                        onClick={() => addToCart(product)}
+                                        className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg p-2 text-center transition-colors"
+                                    >
+                                        <div className="text-xl mb-1">{product.image || "📦"}</div>
+                                        <div className="text-xs font-medium truncate">{product.name}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <ScrollArea className="flex-1 rounded-xl border bg-white/50 p-4 shadow-sm">
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {filteredProducts.map(product => (

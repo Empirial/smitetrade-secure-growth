@@ -17,7 +17,7 @@ const OwnerLogin = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await login(formData.email, formData.password);
+            await login(formData.email, formData.password, "owner");
             navigate("/owner/dashboard");
         } catch (error) {
             // Error handled in context

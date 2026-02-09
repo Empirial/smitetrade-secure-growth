@@ -2,28 +2,39 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, ShieldCheck, AlertCircle, Medal } from "lucide-react";
+import { Search, ShieldCheck, AlertCircle, Medal, Scan } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
 // Mock Data for Cashier View (In real app, we'd fetch this using a function from CreditContext exposed for "Admin/Cashier")
 const mockDatabase: Record<string, any> = {
-    "0821234567": { name: "Lufuno Mphela", phone: "082 123 4567", score: 3.2, tier: "Gold", limit: 5000, balance: 1200 },
-    "0729998888": { name: "Thabo Mbeki", phone: "072 999 8888", score: 105, tier: "Bronze", limit: 1000, balance: 900 }
+    "9001015009087": { name: "Lufuno Mphela", phone: "082 123 4567", score: 3.2, tier: "Gold", limit: 5000, balance: 1200 },
+    "8505055009088": { name: "Thabo Mbeki", phone: "072 999 8888", score: 105, tier: "Bronze", limit: 1000, balance: 900 }
 };
 
 const CashierCreditReview = () => {
     const [query, setQuery] = useState("");
     const [result, setResult] = useState<any>(null);
+    const [isScanning, setIsScanning] = useState(false);
 
     const handleSearch = () => {
-        // In real app: await searchCustomerByPhone(query)
+        // In real app: await searchCustomerBySSID(query)
         const hit = mockDatabase[query];
         if (hit) {
             setResult(hit);
         } else {
             setResult(null);
         }
+    };
+
+    const handleScanQR = () => {
+        setIsScanning(true);
+        // Mock scanning delay
+        setTimeout(() => {
+            setQuery("9001015009087");
+            setResult(mockDatabase["9001015009087"]);
+            setIsScanning(false);
+        }, 1500);
     };
 
     const getTierBadge = (tier: string) => {
@@ -46,21 +57,24 @@ const CashierCreditReview = () => {
                 <Card className="border-t-4 border-t-amber-500 shadow-lg">
                     <CardHeader>
                         <CardTitle>Search Customer</CardTitle>
-                        <CardDescription>Enter Phone Number or Scan SS-ID QR</CardDescription>
+                        <CardDescription>Enter SS-ID Number or Scan QR Code</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex gap-2">
                             <Input
-                                placeholder="e.g. 082 123 4567"
+                                placeholder="e.g. 9001015009087"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                             />
+                            <Button onClick={handleScanQR} variant="outline" className="border-emerald-500 text-emerald-600 hover:bg-emerald-50">
+                                {isScanning ? "Scanning..." : <><Scan className="mr-2 h-4 w-4" /> Scan QR</>}
+                            </Button>
                             <Button onClick={handleSearch} className="bg-amber-600 hover:bg-amber-700">
                                 <Search className="mr-2 h-4 w-4" /> Lookup
                             </Button>
                         </div>
-                        <p className="text-xs text-muted-foreground">Try "0821234567" (Gold) or "0729998888" (Bronze)</p>
+                        <p className="text-xs text-muted-foreground">Try "9001015009087" (Gold) or "8505055009088" (Bronze)</p>
                     </CardContent>
                 </Card>
 

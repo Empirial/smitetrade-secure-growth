@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import PageTransition from "@/components/PageTransition";
+import { useStore } from "@/context/StoreContext";
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -13,18 +14,20 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
+    const { logout } = useStore();
 
     const ownerLinks = {
         Overview: [
             { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
             { href: "/owner/profile", label: "Profile", icon: User },
-            { href: "/owner/alerts", label: "Alerts", icon: ShieldCheck },
+            { href: "/owner/alerts", label: "Alerts", icon: Bell },
         ],
         Operations: [
             { href: "/owner/pos", label: "POS System", icon: ShoppingCart },
             { href: "/owner/orders", label: "Orders", icon: Box },
             { href: "/owner/inventory", label: "Inventory", icon: Package },
             { href: "/owner/suppliers", label: "Suppliers", icon: Truck },
+            { href: "/owner/lending", label: "Lending (P2P)", icon: Banknote },
         ],
         Management: [
             { href: "/owner/staff", label: "Staff", icon: Users },
@@ -94,82 +97,89 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
                                         key={link.href}
                                         to={link.href}
                                         onClick={() => setIsOpen(false)}
-                                        className={`flex items-center gap-3 px-4 py-2 rounded-md transition-all duration-200 border border-transparent ${isActive
-                                            ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                                            : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                        className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group ${location.pathname === link.href
+                                            ? "bg-emerald-50 text-emerald-600 font-medium shadow-sm"
+                                            : "text-muted-foreground hover:bg-slate-50 hover:text-slate-900"
                                             }`}
                                     >
-                                        <Icon size={18} />
-                                        <span className="text-sm">{link.label}</span>
+                                        <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location.pathname === link.href ? "text-emerald-600" : ""
+                                            }`} />
+                                        {link.label}
                                     </Link>
-                                );
-                            })}
+                                ))}
                         </div>
-                    ))
+                        </div>
+    ))
                 ) : (
-                    links.map((link) => {
-                        const Icon = link.icon;
-                        const isActive = location.pathname === link.href;
-                        return (
-                            <Link
-                                key={link.href}
-                                to={link.href}
-                                onClick={() => setIsOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200 border border-transparent ${isActive
-                                    ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                    }`}
-                            >
-                                <Icon size={18} />
-                                <span className="text-sm">{link.label}</span>
-                            </Link>
-                        );
-                    })
-                )}
-            </nav>
-            <div className="pt-4 border-t border-sidebar-border">
-                <Link to="/">
-                    <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-sidebar-accent gap-2">
-                        <LogOut size={18} />
-                        Logout
+    // Flat List for Others
+    <div className="space-y-1">
+        {(role === 'cashier' ? cashierLinks : customerLinks).map((link) => (
+            <Link
+                key={link.href}
+                to={link.href}
+                onClick={() => setIsOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group ${location.pathname === link.href
+                    ? "bg-emerald-50 text-emerald-600 font-medium shadow-sm"
+                    : "text-muted-foreground hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+            >
+                <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location.pathname === link.href ? "text-emerald-600" : ""
+                    }`} />
+                {link.label}
+            </Link>
+        ))}
+    </div>
+)}
+            </nav >
+
+    <div className="px-4 mt-auto pt-4 border-t">
+        <Button
+            variant="ghost"
+            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
+            onClick={() => {
+                logout();
+                setIsOpen(false);
+            }}
+        >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+        </Button>
+    </div>
+        </div >
+    );
+
+return (
+    <div className="min-h-screen bg-background flex">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block w-64 shrink-0 z-20">
+            <NavContent />
+        </div>
+
+        {/* Mobile Sidebar */}
+        <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-30 flex items-center px-4 justify-between">
+            <span className="font-bold text-primary font-[Orbitron]">SMITETRADE</span>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Menu />
                     </Button>
-                </Link>
-            </div>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-64 bg-sidebar border-r-border">
+                    <NavContent />
+                </SheetContent>
+            </Sheet>
         </div>
-    );
 
-    return (
-        <div className="min-h-screen bg-background flex">
-            {/* Desktop Sidebar */}
-            <div className="hidden md:block w-64 shrink-0 z-20">
-                <NavContent />
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto md:pt-0 pt-16">
+            <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+                <PageTransition>
+                    {children}
+                </PageTransition>
             </div>
-
-            {/* Mobile Sidebar */}
-            <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-30 flex items-center px-4 justify-between">
-                <span className="font-bold text-primary font-[Orbitron]">SMITETRADE</span>
-                <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <Menu />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="p-0 w-64 bg-sidebar border-r-border">
-                        <NavContent />
-                    </SheetContent>
-                </Sheet>
-            </div>
-
-            {/* Main Content */}
-            <main className="flex-1 overflow-auto md:pt-0 pt-16">
-                <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-                    <PageTransition>
-                        {children}
-                    </PageTransition>
-                </div>
-            </main>
-        </div>
-    );
+        </main>
+    </div>
+);
 };
 
 export default DashboardLayout;

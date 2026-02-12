@@ -21,6 +21,12 @@ interface CreditContextType {
     simulatePayment: (amount: number, paymentDate: Date) => Promise<void>;
     calculateProjectedScore: (paymentDate: Date) => { score: number; tier: MRIScoreTier };
     isLoading: boolean;
+    // Lending Module
+    borrowers: any[]; // Replace with proper interface
+    loans: any[];
+    addBorrower: (name: string, phone: string, idNumber: string) => Promise<void>;
+    createLoan: (borrowerId: string, amount: number, dueDate: string) => Promise<void>;
+    recordPayment: (loanId: string) => Promise<void>;
 }
 
 const CreditContext = createContext<CreditContextType | undefined>(undefined);
@@ -109,31 +115,54 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         refreshProfile();
     }, [user]);
 
-    const simulatePayment = async (amount: number, paymentDate: Date) => {
-        const { score, tier } = calculateScoreAndTier(paymentDate);
+    // --- Lending Module State (Mock for Phase 7) ---
+    const [borrowers, setBorrowers] = useState<any[]>([
+        { id: "9001015009087", name: "Lufuno Mphela", phone: "082 123 4567", email: "lufuno@example.com", rating: "Good", score: 3.2 },
+        { id: "8505055009088", name: "Thabo Mbeki", phone: "072 999 8888", email: "thabo@example.com", rating: "Risk", score: 105 }
+    ]);
 
-        // Update State
-        if (profile) {
-            setProfile({
-                ...profile,
-                briScore: score,
-                tier: tier,
-                balance: Math.max(0, profile.balance - amount),
-                paymentHistory: [
-                    ...profile.paymentHistory,
-                    { date: paymentDate.toISOString(), amount, scoreSnapshot: score }
-                ]
-            });
+    const [loans, setLoans] = useState<any[]>([
+        { id: "loan_1", borrowerId: "9001015009087", borrowerName: "Lufuno Mphela", amount: 500, dueDate: "2026-03-01", status: "active" }
+    ]);
 
-            // Show feedback
-            if (tier === 'Platinum' || tier === 'Gold') {
-                toast.success(`Payment Successful! You achieved ${tier} Status! 🏆`);
-            } else if (tier === 'Silver') {
-                toast.success('Payment Received. Pay earlier next time to reach Gold!');
-            } else {
-                toast.warning('Payment Received (Late). Your score has dropped.');
+    // --- Lender Actions ---
+    const addBorrower = async (name: string, phone: string, idNumber: string) => {
+        // Generate SS-ID (Mock: just use ID for now or generate random)
+        const ssid = idNumber || Math.floor(Math.random() * 1000000000000).toString();
+        const newBorrower = {
+            id: ssid,
+            name,
+            phone,
+            rating: "New",
+            score: 0
+        };
+        setBorrowers([...borrowers, newBorrower]);
+        // In real app: await setDoc(doc(db, "borrowers", ssid), newBorrower);
+    };
+
+    const createLoan = async (borrowerId: string, amount: number, dueDate: string) => {
+        const borrower = borrowers.find(b => b.id === borrowerId);
+        const newLoan = {
+            id: `loan_${Date.now()}`,
+            borrowerId,
+            borrowerName: borrower?.name || "Unknown",
+            amount,
+            dueDate,
+            status: "active"
+        };
+        setLoans([...loans, newLoan]);
+        // In real app: await addDoc(collection(db, "loans"), newLoan);
+    };
+
+    const recordPayment = async (loanId: string) => {
+        setLoans(loans.map(loan => {
+            if (loan.id === loanId) {
+                return { ...loan, status: "paid", paidDate: new Date().toISOString() };
             }
-        }
+            return loan;
+        }));
+        // Logic to update borrower score would go here
+        toast.success("Payment Recorded");
     };
 
     return (
@@ -142,7 +171,12 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
             refreshProfile,
             simulatePayment,
             calculateProjectedScore: calculateScoreAndTier,
-            isLoading
+            isLoading,
+            borrowers,
+            loans,
+            addBorrower,
+            createLoan,
+            recordPayment
         }}>
             {children}
         </CreditContext.Provider>

@@ -24,6 +24,48 @@ import {
 } from 'firebase/firestore';
 import { OrderSchema } from '@/lib/schemas';
 
+// --- MOCK MODE CONFIGURATION ---
+const USE_MOCK_DATA = true;
+
+const MOCK_USER: User = {
+    id: "mock-owner-123",
+    uid: "mock-owner-123",
+    name: "Mock Owner",
+    email: "owner@example.com",
+    role: "owner",
+    storeName: "Mock Store"
+};
+
+const MOCK_PRODUCTS: Product[] = [
+    { id: "p1", name: "Bread", price: 15.00, category: "Bakery", stock: 50, image: "🍞", status: "In Stock" },
+    { id: "p2", name: "Milk", price: 22.50, category: "Dairy", stock: 10, image: "🥛", status: "Low Stock" },
+    { id: "p3", name: "Eggs", price: 35.00, category: "Pantry", stock: 0, image: "🥚", status: "Out of Stock" },
+    { id: "p4", name: "Coke", price: 18.00, category: "Beverages", stock: 100, image: "🥤", status: "In Stock" },
+];
+
+const MOCK_ORDERS: Order[] = [
+    {
+        id: "ord-001",
+        customerName: "Thabo Bester",
+        customerAddress: "123 Prison Break Ln",
+        items: [{ id: "p1", name: "Bread", quantity: 2, price: 15.00 }],
+        total: 30.00,
+        status: "Delivered",
+        date: new Date(Date.now() - 86400000).toISOString(),
+        type: "delivery"
+    },
+    {
+        id: "ord-002",
+        customerName: "Sarah Connor",
+        customerAddress: "Unknown",
+        items: [{ id: "p2", name: "Milk", quantity: 1, price: 22.50 }],
+        total: 22.50,
+        status: "Pending",
+        date: new Date().toISOString(),
+        type: "instore"
+    }
+];
+
 // --- Types ---
 export type UserRole = 'owner' | 'cashier' | 'customer' | 'driver' | 'admin';
 
@@ -112,6 +154,19 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Auth Listener ---
     useEffect(() => {
+        if (USE_MOCK_DATA) {
+            console.log("StoreContext: Using Mock Data Mode");
+            // Simulate persistent login if previously "logged in" (simplified: just auto-login as owner for testing)
+            // Or just start as null and let them click login.
+            // Let's auto-login for convenience if requested, but standard is start null.
+            // Actually, for "disable login", maybe we just want to BE logged in?
+            // The user said "disable login... so I can test it out". 
+            // Let's auto-login as Owner to make it easy.
+            setUser(MOCK_USER);
+            setIsLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 // Fetch user profile from Firestore
@@ -132,6 +187,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Real-time Data Listeners ---
     useEffect(() => {
+        if (USE_MOCK_DATA) {
+            setProducts(MOCK_PRODUCTS);
+            return;
+        }
+
         const q = query(collection(db, "products"), orderBy("name"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const productsData = snapshot.docs.map(doc => ({
@@ -144,6 +204,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     useEffect(() => {
+        if (USE_MOCK_DATA) {
+            setOrders(MOCK_ORDERS);
+            return;
+        }
+
         // In a real app, query based on role (Owner sees all, Customer sees theirs)
         // For simple MVP, Fetch all orders sorted by date
         const q = query(collection(db, "orders"), orderBy("date", "desc"));
@@ -162,6 +227,23 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Auth Actions ---
     const login = async (email: string, password: string, roleFallback?: UserRole) => {
+        if (USE_MOCK_DATA) {
+            // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            // Mock Login Success
+            const mockUser: User = {
+                id: "mock-user-123",
+                uid: "mock-user-123",
+                name: "Mock User",
+                email: email,
+                role: roleFallback || 'owner',
+                storeName: roleFallback === 'owner' ? "Mock Store" : undefined
+            };
+            setUser(mockUser);
+            toast.success("Mock Login Successful!");
+            return;
+        }
+
         try {
             await signInWithEmailAndPassword(auth, email, password);
             toast.success("Welcome back!");
@@ -196,6 +278,21 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const register = async (email: string, password: string, name: string, role: UserRole, storeName?: string) => {
+        if (USE_MOCK_DATA) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const mockUser: User = {
+                id: "mock-new-user-" + Date.now(),
+                uid: "mock-new-user-" + Date.now(),
+                name: name,
+                email: email,
+                role: role,
+                storeName: storeName
+            };
+            setUser(mockUser);
+            toast.success("Mock Registration Successful!");
+            return;
+        }
+
         try {
             const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
 
@@ -220,6 +317,13 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const logout = async () => {
+        if (USE_MOCK_DATA) {
+            setUser(null);
+            setCart([]);
+            toast.info("Mock Logout Successful");
+            return;
+        }
+
         try {
             await signOut(auth);
             setCart([]); // Clear cart on logout
@@ -230,7 +334,20 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // --- Inventory Actions ---
+    // --- Inventory Actions ---
     const addProduct = async (productData: Omit<Product, 'id' | 'status'>) => {
+        if (USE_MOCK_DATA) {
+            const status = productData.stock > 20 ? 'In Stock' : productData.stock > 0 ? 'Low Stock' : 'Out of Stock';
+            const newProduct: Product = {
+                ...productData,
+                id: "mock-prod-" + Date.now(),
+                status
+            };
+            setProducts(prev => [...prev, newProduct]);
+            toast.success("Product added (Mock)");
+            return;
+        }
+
         try {
             const status = productData.stock > 20 ? 'In Stock' : productData.stock > 0 ? 'Low Stock' : 'Out of Stock';
             await addDoc(collection(db, "products"), {
@@ -246,6 +363,21 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const updateProduct = async (id: string, updates: Partial<Product>) => {
+        if (USE_MOCK_DATA) {
+            setProducts(prev => prev.map(p => {
+                if (p.id === id) {
+                    const merged = { ...p, ...updates };
+                    if (updates.stock !== undefined) {
+                        merged.status = updates.stock > 20 ? 'In Stock' : updates.stock > 0 ? 'Low Stock' : 'Out of Stock';
+                    }
+                    return merged;
+                }
+                return p;
+            }));
+            toast.success("Product updated (Mock)");
+            return;
+        }
+
         try {
             const productRef = doc(db, "products", id);
             // Re-calc status if stock changed
@@ -261,6 +393,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const deleteProduct = async (id: string) => {
+        if (USE_MOCK_DATA) {
+            setProducts(prev => prev.filter(p => p.id !== id));
+            toast.success("Product removed (Mock)");
+            return;
+        }
+
         try {
             await deleteDoc(doc(db, "products", id));
             toast.success("Product removed");
@@ -302,6 +440,36 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Order Actions ---
     const placeOrder = async (customerDetails: { name: string; address: string }) => {
+        if (USE_MOCK_DATA) {
+            // Mock Order Placement
+            const newOrder: Order = {
+                id: "mock-order-" + Date.now(),
+                customerName: customerDetails.name,
+                customerAddress: customerDetails.address,
+                items: cart.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
+                total: cartTotal,
+                status: "Pending",
+                date: new Date().toISOString(),
+                driverId: undefined
+            };
+
+            // Update Mock Stock (simple filter/map)
+            setProducts(prev => prev.map(p => {
+                const cartItem = cart.find(c => c.id === p.id);
+                if (cartItem) {
+                    const newStock = p.stock - cartItem.quantity;
+                    const newStatus = newStock > 20 ? 'In Stock' : newStock > 0 ? 'Low Stock' : 'Out of Stock';
+                    return { ...p, stock: newStock, status: newStatus as any };
+                }
+                return p;
+            }));
+
+            setOrders(prev => [newOrder, ...prev]);
+            clearCart();
+            toast.success("Mock Order Placed!");
+            return;
+        }
+
         try {
             await runTransaction(db, async (transaction) => {
                 // 1. Check stock for all items
@@ -363,6 +531,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const updateOrderStatus = async (orderId: string, status: Order['status']) => {
+        if (USE_MOCK_DATA) {
+            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+            toast.info(`Order updated to ${status} (Mock)`);
+            return;
+        }
+
         try {
             await updateDoc(doc(db, "orders", orderId), { status });
             toast.info(`Order updated to ${status}`);
@@ -373,6 +547,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const assignDriver = async (orderId: string, driverId: string) => {
+        if (USE_MOCK_DATA) {
+            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, driverId, status: 'Out for Delivery' } : o));
+            toast.info("Order assigned to driver (Mock)");
+            return;
+        }
+
         try {
             await updateDoc(doc(db, "orders", orderId), {
                 driverId,

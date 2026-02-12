@@ -5,21 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Search, ShieldCheck, AlertCircle, Medal, Scan } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-
-// Mock Data for Cashier View (In real app, we'd fetch this using a function from CreditContext exposed for "Admin/Cashier")
-const mockDatabase: Record<string, any> = {
-    "9001015009087": { name: "Lufuno Mphela", phone: "082 123 4567", score: 3.2, tier: "Gold", limit: 5000, balance: 1200 },
-    "8505055009088": { name: "Thabo Mbeki", phone: "072 999 8888", score: 105, tier: "Bronze", limit: 1000, balance: 900 }
-};
+import { useCredit } from "@/context/CreditContext";
 
 const CashierCreditReview = () => {
+    const { borrowers } = useCredit(); // Use shared data
     const [query, setQuery] = useState("");
     const [result, setResult] = useState<any>(null);
     const [isScanning, setIsScanning] = useState(false);
 
     const handleSearch = () => {
-        // In real app: await searchCustomerBySSID(query)
-        const hit = mockDatabase[query];
+        // Search by Phone or ID (SS-ID)
+        const hit = borrowers?.find((b: any) => b.id === query || b.phone === query || b.name.toLowerCase().includes(query.toLowerCase()));
         if (hit) {
             setResult(hit);
         } else {
@@ -32,17 +28,18 @@ const CashierCreditReview = () => {
         // Mock scanning delay
         setTimeout(() => {
             setQuery("9001015009087");
-            setResult(mockDatabase["9001015009087"]);
+            const hit = borrowers?.find((b: any) => b.id === "9001015009087");
+            setResult(hit);
             setIsScanning(false);
         }, 1500);
     };
 
-    const getTierBadge = (tier: string) => {
-        switch (tier) {
-            case 'Platinum': return <Badge className="bg-indigo-500 hover:bg-indigo-600">Platinum Member</Badge>;
-            case 'Gold': return <Badge className="bg-amber-400 hover:bg-amber-500 text-black">Gold Member</Badge>;
-            case 'Silver': return <Badge className="bg-slate-400 hover:bg-slate-500">Silver Member</Badge>;
-            default: return <Badge variant="destructive">Risk Alert</Badge>;
+    const getTierBadge = (rating: string) => {
+        // Map rating text to badges
+        switch (rating) {
+            case 'Excellent': case 'Gold': return <Badge className="bg-amber-400 hover:bg-amber-500 text-black">Gold Member</Badge>;
+            case 'Good': case 'Silver': return <Badge className="bg-slate-400 hover:bg-slate-500">Silver Member</Badge>;
+            default: return <Badge variant="destructive">Risk / New</Badge>;
         }
     };
 
@@ -90,7 +87,7 @@ const CashierCreditReview = () => {
                                     <CardDescription>{result.phone}</CardDescription>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
-                                    {getTierBadge(result.tier)}
+                                    {getTierBadge(result.rating)}
                                     <span className="text-xs font-mono text-muted-foreground">BRI: {result.score}%</span>
                                 </div>
                             </div>
@@ -99,31 +96,31 @@ const CashierCreditReview = () => {
                             <div className="grid grid-cols-2 gap-4 text-center">
                                 <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100">
                                     <div className="text-xs text-emerald-600 font-medium uppercase tracking-wider mb-1">Available Credit</div>
-                                    <div className="text-2xl font-bold text-emerald-700">R {result.limit - result.balance}</div>
+                                    <div className="text-2xl font-bold text-emerald-700">R {(result.limit || 0) - (result.balance || 0)}</div>
                                 </div>
                                 <div className="p-4 bg-red-50 rounded-lg border border-red-100">
                                     <div className="text-xs text-red-600 font-medium uppercase tracking-wider mb-1">Due Now</div>
-                                    <div className="text-2xl font-bold text-red-700">R {result.balance}</div>
+                                    <div className="text-2xl font-bold text-red-700">R {result.balance || 0}</div>
                                 </div>
                             </div>
 
                             {/* Decision Support */}
-                            <div className={`p-4 rounded-md border ${result.tier === 'Bronze' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+                            <div className={`p-4 rounded-md border ${result.rating === 'Risk' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
                                 <h4 className="font-bold text-sm mb-2 flex items-center gap-2">
-                                    {result.tier === 'Bronze' ? <AlertCircle className="h-4 w-4 text-red-600" /> : <Medal className="h-4 w-4 text-green-600" />}
+                                    {result.rating === 'Risk' ? <AlertCircle className="h-4 w-4 text-red-600" /> : <Medal className="h-4 w-4 text-green-600" />}
                                     System Recommendation
                                 </h4>
                                 <p className="text-sm">
-                                    {result.tier === 'Gold' || result.tier === 'Platinum'
+                                    {result.rating === 'Good' || result.rating === 'Gold'
                                         ? "✅ SAFE TO LEND. This customer pays promptly. Apply 0% interest on staples."
-                                        : result.tier === 'Silver'
+                                        : result.rating === 'Silver'
                                             ? "⚠️ CAUTION. Verify ID manually. Standard interest rates apply."
                                             : "⛔ HIGH RISK. Do not extend further credit until balance is settled."}
                                 </p>
                             </div>
 
                             <div className="flex gap-3">
-                                <Button className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={result.tier === 'Bronze'}>
+                                <Button className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={result.rating === 'Risk'}>
                                     Authorize New Sale
                                 </Button>
                                 <Button variant="outline" className="w-full" onClick={() => setResult(null)}>Close</Button>
@@ -143,6 +140,13 @@ const CashierCreditReview = () => {
                         </CardContent>
                     </Card>
                 )}
+            </div>
+
+            <div className="text-xs text-muted-foreground text-center max-w-2xl mx-auto space-y-1 pt-8 mt-8 border-t">
+                <p className="font-semibold">Smitetrade provides scoring and risk-assessment insights for decision-support purposes only.</p>
+                <p>The platform does not provide credit, approve or decline loans, extend goods on credit, or make tenancy decisions.</p>
+                <p>All lending, goods-on-credit, and rental decisions remain the sole responsibility of the lender, spaza shop owner, or landlord.</p>
+                <p>Smitetrade does not act as a credit provider, financial adviser, or credit bureau.</p>
             </div>
         </DashboardLayout>
     );

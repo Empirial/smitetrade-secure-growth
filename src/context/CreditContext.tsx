@@ -27,6 +27,18 @@ interface CreditContextType {
     addBorrower: (name: string, phone: string, idNumber: string) => Promise<void>;
     createLoan: (borrowerId: string, amount: number, dueDate: string) => Promise<void>;
     recordPayment: (loanId: string) => Promise<void>;
+    notifications: Notification[];
+    clearNotifications: () => void;
+    // Customer Actions
+    purchaseOnCredit: (amount: number) => Promise<boolean>;
+}
+
+export interface Notification {
+    id: string;
+    userId: string;
+    message: string;
+    date: string;
+    read: boolean;
 }
 
 const CreditContext = createContext<CreditContextType | undefined>(undefined);
@@ -35,6 +47,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
     const { user } = useStore();
     const [profile, setProfile] = useState<CreditProfile | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
     // --- BRI Calculation Logic (The "Secret Sauce") ---
     // Formula: (Payment Day / Days in Month) * 100
@@ -125,6 +138,14 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         { id: "loan_1", borrowerId: "9001015009087", borrowerName: "Lufuno Mphela", amount: 500, dueDate: "2026-03-01", status: "active" }
     ]);
 
+    // --- Simulate Payment (For Customer Side) ---
+    const simulatePayment = async (amount: number, paymentDate: Date) => {
+        // This is for the customer paying off their own credit
+        // It's different from "Lender recording a payment"
+        // usage: await simulatePayment(500, new Date());
+        toast.success(`Payment of R${amount} simulated for ${paymentDate.toLocaleDateString()}`);
+    };
+
     // --- Lender Actions ---
     const addBorrower = async (name: string, phone: string, idNumber: string) => {
         // Generate SS-ID (Mock: just use ID for now or generate random)
@@ -155,14 +176,94 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const recordPayment = async (loanId: string) => {
-        setLoans(loans.map(loan => {
+        let borrowerId = "";
+        let paymentAmount = 0;
+        let dueDateStr = "";
+
+        // 1. Update Loan Status
+        setLoans(prev => prev.map(loan => {
             if (loan.id === loanId) {
+                borrowerId = loan.borrowerId;
+                paymentAmount = loan.amount;
+                dueDateStr = loan.dueDate;
                 return { ...loan, status: "paid", paidDate: new Date().toISOString() };
             }
             return loan;
         }));
-        // Logic to update borrower score would go here
-        toast.success("Payment Recorded");
+
+        if (!borrowerId) return;
+
+        // 2. Calculate New Score Impact
+        const paymentDate = new Date();
+        const dueDate = new Date(dueDateStr);
+
+        // Simple Logic: 
+        // Paid before/on due date -> Score improves (lower % is better in this specific BRI logic? 
+        // Wait, the PDF said 0-3% is Platinum (Ratio of Day/Month). 
+        // Actually, let's treat "Score" as a SpazaScore (Points) for simplicity in this gamification context, 
+        // OR stick to the BRI % logic. 
+        // The UI shows "Score: 3.2%". Let's stick to that. Lower is better?
+        // "3.2% (Excellent)". "105% (Bad)".
+        // So YES, lower percentage is better (Early payment in month).
+
+        // Let's recalculate the borrower's average score based on this new payment.
+        const { score: newPaymentScore } = calculateScoreAndTier(paymentDate);
+
+        setBorrowers(prev => prev.map(b => {
+            if (b.id === borrowerId) {
+                // Weighted average or just set to latest? 
+                // Let's do a mock weighted average to show progression.
+                // If current is 0 (new), take new score.
+                const currentScore = b.score || newPaymentScore;
+                const updatedScore = Number(((currentScore + newPaymentScore) / 2).toFixed(2));
+
+                return {
+                    ...b,
+                    score: updatedScore,
+                    rating: updatedScore <= 4 ? 'Good' : 'Risk'
+                };
+            }
+            return b;
+        }));
+
+        // 3. Send Notification
+        const newNotification: Notification = {
+            id: `notif_${Date.now()}`,
+            userId: borrowerId,
+            message: `Payment of R${paymentAmount} received! Your SpazaScore has been updated.`,
+            date: new Date().toISOString(),
+            read: false
+        };
+        setNotifications(prev => [newNotification, ...prev]);
+
+        toast.success("Payment Recorded & Score Updated");
+    };
+
+    const clearNotifications = () => setNotifications([]);
+
+    // --- Customer Actions ---
+    const purchaseOnCredit = async (amount: number): Promise<boolean> => {
+        if (!profile) return false;
+        if (profile.balance + amount > profile.creditLimit) {
+            toast.error("Insufficient Credit Limit");
+            return false;
+        }
+
+        // Create a new loan (Self-initiated)
+        const newLoan = {
+            id: `loan_${Date.now()}`,
+            borrowerId: profile.uid,
+            borrowerName: user?.name || "Customer",
+            amount: amount,
+            dueDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString(), // 1st of next month
+            status: "active"
+        };
+        setLoans([...loans, newLoan]);
+
+        // Update local profile balance
+        setProfile({ ...profile, balance: profile.balance + amount });
+
+        return true;
     };
 
     return (
@@ -176,7 +277,10 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
             loans,
             addBorrower,
             createLoan,
-            recordPayment
+            recordPayment,
+            notifications,
+            clearNotifications,
+            purchaseOnCredit
         }}>
             {children}
         </CreditContext.Provider>

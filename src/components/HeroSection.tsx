@@ -50,12 +50,12 @@ const HeroSection = () => {
         >
           <Link to="/customer/login">
             <Button size="lg" className="h-14 px-8 text-lg w-full sm:w-auto bg-foreground text-background hover:bg-foreground/90 rounded-full">
-              Customer Portal <ArrowRight className="ml-2 h-5 w-5" />
+              Shop Now <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <Link to="/owner/register">
+          <Link to="/portals">
             <Button size="lg" variant="outline" className="h-14 px-8 text-lg w-full sm:w-auto border-foreground/20 hover:bg-foreground/5 rounded-full">
-              Register Business
+              View Portals
             </Button>
           </Link>
         </motion.div>

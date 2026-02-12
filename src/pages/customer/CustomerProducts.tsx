@@ -10,7 +10,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Plus, Filter, X } from "lucide-react";
+import { Search, ShoppingCart, Plus, Filter, X, Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -188,9 +188,20 @@ const CustomerProducts = () => {
                                     <CardContent className="p-4 pt-2 flex-1">
                                         <p className="font-bold text-lg text-primary">R {product.price.toFixed(2)}</p>
                                     </CardContent>
-                                    <CardFooter className="p-4 pt-0">
+                                    <CardFooter className="p-4 pt-0 flex gap-2">
                                         <Button
-                                            className="w-full"
+                                            variant="outline"
+                                            size="icon"
+                                            className="shrink-0"
+                                            onClick={() => {
+                                                // Mock Wishlist Add
+                                                import("sonner").then(({ toast }) => toast.success("Added to Wishlist"));
+                                            }}
+                                        >
+                                            <Heart className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            className="w-full bg-emerald-600 hover:bg-emerald-700"
                                             size="sm"
                                             onClick={() => addToCart(product)}
                                         >

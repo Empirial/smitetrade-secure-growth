@@ -13,6 +13,7 @@ import { StoreProvider } from "./context/StoreContext";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import SessionExpired from "./pages/SessionExpired";
+import Portals from "./pages/Portals";
 
 // Owner
 import OwnerLogin from "./pages/owner/OwnerLogin";
@@ -73,6 +74,16 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 
+// Lender
+import LenderLogin from "./pages/lender/LenderLogin";
+import LenderDashboard from "./pages/lender/LenderDashboard";
+import LenderClients from "./pages/lender/LenderClients";
+import LenderLoans from "./pages/lender/LenderLoans";
+import LenderCollections from "./pages/lender/LenderCollections";
+import LenderApplications from "./pages/lender/LenderApplications";
+import LenderProfile from "./pages/lender/LenderProfile";
+import LenderCreditCheck from "./pages/lender/LenderCreditCheck";
+
 const queryClient = new QueryClient();
 
 import { CreditProvider } from "./context/CreditContext";
@@ -93,6 +104,7 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/session-expired" element={<SessionExpired />} />
+              <Route path="/portals" element={<Portals />} />
 
               {/* Owner Portal */}
               <Route path="/owner/login" element={<OwnerLogin />} />
@@ -152,6 +164,16 @@ const App = () => (
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
               <Route path="/admin/disputes" element={<AdminDisputes />} />
+
+              {/* Lender Portal */}
+              <Route path="/lender/login" element={<LenderLogin />} />
+              <Route path="/lender/dashboard" element={<LenderDashboard />} />
+              <Route path="/lender/clients" element={<LenderClients />} />
+              <Route path="/lender/loans" element={<LenderLoans />} />
+              <Route path="/lender/collections" element={<LenderCollections />} />
+              <Route path="/lender/applications" element={<LenderApplications />} />
+              <Route path="/lender/profile" element={<LenderProfile />} />
+              <Route path="/lender/credit-check" element={<LenderCreditCheck />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

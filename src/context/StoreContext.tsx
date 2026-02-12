@@ -36,6 +36,14 @@ const MOCK_USER: User = {
     storeName: "Mock Store"
 };
 
+const MOCK_LENDER: User = {
+    id: "mock-lender-001",
+    uid: "mock-lender-001",
+    name: "Mashonisa Mike",
+    email: "mike@lender.com",
+    role: "lender"
+};
+
 const MOCK_PRODUCTS: Product[] = [
     { id: "p1", name: "Bread", price: 15.00, category: "Bakery", stock: 50, image: "🍞", status: "In Stock" },
     { id: "p2", name: "Milk", price: 22.50, category: "Dairy", stock: 10, image: "🥛", status: "Low Stock" },
@@ -67,7 +75,7 @@ const MOCK_ORDERS: Order[] = [
 ];
 
 // --- Types ---
-export type UserRole = 'owner' | 'cashier' | 'customer' | 'driver' | 'admin';
+export type UserRole = 'owner' | 'cashier' | 'customer' | 'driver' | 'admin' | 'lender';
 
 export interface User {
     id: string;
@@ -134,7 +142,13 @@ interface StoreContextType {
 
     // Orders
     orders: Order[];
-    placeOrder: (customerDetails: { name: string; address: string }) => Promise<void>;
+    placeOrder: (customerDetails: {
+        name: string;
+        address: string;
+        items?: CartItem[];
+        paymentMethod?: string;
+        storeId?: string;
+    }) => Promise<void>;
     updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
     assignDriver: (orderId: string, driverId: string) => Promise<void>;
     isLoading: boolean;
@@ -239,7 +253,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 role: roleFallback || 'owner',
                 storeName: roleFallback === 'owner' ? "Mock Store" : undefined
             };
-            setUser(mockUser);
+            if (roleFallback === 'lender') {
+                setUser(MOCK_LENDER);
+            } else {
+                setUser(mockUser);
+            }
             toast.success("Mock Login Successful!");
             return;
         }
@@ -439,15 +457,33 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     // --- Order Actions ---
-    const placeOrder = async (customerDetails: { name: string; address: string }) => {
+    const placeOrder = async (customerDetails: {
+        name: string;
+        address: string;
+        items?: CartItem[];
+        paymentMethod?: string;
+        storeId?: string;
+    }) => {
+        const orderItems = customerDetails.items || cart;
+        const orderTotal = customerDetails.items
+            ? customerDetails.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            : cartTotal;
+
+        if (orderItems.length === 0) {
+            toast.error("Cart is empty");
+            return;
+        }
         if (USE_MOCK_DATA) {
             // Mock Order Placement
             const newOrder: Order = {
                 id: "mock-order-" + Date.now(),
                 customerName: customerDetails.name,
                 customerAddress: customerDetails.address,
-                items: cart.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
-                total: cartTotal,
+                id: "mock-order-" + Date.now(),
+                customerName: customerDetails.name,
+                customerAddress: customerDetails.address,
+                items: orderItems.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
+                total: orderTotal,
                 status: "Pending",
                 date: new Date().toISOString(),
                 driverId: undefined
@@ -455,7 +491,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
             // Update Mock Stock (simple filter/map)
             setProducts(prev => prev.map(p => {
-                const cartItem = cart.find(c => c.id === p.id);
+                const cartItem = orderItems.find(c => c.id === p.id);
                 if (cartItem) {
                     const newStock = p.stock - cartItem.quantity;
                     const newStatus = newStock > 20 ? 'In Stock' : newStock > 0 ? 'Low Stock' : 'Out of Stock';
@@ -465,7 +501,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             }));
 
             setOrders(prev => [newOrder, ...prev]);
-            clearCart();
+            setOrders(prev => [newOrder, ...prev]);
+            if (!customerDetails.items) clearCart(); // Only clear global cart if that was used
             toast.success("Mock Order Placed!");
             return;
         }
@@ -473,7 +510,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         try {
             await runTransaction(db, async (transaction) => {
                 // 1. Check stock for all items
-                for (const item of cart) {
+                for (const item of orderItems) {
                     const productRef = doc(db, "products", item.id);
                     const productDoc = await transaction.get(productRef);
 
@@ -488,7 +525,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 // 2. Decrement stock
-                for (const item of cart) {
+                for (const item of orderItems) {
                     const productRef = doc(db, "products", item.id);
                     const productDoc = await transaction.get(productRef); // cached read
                     const newStock = productDoc.data()!.stock - item.quantity;
@@ -504,8 +541,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 const orderData = {
                     customerName: customerDetails.name,
                     customerAddress: customerDetails.address,
-                    items: cart.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
-                    total: cartTotal,
+                    items: orderItems.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
+                    total: orderTotal,
                     status: "Pending",
                     date: new Date().toISOString(),
                     userId: user?.uid || "guest"
@@ -521,7 +558,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 transaction.set(newOrderRef, orderData);
             });
 
-            clearCart();
+
+
+            if (!customerDetails.items) clearCart();
             toast.success(`Order placed successfully!`);
         } catch (error: any) {
             console.error("Order error:", error);

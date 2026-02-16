@@ -129,36 +129,35 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
     }, [user]);
 
     // --- Lending Module State (Mock for Phase 7) ---
+    const [ssIdCounter, setSsIdCounter] = useState(2); // Start after initial mock data
     const [borrowers, setBorrowers] = useState<any[]>([
-        { id: "9001015009087", name: "Lufuno Mphela", phone: "082 123 4567", email: "lufuno@example.com", rating: "Good", score: 3.2 },
-        { id: "8505055009088", name: "Thabo Mbeki", phone: "072 999 8888", email: "thabo@example.com", rating: "Risk", score: 105 }
+        { id: "SS-ID0001", name: "Lufuno Mphela", phone: "082 123 4567", email: "lufuno@example.com", idNumber: "9001015009087", rating: "Good", score: 3.2 },
+        { id: "SS-ID0002", name: "Thabo Mbeki", phone: "072 999 8888", email: "thabo@example.com", idNumber: "8505055009088", rating: "Risk", score: 105 }
     ]);
 
     const [loans, setLoans] = useState<any[]>([
-        { id: "loan_1", borrowerId: "9001015009087", borrowerName: "Lufuno Mphela", amount: 500, dueDate: "2026-03-01", status: "active" }
+        { id: "loan_1", borrowerId: "SS-ID0001", borrowerName: "Lufuno Mphela", amount: 500, dueDate: "2026-03-01", status: "active" }
     ]);
 
     // --- Simulate Payment (For Customer Side) ---
     const simulatePayment = async (amount: number, paymentDate: Date) => {
-        // This is for the customer paying off their own credit
-        // It's different from "Lender recording a payment"
-        // usage: await simulatePayment(500, new Date());
         toast.success(`Payment of R${amount} simulated for ${paymentDate.toLocaleDateString()}`);
     };
 
     // --- Lender Actions ---
     const addBorrower = async (name: string, phone: string, idNumber: string) => {
-        // Generate SS-ID (Mock: just use ID for now or generate random)
-        const ssid = idNumber || Math.floor(Math.random() * 1000000000000).toString();
+        const nextCounter = ssIdCounter + 1;
+        const ssid = `SS-ID${String(nextCounter).padStart(4, '0')}`;
+        setSsIdCounter(nextCounter);
         const newBorrower = {
             id: ssid,
             name,
             phone,
+            idNumber,
             rating: "New",
             score: 0
         };
         setBorrowers([...borrowers, newBorrower]);
-        // In real app: await setDoc(doc(db, "borrowers", ssid), newBorrower);
     };
 
     const createLoan = async (borrowerId: string, amount: number, dueDate: string) => {

@@ -9,10 +9,10 @@ import { Plus, Search, Truck } from "lucide-react";
 const OwnerSuppliers = () => {
     // Mock data for suppliers
     const suppliers = [
-        { id: 1, name: "Mega Wholesalers", contact: "011 555 1234", products: "Soft Drinks, Snacks", status: "Active" },
-        { id: 2, name: "Fresh Farms", contact: "012 333 4567", products: "Vegetables, Fruits", status: "Active" },
-        { id: 3, name: "Baker's Choice", contact: "021 888 9999", products: "Bread, Pastries", status: "Inactive" },
-        { id: 4, name: "Dairy Direct", contact: "031 444 5555", products: "Milk, Cheese, Yogurt", status: "Active" },
+        { id: 1, name: "Mega Wholesalers", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Soft Drinks, Snacks", status: "Active" },
+        { id: 2, name: "Fresh Farms", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Vegetables, Fruits", status: "Active" },
+        { id: 3, name: "Baker's Choice", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Bread, Pastries", status: "Inactive" },
+        { id: 4, name: "Dairy Direct", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Milk, Cheese, Yogurt", status: "Active" },
     ];
 
     return (

@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, UserByOrder, QrCode, Calendar, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Search, UserCheck, QrCode, Calendar, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCredit } from "@/context/CreditContext";
 import { toast } from "sonner";
+import { maskIdNumber } from "@/lib/utils";
 
 const OwnerLending = () => {
     const { borrowers, addBorrower, loans, createLoan, recordPayment } = useCredit(); // We'll implement this next
@@ -168,7 +169,8 @@ const OwnerLending = () => {
                                     <QrCode className="h-4 w-4 text-muted-foreground" />
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-xs text-muted-foreground mb-2">SS-ID: {borrower.id}</div>
+                                    <div className="text-xs text-muted-foreground mb-1">SS-ID: {borrower.id}</div>
+                                    {borrower.idNumber && <div className="text-xs text-muted-foreground mb-2">ID: {maskIdNumber(borrower.idNumber)}</div>}
                                     <div className="flex justify-between items-center">
                                         <Badge variant={borrower.rating === 'Good' ? 'default' : 'secondary'} className={borrower.rating === 'Good' ? 'bg-emerald-500' : ''}>
                                             {borrower.rating || "New"}

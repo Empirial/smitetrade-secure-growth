@@ -36,17 +36,17 @@
 
     --radius: 0.5rem;
 
-    /* Custom Grayscale Palette overrides */
-    --emerald: 0 0% 20%;
-    /* Rewire to Dark Gray */
-    --emerald-deep: 0 0% 10%;
-    /* Rewire to Almost Black */
-    --electric-blue: 0 0% 40%;
-    /* Rewire to Mid Gray */
-    --gold: 0 0% 0%;
-    /* Rewire to Black */
-    --gold-glow: 0 0% 80%;
-    /* Rewire to Light Gray */
+    /* SMITETRADE Brand Palette */
+    --emerald: 153 46% 21%;
+    /* Deep Emerald #1B4D3E */
+    --emerald-deep: 153 46% 15%;
+    /* Darker Emerald */
+    --electric-blue: 195 100% 50%;
+    /* Electric Blue #00BFFF */
+    --gold: 51 100% 50%;
+    /* Radiant Gold #FFD700 */
+    --gold-glow: 51 100% 70%;
+    /* Light Gold */
 
     /* Sidebar overrides for minimalist look */
     --sidebar-background: 0 0% 98%;

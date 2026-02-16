@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCredit } from "@/context/CreditContext";
+import { Loan } from "@/types";
 import { AlertCircle, FileText, Phone } from "lucide-react";
 
 const LenderCollections = () => {
@@ -36,7 +37,7 @@ const LenderCollections = () => {
                                     </CardContent>
                                 </Card>
                             ) : (
-                                overdueLoans.map((loan: any) => (
+                                overdueLoans.map((loan: Loan) => (
                                     <Card key={loan.id} className="border-l-4 border-l-red-500">
                                         <CardHeader className="flex flex-row items-start justify-between pb-2">
                                             <div>
@@ -84,7 +85,7 @@ const LenderCollections = () => {
                             {collectedLoans.length === 0 ? (
                                 <div className="p-8 text-center text-muted-foreground">No collection history available.</div>
                             ) : (
-                                collectedLoans.map((loan: any) => (
+                                collectedLoans.map((loan: Loan) => (
                                     <div key={loan.id} className="grid grid-cols-4 p-4 border-b last:border-0 items-center">
                                         <div>{loan.borrowerName}</div>
                                         <div>R {loan.amount}</div>

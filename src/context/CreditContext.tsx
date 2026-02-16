@@ -2,18 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useStore } from './StoreContext';
 import { toast } from 'sonner';
 
-// --- Types ---
-export type MRIScoreTier = 'Platinum' | 'Gold' | 'Silver' | 'Bronze' | 'Default';
-
-export interface CreditProfile {
-    uid: string;
-    briScore: number; // The calculated percentage (0-100+)
-    tier: MRIScoreTier;
-    creditLimit: number;
-    balance: number;
-    paymentHistory: { date: string; amount: number; scoreSnapshot: number }[];
-    dueDate: string; // usually 1st of next month
-}
+import { CreditProfile, Borrower, Loan, Notification, MRIScoreTier } from "@/types";
 
 interface CreditContextType {
     profile: CreditProfile | null;
@@ -22,23 +11,15 @@ interface CreditContextType {
     calculateProjectedScore: (paymentDate: Date) => { score: number; tier: MRIScoreTier };
     isLoading: boolean;
     // Lending Module
-    borrowers: any[]; // Replace with proper interface
-    loans: any[];
-    addBorrower: (name: string, phone: string, idNumber: string) => Promise<void>;
+    borrowers: Borrower[];
+    loans: Loan[];
+    addBorrower: (name: string, phone: string, idNumber: string, photoFile?: File) => Promise<void>;
     createLoan: (borrowerId: string, amount: number, dueDate: string) => Promise<void>;
     recordPayment: (loanId: string) => Promise<void>;
     notifications: Notification[];
     clearNotifications: () => void;
     // Customer Actions
     purchaseOnCredit: (amount: number) => Promise<boolean>;
-}
-
-export interface Notification {
-    id: string;
-    userId: string;
-    message: string;
-    date: string;
-    read: boolean;
 }
 
 const CreditContext = createContext<CreditContextType | undefined>(undefined);
@@ -74,7 +55,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         // If we are paying for LAST month's debt, and we are in THIS month:
         // Technically the formula is simple days ratio.
 
-        let ratio = (paymentDay / daysInMonth) * 100;
+        const ratio = (paymentDay / daysInMonth) * 100;
 
         // But wait, what if they pay EARLY (previous month)?
         // The PDF says: "If he paid before the 1st... automatically fall under very excellent (0-3%)"
@@ -126,15 +107,33 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         refreshProfile();
-    }, [user]);
+    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // --- Lending Module State (Mock for Phase 7) ---
-    const [borrowers, setBorrowers] = useState<any[]>([
-        { id: "9001015009087", name: "Lufuno Mphela", phone: "082 123 4567", email: "lufuno@example.com", rating: "Good", score: 3.2 },
-        { id: "8505055009088", name: "Thabo Mbeki", phone: "072 999 8888", email: "thabo@example.com", rating: "Risk", score: 105 }
+    const [borrowers, setBorrowers] = useState<Borrower[]>([
+        {
+            id: "9001015009087",
+            ssid: "SS-ID0001",
+            name: "Lufuno Mphela",
+            phone: "082 123 4567",
+            email: "lufuno@example.com",
+            rating: "Good",
+            score: 3.2,
+            photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop"
+        },
+        {
+            id: "8505055009088",
+            ssid: "SS-ID0002",
+            name: "Thabo Mbeki",
+            phone: "072 999 8888",
+            email: "thabo@example.com",
+            rating: "Risk",
+            score: 105,
+            photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop"
+        }
     ]);
 
-    const [loans, setLoans] = useState<any[]>([
+    const [loans, setLoans] = useState<Loan[]>([
         { id: "loan_1", borrowerId: "9001015009087", borrowerName: "Lufuno Mphela", amount: 500, dueDate: "2026-03-01", status: "active" }
     ]);
 
@@ -147,15 +146,30 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // --- Lender Actions ---
-    const addBorrower = async (name: string, phone: string, idNumber: string) => {
-        // Generate SS-ID (Mock: just use ID for now or generate random)
-        const ssid = idNumber || Math.floor(Math.random() * 1000000000000).toString();
+    const addBorrower = async (name: string, phone: string, idNumber: string, photoFile?: File) => {
+        // Generate SS-ID (SS-ID 0001 format)
+        // Find highest current ID
+        const maxId = borrowers.reduce((max, b) => {
+            const num = parseInt(b.ssid.replace("SS-ID", ""));
+            return isNaN(num) ? max : Math.max(max, num);
+        }, 0);
+
+        const nextId = maxId + 1;
+        const ssid = `SS-ID ${nextId.toString().padStart(4, '0')}`;
+
+        // Mock Photo Upload
+        const photoUrl = photoFile
+            ? URL.createObjectURL(photoFile)
+            : "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop";
+
         const newBorrower = {
-            id: ssid,
+            id: idNumber,
+            ssid,
             name,
             phone,
             rating: "New",
-            score: 0
+            score: 0,
+            photoUrl
         };
         setBorrowers([...borrowers, newBorrower]);
         // In real app: await setDoc(doc(db, "borrowers", ssid), newBorrower);

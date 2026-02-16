@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, User, FileText, Search, MoreHorizontal, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useCredit } from "@/context/CreditContext";
+import { Borrower } from "@/types";
 import { toast } from "sonner";
 
 const LenderClients = () => {
@@ -19,6 +20,7 @@ const LenderClients = () => {
 
     // Form States
     const [newBorrower, setNewBorrower] = useState({ name: "", phone: "", idNumber: "" });
+    const [photoFile, setPhotoFile] = useState<File | undefined>(undefined);
     const [newLoan, setNewLoan] = useState({ amount: "", date: "" });
 
     const handleAddBorrower = async () => {
@@ -26,10 +28,11 @@ const LenderClients = () => {
             toast.error("Name and ID are required");
             return;
         }
-        await addBorrower(newBorrower.name, newBorrower.phone, newBorrower.idNumber);
+        await addBorrower(newBorrower.name, newBorrower.phone, newBorrower.idNumber, photoFile);
         setIsAddOpen(false);
         setNewBorrower({ name: "", phone: "", idNumber: "" });
-        toast.success("Borrower Profile Created");
+        setPhotoFile(undefined);
+        toast.success("Borrower Profile Created & SS:ID Generated");
     };
 
     const handleCreateLoan = async () => {
@@ -57,7 +60,7 @@ const LenderClients = () => {
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Register New Client</DialogTitle>
-                                <DialogDescription>Create a profile for a new borrower.</DialogDescription>
+                                <DialogDescription>Create a profile. An SS:ID will be auto-generated.</DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
@@ -72,28 +75,52 @@ const LenderClients = () => {
                                     <Label>Phone Number</Label>
                                     <Input value={newBorrower.phone} onChange={e => setNewBorrower({ ...newBorrower, phone: e.target.value })} placeholder="082..." />
                                 </div>
+                                <div className="grid gap-2">
+                                    <Label>Client Photo</Label>
+                                    <Input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => setPhotoFile(e.target.files?.[0])}
+                                    />
+                                </div>
                             </div>
                             <DialogFooter>
-                                <Button onClick={handleAddBorrower}>Register</Button>
+                                <Button onClick={handleAddBorrower}>Register & Generate SS:ID</Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {borrowers.map((borrower: any) => (
+                    {borrowers.map((borrower: Borrower) => (
                         <Card key={borrower.id} className="hover:shadow-md transition-shadow">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <CardTitle className="text-base font-bold">{borrower.name}</CardTitle>
+                                <div className="flex items-center gap-3">
+                                    {/* Avatar */}
+                                    <div className="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">
+                                        {borrower.photoUrl ? (
+                                            <img src={borrower.photoUrl} alt={borrower.name} className="h-full w-full object-cover" />
+                                        ) : (
+                                            <User className="h-6 w-6 m-2 text-gray-400" />
+                                        )}
+                                    </div>
+                                    <CardTitle className="text-base font-bold">{borrower.name}</CardTitle>
+                                </div>
                                 <Badge variant={borrower.rating === 'Risk' ? 'destructive' : 'outline'}>
                                     {borrower.rating || 'New'}
                                 </Badge>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-sm text-muted-foreground space-y-1 mb-4">
+                                    <div className="flex justify-between items-center">
+                                        <span>SS:ID:</span>
+                                        <span className="font-mono font-bold text-emerald-600">{borrower.ssid || 'Generating...'}</span>
+                                    </div>
                                     <div className="flex justify-between">
-                                        <span>SS-ID:</span>
-                                        <span className="font-mono">{borrower.id}</span>
+                                        <span>ID Number:</span>
+                                        <span className="font-mono text-xs">
+                                            {borrower.id ? `${borrower.id.substring(0, 6)}......${borrower.id.slice(-2)}` : 'N/A'}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span>Phone:</span>

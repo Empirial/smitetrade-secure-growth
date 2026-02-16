@@ -18,7 +18,7 @@ const OwnerOrders = () => {
         const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.id.toString().includes(searchTerm);
         // Data structure update pending: 'type' field. defaulting to show all for now.
-        const matchesType = true; 
+        const matchesType = true;
         return matchesSearch && matchesType;
     });
 
@@ -66,6 +66,7 @@ const OwnerOrders = () => {
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
                                     <TableHead>Customer</TableHead>
+                                    <TableHead>Source</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Total</TableHead>
@@ -74,7 +75,7 @@ const OwnerOrders = () => {
                             <TableBody>
                                 {filteredOrders.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                                             No orders found.
                                         </TableCell>
                                     </TableRow>
@@ -83,6 +84,11 @@ const OwnerOrders = () => {
                                         <TableRow key={order.id}>
                                             <TableCell className="font-medium">#{order.id}</TableCell>
                                             <TableCell>{order.customerName}</TableCell>
+                                            <TableCell>
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                                    Customer Order
+                                                </span>
+                                            </TableCell>
                                             <TableCell>{new Date(order.date).toLocaleDateString()} {new Date(order.date).toLocaleTimeString()}</TableCell>
                                             <TableCell>
                                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800`}>

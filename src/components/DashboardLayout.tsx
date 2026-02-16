@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import PageTransition from "@/components/PageTransition";
 import { useStore } from "@/context/StoreContext";
+import logo from "@/assets/smitetrade-logo.jpeg";
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -93,9 +94,9 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
         <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border text-sidebar-foreground p-4">
             <div className="mb-8 p-2">
                 <Link to="/">
-                    <h1 className="text-xl font-bold tracking-wider font-[Orbitron] text-primary">SMITETRADE</h1>
+                    <img src={logo} alt="SMITETRADE" className="max-w-[150px] h-auto mx-auto md:mx-0" />
                 </Link>
-                <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">{role} Portal</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mt-2">{role} Portal</p>
             </div>
             <nav className="space-y-1 flex-1 overflow-y-auto">
                 {role === 'owner' ? (
@@ -174,7 +175,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
 
             {/* Mobile Sidebar */}
             <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-30 flex items-center px-4 justify-between">
-                <span className="font-bold text-primary font-[Orbitron]">SMITETRADE</span>
+                <img src={logo} alt="SMITETRADE" className="h-10 w-auto" />
                 <Sheet open={isOpen} onOpenChange={setIsOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon">

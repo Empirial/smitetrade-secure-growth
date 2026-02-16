@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 import { useCredit } from "@/context/CreditContext";
+import { Loan } from "@/types";
 import { toast } from "sonner";
 
 const LenderLoans = () => {
@@ -57,7 +58,7 @@ const LenderLoans = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {sortedLoans.map((loan: any) => (
+                                {sortedLoans.map((loan: Loan) => (
                                     <TableRow key={loan.id}>
                                         <TableCell className="font-medium">{loan.borrowerName}</TableCell>
                                         <TableCell>R {loan.amount}</TableCell>
@@ -88,6 +89,11 @@ const LenderLoans = () => {
                         </Table>
                     </CardContent>
                 </Card>
+            </div>
+
+            <div className="mt-8 pt-6 border-t text-center text-xs text-muted-foreground">
+                <p>Safe Compliance Statement: All lending activities on Smitetrade are subject to the National Credit Act (NCA) and Fair Lending Practices.</p>
+                <p>Lenders are responsible for ensuring affordability assessments are conducted responsibly.</p>
             </div>
         </DashboardLayout>
     );

@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { toast } from "sonner";
+import { useCredit } from "@/context/CreditContext";
 
 const CustomerProfile = () => {
+    const { profile, isLoading } = useCredit();
+
     const handleSave = () => {
         toast.success("Profile updated successfully");
     };
@@ -22,8 +25,24 @@ const CustomerProfile = () => {
                 </div>
 
                 {/* Dashboard Widgets */}
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-4">
                     <Card className="bg-emerald-50 border-emerald-100">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-emerald-800">SpazaScore (BRI)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-emerald-700">
+                                {isLoading ? "..." : (profile ? `${profile.briScore.toFixed(1)}%` : "N/A")}
+                            </div>
+                            <p className="text-xs text-emerald-600 mt-1">
+                                {profile ? profile.tier : "-"}
+                            </p>
+                            <Button size="sm" variant="link" className="px-0 text-emerald-800" asChild>
+                                <Link to="/customer/credit-status">View Details &rarr;</Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-blue-50 border-blue-100">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-emerald-800">Active Loan</CardTitle>
                         </CardHeader>

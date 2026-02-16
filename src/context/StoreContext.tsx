@@ -24,99 +24,12 @@ import {
 } from 'firebase/firestore';
 import { OrderSchema } from '@/lib/schemas';
 
-// --- MOCK MODE CONFIGURATION ---
-const USE_MOCK_DATA = true;
+import { MOCK_USER, MOCK_LENDER, MOCK_PRODUCTS, MOCK_ORDERS, USE_MOCK_DATA } from '@/lib/constants';
 
-const MOCK_USER: User = {
-    id: "mock-owner-123",
-    uid: "mock-owner-123",
-    name: "Mock Owner",
-    email: "owner@example.com",
-    role: "owner",
-    storeName: "Mock Store"
-};
+import { User, Product, Order, CartItem, UserRole } from "@/types";
 
-const MOCK_LENDER: User = {
-    id: "mock-lender-001",
-    uid: "mock-lender-001",
-    name: "Mashonisa Mike",
-    email: "mike@lender.com",
-    role: "lender"
-};
-
-const MOCK_PRODUCTS: Product[] = [
-    { id: "p1", name: "Bread", price: 15.00, category: "Bakery", stock: 50, image: "🍞", status: "In Stock" },
-    { id: "p2", name: "Milk", price: 22.50, category: "Dairy", stock: 10, image: "🥛", status: "Low Stock" },
-    { id: "p3", name: "Eggs", price: 35.00, category: "Pantry", stock: 0, image: "🥚", status: "Out of Stock" },
-    { id: "p4", name: "Coke", price: 18.00, category: "Beverages", stock: 100, image: "🥤", status: "In Stock" },
-];
-
-const MOCK_ORDERS: Order[] = [
-    {
-        id: "ord-001",
-        customerName: "Thabo Bester",
-        customerAddress: "123 Prison Break Ln",
-        items: [{ id: "p1", name: "Bread", quantity: 2, price: 15.00 }],
-        total: 30.00,
-        status: "Delivered",
-        date: new Date(Date.now() - 86400000).toISOString(),
-        type: "delivery"
-    },
-    {
-        id: "ord-002",
-        customerName: "Sarah Connor",
-        customerAddress: "Unknown",
-        items: [{ id: "p2", name: "Milk", quantity: 1, price: 22.50 }],
-        total: 22.50,
-        status: "Pending",
-        date: new Date().toISOString(),
-        type: "instore"
-    }
-];
-
-// --- Types ---
-export type UserRole = 'owner' | 'cashier' | 'customer' | 'driver' | 'admin' | 'lender';
-
-export interface User {
-    id: string;
-    uid: string;
-    name: string;
-    email: string;
-    role: UserRole;
-    storeName?: string; // For Owners
-}
-
-export interface Product {
-    id: string; // Changed to string for Firestore
-    name: string;
-    price: number;
-    category: string;
-    stock: number;
-    image: string; // Emoji
-    status: 'In Stock' | 'Low Stock' | 'Critical' | 'Out of Stock';
-}
-
-export interface CartItem extends Product {
-    quantity: number;
-}
-
-export interface OrderItem {
-    id: string; // Changed to string
-    name: string;
-    quantity: number;
-    price: number;
-}
-
-export interface Order {
-    id: string;
-    customerName: string;
-    customerAddress: string;
-    items: OrderItem[];
-    total: number;
-    status: 'Pending' | 'Paid' | 'Ready' | 'Out for Delivery' | 'Delivered';
-    date: string;
-    driverId?: string;
-    type?: 'instore' | 'online' | 'delivery';
+interface FirebaseError extends Error {
+    code: string;
 }
 
 interface StoreContextType {
@@ -265,10 +178,10 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             toast.success("Welcome back!");
-        } catch (error: any) {
+        } catch (error) {
             console.error("Login error:", error);
             // Auto-Register Fallback for "Random Login" testing
-            if (roleFallback && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
+            if (roleFallback && error instanceof Error && ((error as FirebaseError).code === 'auth/user-not-found' || (error as FirebaseError).code === 'auth/invalid-credential')) {
                 try {
                     toast.info("Account not found. Creating test account...");
                     const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
@@ -284,13 +197,13 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
                     toast.success("Test account created & logged in!");
                     return;
-                } catch (regError: any) {
+                } catch (regError) {
                     console.error("Auto-registration failed:", regError);
-                    toast.error("Login failed: " + error.message);
+                    toast.error("Login failed: " + (error instanceof Error ? error.message : "Unknown error"));
                     throw error;
                 }
             }
-            toast.error("Failed to login: " + error.message);
+            toast.error("Failed to login: " + (error instanceof Error ? error.message : "Unknown error"));
             throw error;
         }
     };
@@ -327,9 +240,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             // Force set user state immediately for better UX
             setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
             toast.success("Account created successfully!");
-        } catch (error: any) {
+        } catch (error) {
             console.error("Registration error:", error);
-            toast.error("Failed to create account: " + error.message);
+            toast.error("Failed to create account: " + (error instanceof Error ? error.message : "Unknown error"));
             throw error;
         }
     };
@@ -479,9 +392,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 id: "mock-order-" + Date.now(),
                 customerName: customerDetails.name,
                 customerAddress: customerDetails.address,
-                id: "mock-order-" + Date.now(),
-                customerName: customerDetails.name,
-                customerAddress: customerDetails.address,
                 items: orderItems.map(c => ({ id: c.id, name: c.name, quantity: c.quantity, price: c.price })),
                 total: orderTotal,
                 status: "Pending",
@@ -495,12 +405,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 if (cartItem) {
                     const newStock = p.stock - cartItem.quantity;
                     const newStatus = newStock > 20 ? 'In Stock' : newStock > 0 ? 'Low Stock' : 'Out of Stock';
-                    return { ...p, stock: newStock, status: newStatus as any };
+                    return { ...p, stock: newStock, status: newStatus as Product['status'] };
                 }
                 return p;
             }));
 
-            setOrders(prev => [newOrder, ...prev]);
             setOrders(prev => [newOrder, ...prev]);
             if (!customerDetails.items) clearCart(); // Only clear global cart if that was used
             toast.success("Mock Order Placed!");
@@ -562,9 +471,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
             if (!customerDetails.items) clearCart();
             toast.success(`Order placed successfully!`);
-        } catch (error: any) {
+        } catch (error) {
             console.error("Order error:", error);
-            toast.error("Failed to place order: " + error.message);
+            toast.error("Failed to place order: " + (error instanceof Error ? error.message : "Unknown error"));
             throw error;
         }
     };

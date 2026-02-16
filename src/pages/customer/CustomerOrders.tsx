@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Package, Truck, CheckCircle, RefreshCw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner"; // Added missing import
 
 const CustomerOrders = () => {
+    const navigate = useNavigate();
     // Mock orders data
     const orders = [
         { id: "ORD-001", date: "2024-02-10", total: 1250, status: "Delivered", items: 4 },
@@ -52,6 +54,7 @@ const CustomerOrders = () => {
                                         </Badge>
                                     </div>
                                     <CardDescription>{order.date} • {order.items} Items</CardDescription>
+                                    <p className="text-xs font-semibold text-emerald-600 mt-1">Estimated: 8am - 6pm</p>
                                 </div>
                                 <div className="text-right">
                                     <span className="font-bold block">R {order.total.toFixed(2)}</span>
@@ -61,10 +64,19 @@ const CustomerOrders = () => {
                                 </div>
                             </CardHeader>
                             <CardContent className="pt-4 border-t flex justify-end gap-2">
-                                <Button variant="outline" size="sm">
-                                    <Truck className="mr-2 h-4 w-4" /> Track
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link to="/customer/tracking">
+                                        <Truck className="mr-2 h-4 w-4" /> Track
+                                    </Link>
                                 </Button>
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                                <Button
+                                    size="sm"
+                                    className="bg-emerald-600 hover:bg-emerald-700"
+                                    onClick={() => {
+                                        toast.success("Items added to cart");
+                                        navigate("/customer/cart");
+                                    }}
+                                >
                                     <RefreshCw className="mr-2 h-4 w-4" /> Reorder
                                 </Button>
                             </CardContent>

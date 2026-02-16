@@ -103,7 +103,7 @@ const CashierCheckout = () => {
                             <CardTitle>Order Summary</CardTitle>
                         </CardHeader>
                         <CardContent className="divide-y">
-                            {cart.map((item: any) => (
+                            {cart.map((item: { id: string; name: string; quantity: number; price: number }) => (
                                 <div key={item.id} className="flex justify-between py-3 text-sm">
                                     <span>{item.name} x{item.quantity}</span>
                                     <span>R{(item.price * item.quantity).toFixed(2)}</span>

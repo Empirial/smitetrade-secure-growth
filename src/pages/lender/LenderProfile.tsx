@@ -56,9 +56,6 @@ const LenderProfile = () => {
                                 <CardFooter>
                                     <Button>Save Changes</Button>
                                 </CardFooter>
-                                <CardFooter>
-                                    <Button>Save Changes</Button>
-                                </CardFooter>
                             </Card>
 
                             <Card>

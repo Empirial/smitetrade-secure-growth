@@ -6,89 +6,84 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    /* Dark Theme Default */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 0%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
 
     --radius: 0.5rem;
 
-    /* Custom Grayscale Palette overrides */
-    --emerald: 0 0% 20%;
-    /* Rewire to Dark Gray */
-    --emerald-deep: 0 0% 10%;
-    /* Rewire to Almost Black */
-    --electric-blue: 0 0% 40%;
-    /* Rewire to Mid Gray */
-    --gold: 0 0% 0%;
-    /* Rewire to Black */
-    --gold-glow: 0 0% 80%;
-    /* Rewire to Light Gray */
+    /* Custom Palette overrides */
+    --emerald: 142.1 76.2% 36.3%;
+    --emerald-deep: 142.1 70.6% 45.3%;
+    --electric-blue: 221.2 83.2% 53.3%;
+    --gold: 47.9 95.8% 53.1%;
+    --gold-glow: 48 96% 89%;
 
-    /* Sidebar overrides for minimalist look */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 0%;
-    --sidebar-primary: 0 0% 0%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 92%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 0% 0%;
+    /* Sidebar overrides for dark theme */
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
   }
 
-  /* Dark mode (if requested, but user asked for "Black and White", usually implies Light Minimalist or High Contrast Dark)
-     I'll keep a minimalist dark mode just in case system prefs switch, or map it similarly */
+  /* We can keep .dark class identical or just rely on root since user wants this permanently */
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 3%;
-    --card-foreground: 0 0% 100%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 3%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 0 0% 10%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 0 0% 80%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -100,6 +95,9 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    /* Radial Gradient Background */
+    background: radial-gradient(circle at center, #1e293b, #020617);
+    min-height: 100vh;
   }
 
   h1,
@@ -127,7 +125,7 @@
   .btn-scale {
     @apply active:scale-95 transition-transform duration-100;
   }
-  
+
   /* Apply to all Shadcn Buttons by default if possible, or add globally */
   button {
     @apply active:scale-[0.98] transition-transform duration-100;
@@ -146,7 +144,7 @@
   }
 
   .glow-gold {
-     box-shadow: 0 0 40px -10px rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 40px -10px rgba(255, 215, 0, 0.3);
   }
 
   .glow-emerald {

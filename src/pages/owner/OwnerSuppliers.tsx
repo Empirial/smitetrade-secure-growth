@@ -5,15 +5,33 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Truck } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 const OwnerSuppliers = () => {
-    // Mock data for suppliers
-    const suppliers = [
-        { id: 1, name: "Mega Wholesalers", contact: "011 555 1234", products: "Soft Drinks, Snacks", status: "Active" },
-        { id: 2, name: "Fresh Farms", contact: "012 333 4567", products: "Vegetables, Fruits", status: "Active" },
-        { id: 3, name: "Baker's Choice", contact: "021 888 9999", products: "Bread, Pastries", status: "Inactive" },
-        { id: 4, name: "Dairy Direct", contact: "031 444 5555", products: "Milk, Cheese, Yogurt", status: "Active" },
-    ];
+    const [suppliers, setSuppliers] = useState([
+        { id: 1, name: "Mega Wholesalers", contact: "Via Smitetrade Intermediary: 087 555 1234", products: "Soft Drinks, Snacks", status: "Active" },
+        { id: 2, name: "Fresh Farms", contact: "Via Smitetrade Intermediary: 087 555 1234", products: "Vegetables, Fruits", status: "Active" },
+        { id: 3, name: "Baker's Choice", contact: "Via Smitetrade Intermediary: 087 555 1234", products: "Bread, Pastries", status: "Inactive" },
+        { id: 4, name: "Dairy Direct", contact: "Via Smitetrade Intermediary: 087 555 1234", products: "Milk, Cheese, Yogurt", status: "Active" },
+    ]);
+
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const [newSupplier, setNewSupplier] = useState({ name: "", products: "" });
+
+    const handleAddSupplier = () => {
+        if (!newSupplier.name || !newSupplier.products) return;
+        setSuppliers([...suppliers, {
+            id: Date.now(),
+            name: newSupplier.name,
+            contact: "Via Smitetrade Intermediary: 087 555 1234",
+            products: newSupplier.products,
+            status: "Active"
+        }]);
+        setIsAddOpen(false);
+        setNewSupplier({ name: "", products: "" });
+    };
 
     return (
         <DashboardLayout role="owner">
@@ -23,10 +41,42 @@ const OwnerSuppliers = () => {
                         <h1 className="text-3xl font-bold tracking-tight">Suppliers</h1>
                         <p className="text-muted-foreground">Manage your supplier relationships and stock sources.</p>
                     </div>
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Supplier
-                    </Button>
+                    <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                        <DialogTrigger asChild>
+                            <Button>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Supplier
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add New Supplier</DialogTitle>
+                                <DialogDescription>Register a new supplier. All orders will be routed via Smitetrade.</DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="name">Supplier Name</Label>
+                                    <Input
+                                        id="name"
+                                        value={newSupplier.name}
+                                        onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="products">Main Products</Label>
+                                    <Input
+                                        id="products"
+                                        placeholder="e.g. Beverages, Cleaning Supplies"
+                                        value={newSupplier.products}
+                                        onChange={(e) => setNewSupplier({ ...newSupplier, products: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button onClick={handleAddSupplier}>Register Supplier</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
                 <div className="flex items-center gap-4">

@@ -6,16 +6,17 @@ import { Search, ShieldCheck, AlertCircle, Medal, Scan } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCredit } from "@/context/CreditContext";
+import { Borrower } from "@/types";
 
 const CashierCreditReview = () => {
     const { borrowers } = useCredit(); // Use shared data
     const [query, setQuery] = useState("");
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<Borrower | null>(null);
     const [isScanning, setIsScanning] = useState(false);
 
     const handleSearch = () => {
         // Search by Phone or ID (SS-ID)
-        const hit = borrowers?.find((b: any) => b.id === query || b.phone === query || b.name.toLowerCase().includes(query.toLowerCase()));
+        const hit = borrowers?.find((b: Borrower) => b.id === query || b.phone === query || b.name.toLowerCase().includes(query.toLowerCase()));
         if (hit) {
             setResult(hit);
         } else {
@@ -23,16 +24,7 @@ const CashierCreditReview = () => {
         }
     };
 
-    const handleScanQR = () => {
-        setIsScanning(true);
-        // Mock scanning delay
-        setTimeout(() => {
-            setQuery("9001015009087");
-            const hit = borrowers?.find((b: any) => b.id === "9001015009087");
-            setResult(hit);
-            setIsScanning(false);
-        }, 1500);
-    };
+
 
     const getTierBadge = (rating: string) => {
         // Map rating text to badges
@@ -54,7 +46,7 @@ const CashierCreditReview = () => {
                 <Card className="border-t-4 border-t-amber-500 shadow-lg">
                     <CardHeader>
                         <CardTitle>Search Customer</CardTitle>
-                        <CardDescription>Enter SS-ID Number or Scan QR Code</CardDescription>
+                        <CardDescription>Enter SS-ID Number or Name</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex gap-2">
@@ -64,9 +56,6 @@ const CashierCreditReview = () => {
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                             />
-                            <Button onClick={handleScanQR} variant="outline" className="border-emerald-500 text-emerald-600 hover:bg-emerald-50">
-                                {isScanning ? "Scanning..." : <><Scan className="mr-2 h-4 w-4" /> Scan QR</>}
-                            </Button>
                             <Button onClick={handleSearch} className="bg-amber-600 hover:bg-amber-700">
                                 <Search className="mr-2 h-4 w-4" /> Lookup
                             </Button>
@@ -127,6 +116,32 @@ const CashierCreditReview = () => {
                             </div>
                         </CardContent>
                     </Card>
+                )}
+
+                {/* List of recent/suggested borrowers if no result */}
+                {!result && !query && (
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Recent Customers</h3>
+                        {borrowers.map((b) => (
+                            <Card key={b.id} className="hover:border-emerald-500 cursor-pointer transition-colors" onClick={() => setResult(b)}>
+                                <CardContent className="flex items-center justify-between p-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-10 w-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600">
+                                            {b.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold">{b.name}</div>
+                                            <div className="text-xs text-muted-foreground">{b.ssid}</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className={`text-sm font-bold ${b.rating === 'Good' ? 'text-emerald-600' : 'text-amber-600'}`}>{b.rating}</div>
+                                        <div className="text-xs text-muted-foreground">{b.score}% BRI</div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
                 )}
 
                 {!result && query && query.length > 5 && (

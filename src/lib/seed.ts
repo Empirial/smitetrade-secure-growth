@@ -1,7 +1,7 @@
 
 import { db } from "./firebase";
 import { collection, doc, setDoc, writeBatch } from "firebase/firestore";
-import { Product } from "@/context/StoreContext";
+import { Product } from "@/types";
 
 const INITIAL_PRODUCTS: Omit<Product, 'id'>[] = [
     { name: "Maize Meal 10kg", price: 120.00, category: "Staples", stock: 50, image: "🌽", status: "In Stock" },

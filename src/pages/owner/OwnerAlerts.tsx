@@ -3,7 +3,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useStore } from "@/context/StoreContext";
-import { AlertTriangle, AlertCircle, ArrowDownCircle, Info } from "lucide-react";
+import { AlertTriangle, AlertCircle, ArrowDownCircle, Info, Banknote, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const OwnerAlerts = () => {
     const { products } = useStore();
@@ -11,8 +12,13 @@ const OwnerAlerts = () => {
     // Mock Alerts Logic
     const lowStockItems = products.filter(p => p.status === 'Low Stock' || p.status === 'Critical');
     const criticalAlerts = [
-        { id: 1, title: "High Refund Rate", description: "Cashier terminal #2 has processed an unusual number of refunds today.", severity: "critical" },
-        { id: 2, title: "Cash Discrepancy", description: "Closing balance for shift #405 short by R50.00.", severity: "warning" },
+        { id: 1, title: "High Refund Rate", description: "Cashier terminal #2 has processed an unusual number of refunds today.", severity: "critical", link: null },
+        { id: 2, title: "Cash Discrepancy", description: "Closing balance for shift #405 short by R50.00.", severity: "warning", link: null },
+    ];
+
+    const loanAlerts = [
+        { id: 101, title: "New Loan Application", description: "Thabo Mbeki requests R500.00 for 14 days.", severity: "info", link: "/owner/lending" },
+        { id: 102, title: "Overdue Repayment", description: "Simon's loan of R200.00 is 3 days overdue.", severity: "warning", link: "/owner/lending" },
     ];
 
     return (

@@ -3,7 +3,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Package, ArrowRight } from "lucide-react";
+import { MapPin, Package, ArrowRight, Phone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "@/context/StoreContext";
 
@@ -63,6 +63,11 @@ const DriverOrders = () => {
                                 </div>
                                 <div className="pl-6 text-xs text-muted-foreground">
                                     {order.items.map(i => i.name).join(", ")}
+                                </div>
+                                <div className="mt-2 pt-2 border-t flex justify-end">
+                                    <Button variant="ghost" size="sm" className="h-8 text-emerald-600 gap-2" onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${"0821234567"}`; }}>
+                                        <Phone className="h-3 w-3" /> Call Customer
+                                    </Button>
                                 </div>
                             </CardContent>
                             <CardFooter>

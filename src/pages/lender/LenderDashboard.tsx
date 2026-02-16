@@ -1,11 +1,20 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCredit } from "@/context/CreditContext";
+import { Loan } from "@/types";
 import { Banknote, Users, TrendingUp, AlertTriangle, Search, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-const InfoCard = ({ title, value, subtext, icon: Icon, color }: any) => (
+interface InfoCardProps {
+    title: string;
+    value: string | number;
+    subtext: string;
+    icon: React.ElementType;
+    color: string;
+}
+
+const InfoCard = ({ title, value, subtext, icon: Icon, color }: InfoCardProps) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -92,7 +101,7 @@ const LenderDashboard = () => {
                                 {loans.length === 0 ? (
                                     <p className="text-sm text-muted-foreground">No activity yet.</p>
                                 ) : (
-                                    loans.slice(0, 5).map((loan: any) => (
+                                    loans.slice(0, 5).map((loan: Loan) => (
                                         <div key={loan.id} className="flex items-center justify-between border-b pb-2 last:border-0">
                                             <div>
                                                 <p className="font-medium text-sm">{loan.borrowerName}</p>
@@ -109,7 +118,18 @@ const LenderDashboard = () => {
                     </Card>
                 </div>
             </div>
-        </DashboardLayout>
+
+
+            <div className="mt-8 border-t pt-6 text-xs text-muted-foreground space-y-2">
+                <p className="font-semibold">Safe Compliance Statement</p>
+                <p>
+                    "Smitetrade provides scoring and risk-assessment insights for decision-support purposes only.
+                    The platform does not provide credit, approve or decline loans, extend goods on credit, or make tenancy decisions.
+                    All lending, goods-on-credit, and rental decisions remain the sole responsibility of the lender, spaza shop owner, or landlord.
+                    Smitetrade does not act as a credit provider, financial adviser, or credit bureau."
+                </p>
+            </div>
+        </DashboardLayout >
     );
 };
 

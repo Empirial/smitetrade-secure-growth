@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const OwnerProfile = () => {
@@ -68,7 +69,53 @@ const OwnerProfile = () => {
                                 <Label htmlFor="storename">Store Name</Label>
                                 <Input id="storename" defaultValue="My Spaza Shop" />
                             </div>
-                            <div className="grid gap-2">
+
+                            <div className="border-t pt-2 mt-2">
+                                <h3 className="font-semibold mb-3">Location Details</h3>
+                                <div className="grid gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="street">Street Address</Label>
+                                        <Input id="street" placeholder="123 Main Street" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="suburb">Suburb</Label>
+                                            <Input id="suburb" placeholder="e.g. Soweto" />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="city">City</Label>
+                                            <Input id="city" placeholder="e.g. Johannesburg" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="province">Province</Label>
+                                            <Select defaultValue="Gauteng">
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select Province" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Gauteng">Gauteng</SelectItem>
+                                                    <SelectItem value="KZN">KwaZulu-Natal</SelectItem>
+                                                    <SelectItem value="WC">Western Cape</SelectItem>
+                                                    <SelectItem value="EC">Eastern Cape</SelectItem>
+                                                    <SelectItem value="FS">Free State</SelectItem>
+                                                    <SelectItem value="MP">Mpumalanga</SelectItem>
+                                                    <SelectItem value="NW">North West</SelectItem>
+                                                    <SelectItem value="NC">Northern Cape</SelectItem>
+                                                    <SelectItem value="LP">Limpopo</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="postalCode">Postal Code</Label>
+                                            <Input id="postalCode" placeholder="0000" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-2 border-t pt-4">
                                 <Label htmlFor="currency">Currency</Label>
                                 <Input id="currency" defaultValue="ZAR (R)" disabled />
                             </div>

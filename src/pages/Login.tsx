@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Store, CreditCard, ShoppingBag, Truck, ShieldCheck, ArrowLeft, User } from "lucide-react";
-import { useStore, UserRole } from "@/context/StoreContext";
+import { useStore } from "@/context/StoreContext";
+import { UserRole } from "@/types";
 
 const Login = () => {
     const { login } = useStore();

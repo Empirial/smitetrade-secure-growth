@@ -2,6 +2,11 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +16,13 @@ import { ShieldCheck, Banknote, Percent, CheckCircle, Info } from "lucide-react"
 const CustomerCreditApplication = () => {
     const [selectedLender, setSelectedLender] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+    // Form State
+    const [amount, setAmount] = useState("");
+    const [term, setTerm] = useState("");
+    const [reason, setReason] = useState("");
+    const [paymentDate, setPaymentDate] = useState("");
 
     // Mock Customer Data
     const customerCreditScore = 750;
@@ -28,6 +40,15 @@ const CustomerCreditApplication = () => {
             toast.error("Please select a lender to proceed.");
             return;
         }
+        if (!amount || !term || !reason) {
+            toast.error("Please fill in all application details.");
+            return;
+        }
+        setShowDisclaimer(true);
+    };
+
+    const confirmApplication = () => {
+        setShowDisclaimer(false);
         setLoading(true);
         // Simulate API Processing
         setTimeout(() => {
@@ -119,19 +140,116 @@ const CustomerCreditApplication = () => {
                 </div>
 
                 {/* Application Action */}
-                <div className="flex flex-col items-end gap-4 bg-slate-50 p-6 rounded-lg border border-slate-100">
-                    <div className="text-right">
-                        <h3 className="font-semibold">Ready to Apply?</h3>
-                        <p className="text-sm text-muted-foreground">Select a lender above to proceed with your application.</p>
+                <div className="flex flex-col gap-6 bg-slate-50 p-6 rounded-lg border border-slate-100">
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <h3 className="font-semibold text-lg">Loan Details</h3>
+                            <div className="grid gap-2">
+                                <Label htmlFor="amount">Loan Amount (R)</Label>
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    placeholder="e.g. 2500"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="lender">Select Lender</Label>
+                                <Select onValueChange={setSelectedLender} value={selectedLender || ""}>
+                                    <SelectTrigger id="lender">
+                                        <SelectValue placeholder="Choose a partner" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {lenderOffers.map(lender => (
+                                            <SelectItem key={lender.id} value={lender.id}>
+                                                {lender.name} ({lender.rate})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="paymentDate">Proposed Payment Date</Label>
+                                <Input
+                                    id="paymentDate"
+                                    type="date"
+                                    value={paymentDate}
+                                    onChange={(e) => setPaymentDate(e.target.value)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="term">Repayment Term</Label>
+                                <Select onValueChange={setTerm} value={term}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select term" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="14">14 Days</SelectItem>
+                                        <SelectItem value="30">30 Days</SelectItem>
+                                        <SelectItem value="60">60 Days</SelectItem>
+                                        <SelectItem value="90">90 Days</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <h3 className="font-semibold text-lg">Reason for Loan</h3>
+                            <div className="grid gap-2 h-full">
+                                <Label htmlFor="reason">Purpose</Label>
+                                <Textarea
+                                    id="reason"
+                                    placeholder="e.g. Stock replenishment for weekend trade..."
+                                    className="h-full min-h-[100px]"
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <Button
-                        size="lg"
-                        className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto"
-                        onClick={handleApply}
-                        disabled={loading || !selectedLender}
-                    >
-                        {loading ? "Processing..." : "Apply Now"}
-                    </Button>
+
+                    <div className="flex flex-col md:flex-row justify-between items-center pt-4 border-t gap-4">
+                        <div className="text-sm text-muted-foreground order-2 md:order-1">
+                            By clicking Apply, you agree to the terms of the selected lender.
+                        </div>
+                        <Button
+                            size="lg"
+                            className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto order-1 md:order-2"
+                            onClick={handleApply}
+                            disabled={loading || !selectedLender}
+                        >
+                            {loading ? "Processing..." : `Apply for R${amount || '0'}`}
+                        </Button>
+                    </div>
+
+                    <Dialog open={showDisclaimer} onOpenChange={setShowDisclaimer}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Loan Application Disclaimer</DialogTitle>
+                                <DialogDescription>
+                                    Please review the following terms before proceeding.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 text-sm text-muted-foreground">
+                                <p>By submitting this application, you acknowledge and agree to the following:</p>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li>You are applying for a loan from the selected lender, not Smitetrade directly.</li>
+                                    <li>You agree to the interest rate and repayment terms specified in the offer.</li>
+                                    <li>Failure to repay on time may negatively impact your SpazaScore and future borrowing ability.</li>
+                                    <li>Your personal and business information will be shared with the lender for assessment purposes.</li>
+                                </ul>
+                                <div className="bg-yellow-50 p-3 rounded border border-yellow-200 text-yellow-800 text-xs">
+                                    <strong>Important:</strong> Ensure you have sufficient funds or cash flow to meet the repayment obligation on the due date.
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setShowDisclaimer(false)}>Cancel</Button>
+                                <Button onClick={confirmApplication} className="bg-emerald-600 hover:bg-emerald-700">
+                                    I Agree & Submit Application
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
         </DashboardLayout>

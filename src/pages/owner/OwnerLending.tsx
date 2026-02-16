@@ -9,6 +9,7 @@ import { Plus, Search, UserByOrder, QrCode, Calendar, CheckCircle2, AlertCircle 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCredit } from "@/context/CreditContext";
+import { Loan, Borrower } from "@/types";
 import { toast } from "sonner";
 
 const OwnerLending = () => {
@@ -20,12 +21,14 @@ const OwnerLending = () => {
 
     // Form States
     const [newBorrower, setNewBorrower] = useState({ name: "", phone: "", idNumber: "" });
+    const [photoFile, setPhotoFile] = useState<File | undefined>(undefined);
     const [newLoan, setNewLoan] = useState({ amount: "", date: "" });
 
     const handleAddBorrower = () => {
-        addBorrower(newBorrower.name, newBorrower.phone, newBorrower.idNumber);
+        addBorrower(newBorrower.name, newBorrower.phone, newBorrower.idNumber, photoFile);
         setIsAddOpen(false);
         setNewBorrower({ name: "", phone: "", idNumber: "" });
+        setPhotoFile(undefined);
         toast.success("Borrower Profile Created");
     };
 
@@ -79,6 +82,10 @@ const OwnerLending = () => {
                                     <Label>Phone Number</Label>
                                     <Input value={newBorrower.phone} onChange={e => setNewBorrower({ ...newBorrower, phone: e.target.value })} placeholder="082..." />
                                 </div>
+                                <div className="grid gap-2">
+                                    <Label>Photo</Label>
+                                    <Input type="file" onChange={e => setPhotoFile(e.target.files?.[0])} accept="image/*" />
+                                </div>
                             </div>
                             <DialogFooter>
                                 <Button onClick={handleAddBorrower}>Create Profile</Button>
@@ -106,7 +113,7 @@ const OwnerLending = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {loans?.map((loan: any) => (
+                                {loans?.map((loan: Loan) => (
                                     <TableRow key={loan.id}>
                                         <TableCell className="font-medium">{loan.borrowerName}</TableCell>
                                         <TableCell className="font-mono text-xs">{loan.borrowerId}</TableCell>
@@ -139,7 +146,7 @@ const OwnerLending = () => {
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>New Loan Agreement</DialogTitle>
-                            <DialogDescription>Authorize credit for {selectedBorrower ? borrowers?.find((b: any) => b.id === selectedBorrower)?.name : "customer"}.</DialogDescription>
+                            <DialogDescription>Authorize credit for {selectedBorrower ? borrowers?.find((b: Borrower) => b.id === selectedBorrower)?.name : "customer"}.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
@@ -161,19 +168,40 @@ const OwnerLending = () => {
                 <div>
                     <h2 className="text-xl font-semibold mb-4">Registered Borrowers</h2>
                     <div className="grid md:grid-cols-3 gap-4">
-                        {borrowers?.map((borrower: any) => (
-                            <Card key={borrower.id} className="hover:border-emerald-500 transition-colors cursor-pointer" onClick={() => { setSelectedBorrower(borrower.id); setIsLoanOpen(true); }}>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <div className="font-bold">{borrower.name}</div>
-                                    <QrCode className="h-4 w-4 text-muted-foreground" />
+                        {borrowers?.map((borrower: Borrower) => (
+                            <Card key={borrower.id} className="hover:border-emerald-500 transition-colors cursor-pointer overflow-hidden" onClick={() => { setSelectedBorrower(borrower.id); setIsLoanOpen(true); }}>
+                                <div className="h-24 bg-slate-100 relative">
+                                    {borrower.photoUrl ? (
+                                        <img src={borrower.photoUrl} alt={borrower.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Photo</div>
+                                    )}
+                                    <div className="absolute top-2 right-2 bg-white/90 p-1 rounded-full shadow-sm">
+                                        <QrCode className="h-4 w-4 text-emerald-600" />
+                                    </div>
+                                </div>
+                                <CardHeader className="pb-2 pt-4">
+                                    <div className="font-bold text-lg">{borrower.name}</div>
+                                    <div className="text-xs text-muted-foreground">{borrower.phone}</div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-xs text-muted-foreground mb-2">SS-ID: {borrower.id}</div>
-                                    <div className="flex justify-between items-center">
+                                    <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                                        <div>
+                                            <span className="text-muted-foreground block">SS-ID</span>
+                                            <span className="font-mono font-medium">{borrower.ssid || "PENDING"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground block">ID Number</span>
+                                            <span className="font-mono font-medium">
+                                                {borrower.id.substring(0, 6)}...{borrower.id.slice(-2)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center border-t pt-3">
                                         <Badge variant={borrower.rating === 'Good' ? 'default' : 'secondary'} className={borrower.rating === 'Good' ? 'bg-emerald-500' : ''}>
                                             {borrower.rating || "New"}
                                         </Badge>
-                                        <span className="text-xs text-muted-foreground">Score: {borrower.score}%</span>
+                                        <span className="text-xs font-bold text-emerald-700">{borrower.score}% BRI</span>
                                     </div>
                                 </CardContent>
                             </Card>

@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Edit, Trash2, Package } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Package, ScanLine } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
 
@@ -18,7 +18,17 @@ const OwnerInventory = () => {
     const [isAddOpen, setIsAddOpen] = useState(false);
 
     // Form state handling
-    const [formData, setFormData] = useState({ name: "", category: "", price: "", stock: "" });
+    const [formData, setFormData] = useState({ name: "", category: "", price: "", stock: "", barcode: "" });
+    const [isScanning, setIsScanning] = useState(false);
+
+    const handleScan = () => {
+        setIsScanning(true);
+        // Mock Scan
+        setTimeout(() => {
+            setFormData(prev => ({ ...prev, barcode: "6001234567890" })); // Mock Barcode
+            setIsScanning(false);
+        }, 1000);
+    };
 
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -41,10 +51,11 @@ const OwnerInventory = () => {
             category: formData.category,
             price: parseFloat(formData.price),
             stock: parseInt(formData.stock),
+            barcode: formData.barcode, // Add to product
             image: "📦" // Default emoji for new products
         });
         setIsAddOpen(false);
-        setFormData({ name: "", category: "", price: "", stock: "" });
+        setFormData({ name: "", category: "", price: "", stock: "", barcode: "" });
     };
 
     return (

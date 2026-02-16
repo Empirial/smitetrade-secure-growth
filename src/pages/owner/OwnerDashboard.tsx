@@ -7,7 +7,17 @@ import { useStore } from "@/context/StoreContext";
 import { Link } from "react-router-dom";
 
 // Reusable Stat Card Component
-const StatCard = ({ title, value, subtext, icon: Icon, color, isLoading }: any) => (
+// Reusable Stat Card Component
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    subtext: string;
+    icon: React.ElementType;
+    color: string;
+    isLoading?: boolean;
+}
+
+const StatCard = ({ title, value, subtext, icon: Icon, color, isLoading }: StatCardProps) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>

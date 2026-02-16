@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { User, UserRole } from "@/context/StoreContext";
+import { User, UserRole } from "@/types";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, RefreshCw, Mail } from "lucide-react";
 

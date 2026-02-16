@@ -56,6 +56,9 @@ import CustomerCreditApplication from "./pages/customer/CustomerCreditApplicatio
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import CustomerOrderDetails from "./pages/customer/CustomerOrderDetails";
 import CustomerSupport from "./pages/customer/CustomerSupport";
+import CustomerOrders from "./pages/customer/CustomerOrders";
+import CustomerWishlist from "./pages/customer/CustomerWishlist";
+import BehavioralReliabilityIndex from "./pages/customer/BehavioralReliabilityIndex";
 
 // Driver
 import DriverLogin from "./pages/driver/DriverLogin";
@@ -145,7 +148,10 @@ const App = () => (
               <Route path="/customer/credit-review" element={<CustomerCreditReview />} />
               <Route path="/customer/apply-credit" element={<CustomerCreditApplication />} />
               <Route path="/customer/profile" element={<CustomerProfile />} />
+              <Route path="/customer/orders" element={<CustomerOrders />} />
               <Route path="/customer/orders/:id" element={<CustomerOrderDetails />} />
+              <Route path="/customer/wishlist" element={<CustomerWishlist />} />
+              <Route path="/customer/credit-status" element={<BehavioralReliabilityIndex />} />
               <Route path="/customer/support" element={<CustomerSupport />} />
 
               {/* Driver Portal */}

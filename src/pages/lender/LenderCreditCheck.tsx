@@ -1,27 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCredit } from "@/context/CreditContext";
+import { Borrower } from "@/types";
 import { Search, ShieldCheck, AlertTriangle, CreditCard, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const LenderCreditCheck = () => {
     const { borrowers } = useCredit();
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResult, setSearchResult] = useState<any>(null);
+    const [searchResult, setSearchResult] = useState<Borrower & { businessName?: string; totalDebt?: number; totalPaid?: number; defaults?: number; limit?: number; status?: string } | null>(null);
     const [searched, setSearched] = useState(false);
+    const [searchParams] = useSearchParams();
 
-    const handleSearch = () => {
+    useEffect(() => {
+        const query = searchParams.get("q");
+        if (query) {
+            setSearchQuery(query);
+            // Small timeout to allow state update before searching
+            setTimeout(() => {
+                handleSearch(query);
+            }, 100);
+        }
+    }, [searchParams]);
+
+    const handleSearch = (overrideQuery?: string) => {
+        const queryToUse = overrideQuery || searchQuery;
         setSearched(true);
 
+        if (!queryToUse) return;
+
         // Mock Data for specific user demo
-        if (searchQuery.toLowerCase().includes("lufuno") || searchQuery.toLowerCase().includes("mphela")) {
+        if (queryToUse.toLowerCase().includes("lufuno") || queryToUse.toLowerCase().includes("mphela")) {
             setSearchResult({
-                id: "LM-2024-001",
+                id: "9001015009087",
+                ssid: "SS-ID0001",
                 name: "Lufuno Mphela",
+                phone: "082 123 4567",
                 email: "mphelalufuno1.0@gmail.com",
                 businessName: "Mphela General Trading",
                 creditScore: 780,
@@ -30,14 +49,16 @@ const LenderCreditCheck = () => {
                 totalDebt: 0,
                 totalPaid: 15,
                 defaults: 0,
-                limit: 50000
+                limit: 50000,
+                photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop"
             });
             return;
         }
 
-        const result = borrowers.find((b) =>
-            b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            b.id.toString() === searchQuery
+        const result = borrowers.find((b: Borrower) =>
+            b.name.toLowerCase().includes(queryToUse.toLowerCase()) ||
+            b.id.toString() === queryToUse ||
+            b.ssid?.toLowerCase() === queryToUse.toLowerCase()
         );
         setSearchResult(result);
     };
@@ -82,7 +103,7 @@ const LenderCreditCheck = () => {
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <Button onClick={handleSearch}>
+                            <Button onClick={() => handleSearch()}>
                                 <Search className="mr-2 h-4 w-4" /> Search
                             </Button>
                         </div>
@@ -93,6 +114,28 @@ const LenderCreditCheck = () => {
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {searchResult ? (
                             <>
+                                {/* Identity Header */}
+                                <div className="flex items-center gap-6 bg-white p-6 rounded-lg border shadow-sm">
+                                    <div className="h-24 w-24 rounded-full bg-gray-100 overflow-hidden border-4 border-gray-50 shadow-inner">
+                                        {searchResult.photoUrl ? (
+                                            <img src={searchResult.photoUrl} alt={searchResult.name} className="h-full w-full object-cover" />
+                                        ) : (
+                                            <div className="h-full w-full flex items-center justify-center text-gray-400">No Photo</div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h2 className="text-3xl font-bold tracking-tight">{searchResult.name}</h2>
+                                        <div className="flex items-center gap-3 mt-2">
+                                            <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 px-3 py-1 text-sm font-mono">
+                                                {searchResult.ssid || "NO SS:ID"}
+                                            </Badge>
+                                            <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                                <ShieldCheck className="h-4 w-4 text-emerald-500" /> Identity Verified
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="grid gap-4 md:grid-cols-3">
                                     <Card className="border-t-4 border-t-emerald-500">
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -133,12 +176,16 @@ const LenderCreditCheck = () => {
                                 <Card>
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
-                                            <CardTitle>Detailed Profile: {searchResult.name}</CardTitle>
+                                            <CardTitle>Detailed Profile</CardTitle>
                                             <Badge className={getStatusBadge(searchResult.rating)}>
                                                 {searchResult.status || "Active"}
                                             </Badge>
                                         </div>
-                                        <CardDescription>Verified ID: {searchResult.id}</CardDescription>
+                                        <CardDescription>
+                                            Verified ID: <span className="font-mono text-zinc-900 font-medium">
+                                                {searchResult.id ? `${searchResult.id.substring(0, 6)}......${searchResult.id.slice(-2)}` : 'N/A'}
+                                            </span>
+                                        </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -175,6 +222,11 @@ const LenderCreditCheck = () => {
                         )}
                     </div>
                 )}
+
+                <div className="mt-8 pt-6 border-t text-center text-xs text-muted-foreground">
+                    <p>Safe Compliance Statement: All credit checks and lending activities on Smitetrade are subject to the National Credit Act (NCA) and Fair Lending Practices.</p>
+                    <p>Lenders are responsible for ensuring affordability assessments are conducted responsibly.</p>
+                </div>
             </div>
         </DashboardLayout>
     );

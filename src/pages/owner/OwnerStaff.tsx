@@ -31,12 +31,15 @@ interface StaffMember {
     role: string;
     status?: string; // Optional in User type?
     joined?: string;
+    username?: string;
+    password?: string;
+    pin?: string;
 }
 
 const OwnerStaff = () => {
     const [staff, setStaff] = useState<StaffMember[]>([]);
     const [isAddOpen, setIsAddOpen] = useState(false);
-    const [formData, setFormData] = useState({ name: "", email: "", role: "cashier" }); // lowercase role to match types
+    const [formData, setFormData] = useState({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
 
     useEffect(() => {
         // Fetch users who are cashiers or drivers
@@ -50,6 +53,9 @@ const OwnerStaff = () => {
                     name: data.name,
                     email: data.email,
                     role: data.role,
+                    username: data.username || "user1", // Mock defaults if missing
+                    password: data.password || "pass123",
+                    pin: data.pin || "0000",
                     status: "Active", // Default for now
                     joined: "2024-01-01" // Default
                 } as StaffMember;
@@ -59,14 +65,24 @@ const OwnerStaff = () => {
         return () => unsubscribe();
     }, []);
 
-    const handleAddStaff = () => {
-        // In a real app, this should probably create a user invitation or 
-        // create a user document directly (if using a different auth flow).
-        // For now, we'll just close the dialog as we can't create Auth users 
-        // without their password here easily.
-        console.log("Add staff feature would send invite to:", formData.email);
+    const handleAddStaff = async () => {
+        // Create a local mock staff member immediately for UI feedback
+        const newStaff: StaffMember = {
+            id: `temp_${Date.now()}`,
+            name: formData.name,
+            email: formData.email,
+            role: formData.role,
+            username: formData.username,
+            password: formData.password,
+            pin: formData.pin,
+            status: "Active",
+            joined: new Date().toISOString().split('T')[0]
+        };
+        setStaff([...staff, newStaff]);
+
+        console.log("Creating staff with credentials:", formData);
         setIsAddOpen(false);
-        setFormData({ name: "", email: "", role: "cashier" });
+        setFormData({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
     };
 
     const getRoleIcon = (role: string) => {
@@ -144,6 +160,40 @@ const OwnerStaff = () => {
                                             </SelectContent>
                                         </Select>
                                     </div>
+                                    <div className="grid grid-cols-4 items-center gap-4 border-t pt-4 mt-2">
+                                        <h3 className="col-span-4 font-semibold mb-2">Login Credentials</h3>
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="username" className="text-right">Username</Label>
+                                        <Input
+                                            id="username"
+                                            className="col-span-3"
+                                            value={formData.username}
+                                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                            placeholder="johndoe"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="password" className="text-right">Password</Label>
+                                        <Input
+                                            id="password"
+                                            className="col-span-3"
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            placeholder="Secret123!"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="pin" className="text-right">PIN</Label>
+                                        <Input
+                                            id="pin"
+                                            maxLength={4}
+                                            className="col-span-3"
+                                            value={formData.pin}
+                                            onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
+                                            placeholder="1234 (For POS)"
+                                        />
+                                    </div>
                                 </div>
                                 <DialogFooter>
                                     <Button onClick={handleAddStaff}>Create Account</Button>
@@ -160,7 +210,7 @@ const OwnerStaff = () => {
                                 <CardTitle className="text-base font-medium">
                                     {member.name}
                                 </CardTitle>
-                                <Badge variant={getStatusColor(member.status) as any}>{member.status}</Badge>
+                                <Badge variant={getStatusColor(member.status || "") as "default" | "secondary" | "destructive" | "outline"}>{member.status}</Badge>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
@@ -170,6 +220,17 @@ const OwnerStaff = () => {
                                 <div className="text-xs text-muted-foreground mb-4">
                                     Joined: {member.joined} <br />
                                     Email: {member.email}
+                                </div>
+                                <div className="bg-slate-50 p-2 rounded text-xs space-y-1 border border-slate-100 mb-4">
+                                    <div className="font-semibold text-slate-700">Login Details</div>
+                                    <div className="grid grid-cols-2 gap-x-2">
+                                        <span className="text-muted-foreground">Username:</span>
+                                        <span className="font-mono">{member.username || "-"}</span>
+                                        <span className="text-muted-foreground">Password:</span>
+                                        <span className="font-mono">{member.password || "-"}</span>
+                                        <span className="text-muted-foreground">POS PIN:</span>
+                                        <span className="font-mono">{member.pin || "-"}</span>
+                                    </div>
                                 </div>
                                 <div className="flex justify-end">
                                     <DropdownMenu>

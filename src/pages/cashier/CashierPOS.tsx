@@ -2,13 +2,15 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input"; // Added missing import
-import { Search, Plus, Trash2, ShoppingCart, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Search, Plus, Trash2, ShoppingCart, ArrowRight, Camera } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useStore } from "@/context/StoreContext";
-import { Product } from "@/context/StoreContext";
+import { Product } from "@/types";
 
 const CashierPOS = () => {
     const { products } = useStore();
@@ -47,6 +49,30 @@ const CashierPOS = () => {
         navigate("/cashier/checkout", { state: { cart, total } });
     };
 
+    // Custom Item / Photo Capture Logic
+    const [isCustomOpen, setIsCustomOpen] = useState(false);
+    const [customItem, setCustomItem] = useState({ name: "Custom Item", price: "", image: "" });
+    const [customFile, setCustomFile] = useState<File | undefined>(undefined);
+
+    const handleAddCustomItem = () => {
+        if (!customItem.price) return;
+
+        const newItem: Product = {
+            id: `custom-${Date.now()}`,
+            name: customItem.name || "Custom Item",
+            price: Number(customItem.price),
+            category: "Custom",
+            stock: 1,
+            image: customFile ? URL.createObjectURL(customFile) : "📸", // Mock image URL or emoji
+            status: "Active"
+        };
+
+        addToCart(newItem);
+        setIsCustomOpen(false);
+        setCustomItem({ name: "Custom Item", price: "", image: "" });
+        setCustomFile(undefined);
+    };
+
     return (
         <DashboardLayout role="cashier">
             <div className="flex flex-col h-[calc(100vh-8rem)] lg:flex-row gap-6">
@@ -62,6 +88,51 @@ const CashierPOS = () => {
                                 onChange={(e) => setSearch(e.target.value)}
                             />
                         </div>
+                        {/* Camera / Custom Item Button */}
+                        {/* Camera / Custom Item Button */}
+                        <Dialog open={isCustomOpen} onOpenChange={setIsCustomOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="icon" className="shrink-0 bg-white hover:bg-emerald-50 text-emerald-600 border-emerald-200">
+                                    <Camera className="h-4 w-4" />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Scan or Add Item</DialogTitle>
+                                    <DialogDescription>Use camera to scan barcode or add custom item.</DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    {/* Mock Camera View */}
+                                    <div className="aspect-video bg-black rounded-lg relative overflow-hidden flex items-center justify-center">
+                                        <div className="absolute inset-0 opacity-50 bg-[url('https://images.unsplash.com/photo-1550989460-0adf9ea622e2?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center"></div>
+                                        <div className="w-64 h-32 border-2 border-red-500/50 rounded-lg relative z-10 animate-pulse"></div>
+                                        <div className="absolute bottom-2 text-white text-xs bg-black/50 px-2 py-1 rounded">Scanning...</div>
+                                    </div>
+
+                                    <div className="text-center text-xs text-muted-foreground -mt-2">
+                                        Camera active. Align barcode within frame.
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label>Or Add Manually</Label>
+                                        <Input
+                                            value={customItem.name}
+                                            onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
+                                            placeholder="Item Name"
+                                        />
+                                        <Input
+                                            type="number"
+                                            value={customItem.price}
+                                            onChange={(e) => setCustomItem({ ...customItem, price: e.target.value })}
+                                            placeholder="Price (R)"
+                                        />
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button onClick={handleAddCustomItem} disabled={!customItem.price}>Add Item</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
 
                     {/* Quick Access Grid */}
@@ -92,7 +163,12 @@ const CashierPOS = () => {
                                     className="group relative flex flex-col items-center justify-center p-4 rounded-xl border border-dashed hover:border-solid hover:border-emerald-500 bg-white hover:shadow-md transition-all h-28"
                                 >
                                     <div className={`mb-2 h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-100 text-emerald-700`}>
-                                        {product.name.charAt(0)}
+                                        {/* Show Image if available (for custom items), else initial */}
+                                        {product.image && product.image.startsWith('blob') ? (
+                                            <img src={product.image} alt={product.name} className="h-full w-full rounded-full object-cover" />
+                                        ) : (
+                                            product.image || product.name.charAt(0)
+                                        )}
                                     </div>
                                     <span className="font-medium text-center text-sm line-clamp-2">{product.name}</span>
                                     <span className="mt-1 font-bold text-emerald-600">R{product.price.toFixed(2)}</span>
@@ -159,6 +235,6 @@ const CashierPOS = () => {
             </div>
         </DashboardLayout>
     );
-}; // Added missing closing brace
+};
 
 export default CashierPOS;

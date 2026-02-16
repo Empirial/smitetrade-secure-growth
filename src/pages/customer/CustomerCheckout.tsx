@@ -182,7 +182,7 @@ const CustomerCheckout = () => {
 
                                     <div className="space-y-2">
                                         <h4 className="font-semibold text-sm">Items:</h4>
-                                        {cart.map((item: any) => (
+                                        {cart.map((item: { id: string; name: string; quantity: number; price: number }) => (
                                             <div key={item.id} className="flex justify-between text-sm border-b pb-2 last:border-0">
                                                 <span>{item.quantity}x {item.name}</span>
                                                 <span>R {(item.price * item.quantity).toFixed(2)}</span>

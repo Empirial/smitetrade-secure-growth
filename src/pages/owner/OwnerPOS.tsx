@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Plus, Trash2, ShoppingCart, CreditCard, Banknote } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Search, Plus, Trash2, ShoppingCart, CreditCard, Banknote, Camera } from "lucide-react";
 import { useState } from "react";
 
 const products = [
@@ -17,11 +19,44 @@ const products = [
     { id: "8", name: "Lays Chips 120g", price: 19.00, category: "Snacks", color: "bg-red-200 text-red-800" },
 ];
 
+interface POSProduct {
+    id: string;
+    name: string;
+    price: number;
+    category: string;
+    color: string;
+    image?: string;
+}
+
 const OwnerPOS = () => {
     const [cart, setCart] = useState<{ id: string; name: string; price: number; quantity: number }[]>([]);
     const [search, setSearch] = useState("");
 
-    const addToCart = (product: typeof products[0]) => {
+    // Custom Item / Photo Capture Logic
+    const [isCustomOpen, setIsCustomOpen] = useState(false);
+    const [customItem, setCustomItem] = useState({ name: "Custom Item", price: "", image: "" });
+    const [customFile, setCustomFile] = useState<File | undefined>(undefined);
+
+    const handleAddCustomItem = () => {
+        if (!customItem.price) return;
+
+        const newItem = {
+            id: `custom-${Date.now()}`,
+            name: customItem.name || "Custom Item",
+            price: Number(customItem.price),
+            category: "Custom",
+            color: "bg-gray-100 text-gray-700",
+            image: customFile ? URL.createObjectURL(customFile) : "📸",
+            quantity: 1
+        };
+
+        setCart(prev => [...prev, newItem]);
+        setIsCustomOpen(false);
+        setCustomItem({ name: "Custom Item", price: "", image: "" });
+        setCustomFile(undefined);
+    };
+
+    const addToCart = (product: POSProduct) => {
         setCart(prev => {
             const existing = prev.find(p => p.id === product.id);
             if (existing) {
@@ -64,6 +99,54 @@ const OwnerPOS = () => {
                                 onChange={(e) => setSearch(e.target.value)}
                             />
                         </div>
+                        {/* Camera / Custom Item Button */}
+                        <Dialog open={isCustomOpen} onOpenChange={setIsCustomOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="icon" className="shrink-0 bg-white hover:bg-emerald-50 text-emerald-600 border-emerald-200">
+                                    <Camera className="h-4 w-4" />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Add Non-Barcoded Item</DialogTitle>
+                                    <DialogDescription>Take a picture or add details for a custom item.</DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid gap-2">
+                                        <Label>Item Name (Optional)</Label>
+                                        <Input
+                                            value={customItem.name}
+                                            onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
+                                            placeholder="e.g. Loose Vegetables"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Price (R)</Label>
+                                        <Input
+                                            type="number"
+                                            value={customItem.price}
+                                            onChange={(e) => setCustomItem({ ...customItem, price: e.target.value })}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label>Capture Photo</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment" // Hints mobile to use camera
+                                                onChange={(e) => setCustomFile(e.target.files?.[0])}
+                                            />
+                                            <Camera className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button onClick={handleAddCustomItem} disabled={!customItem.price}>Add to Cart</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
 
                     <ScrollArea className="flex-1 rounded-xl border bg-white/50 p-4 shadow-sm">
@@ -75,7 +158,13 @@ const OwnerPOS = () => {
                                     className="group relative flex flex-col items-center justify-center p-6 rounded-xl border border-dashed hover:border-solid hover:border-emerald-500 bg-white hover:shadow-md transition-all h-32"
                                 >
                                     <div className={`mb-2 h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg ${product.color}`}>
-                                        {product.name.charAt(0)}
+                                        {/* Show Image if available (for custom items), else initial */}
+                                        {/* Show Image if available (for custom items), else initial */}
+                                        {(product as POSProduct).image && (product as POSProduct).image?.startsWith('blob') ? (
+                                            <img src={(product as POSProduct).image} alt={product.name} className="h-full w-full rounded-full object-cover" />
+                                        ) : (
+                                            product.name.charAt(0)
+                                        )}
                                     </div>
                                     <span className="font-medium text-center text-sm line-clamp-2">{product.name}</span>
                                     <span className="mt-1 font-bold text-emerald-600">R{product.price.toFixed(2)}</span>

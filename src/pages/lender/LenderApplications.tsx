@@ -8,8 +8,8 @@ import { Link } from "react-router-dom";
 const LenderApplications = () => {
     // Mock applications data
     const applications = [
-        { id: 1, borrower: "Spaza A", amount: 5000, term: "30 Days", reason: "Inventory Restock", creditScore: 720, date: "2024-02-12" },
-        { id: 2, borrower: "Tuckshop B", amount: 2500, term: "14 Days", reason: "Equipment Repair", creditScore: 650, date: "2024-02-11" },
+        { id: 1, borrower: "Lufuno Mphela", amount: 5000, term: "30 Days", reason: "Inventory Restock", creditScore: 780, date: "2024-02-12", ssid: "SS-ID0001" },
+        { id: 2, borrower: "Thabo Mbeki", amount: 2500, term: "14 Days", reason: "Equipment Repair", creditScore: 650, date: "2024-02-11", ssid: "SS-ID0002" },
     ];
 
     return (
@@ -71,9 +71,9 @@ const LenderApplications = () => {
 
                                 <div className="flex gap-2 justify-end pt-4 border-t">
                                     <Button variant="outline" size="sm" asChild>
-                                        {/* In a real app, this would link to the specific user's credit profile */}
-                                        <Link to="/lender/credit-check">
-                                            <FileText className="mr-2 h-4 w-4" /> Credit Report
+                                        {/* Link with query param to auto-search profile */}
+                                        <Link to={`/lender/credit-check?q=${encodeURIComponent(app.borrower)}`}>
+                                            <FileText className="mr-2 h-4 w-4" /> View Report
                                         </Link>
                                     </Button>
                                     <Button variant="destructive" size="sm">

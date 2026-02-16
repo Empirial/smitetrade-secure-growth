@@ -38,6 +38,7 @@ const CashierCheckout = () => {
         // Place the order in the system
         await placeOrder({
             name: "Walk-in Customer",
+            address: "In-Store",
             items: cart, // Pass cart items explicitly if placeOrder supports it, or use StoreContext cart if it was synced (but CashierPOS has local cart)
             // Wait, StoreContext.placeOrder uses the *global* cart. 
             // CashierPOS uses a *local* cart state passed via navigation.

@@ -10,6 +10,7 @@ import { Plus, User, FileText, Search, MoreHorizontal, UserPlus } from "lucide-r
 import { useState } from "react";
 import { useCredit } from "@/context/CreditContext";
 import { toast } from "sonner";
+import { maskIdNumber } from "@/lib/utils";
 
 const LenderClients = () => {
     const { borrowers, addBorrower, createLoan } = useCredit();
@@ -95,6 +96,12 @@ const LenderClients = () => {
                                         <span>SS-ID:</span>
                                         <span className="font-mono">{borrower.id}</span>
                                     </div>
+                                    {borrower.idNumber && (
+                                        <div className="flex justify-between">
+                                            <span>ID Number:</span>
+                                            <span className="font-mono">{maskIdNumber(borrower.idNumber)}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between">
                                         <span>Phone:</span>
                                         <span>{borrower.phone}</span>

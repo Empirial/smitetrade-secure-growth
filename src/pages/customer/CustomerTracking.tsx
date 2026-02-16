@@ -22,9 +22,9 @@ const CustomerTracking = () => {
 
     const steps = [
         { label: "Order Received", status: "completed", time: new Date(latestOrder.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
-        { label: "Preparing Order", status: latestOrder.status === 'Pending' ? 'current' : 'completed', time: "Est. 10 mins" },
-        { label: "Out for Delivery", status: latestOrder.status === 'Out for Delivery' ? 'current' : latestOrder.status === 'Delivered' ? 'completed' : 'pending', time: "Est. 20 mins" },
-        { label: "Delivered", status: latestOrder.status === 'Delivered' ? 'completed' : 'pending', time: "Est. 30 mins" },
+        { label: "Preparing Order", status: latestOrder.status === 'Pending' ? 'current' : 'completed', time: "Between 8am - 6pm" },
+        { label: "Out for Delivery", status: latestOrder.status === 'Out for Delivery' ? 'current' : latestOrder.status === 'Delivered' ? 'completed' : 'pending', time: "Between 8am - 6pm" },
+        { label: "Delivered", status: latestOrder.status === 'Delivered' ? 'completed' : 'pending', time: "Between 8am - 6pm" },
     ];
 
     return (

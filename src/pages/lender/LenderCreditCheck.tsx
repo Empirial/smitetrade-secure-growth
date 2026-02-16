@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useCredit } from "@/context/CreditContext";
 import { Search, ShieldCheck, AlertTriangle, CreditCard, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { maskIdNumber } from "@/lib/utils";
 
 const LenderCreditCheck = () => {
     const { borrowers } = useCredit();
@@ -138,7 +139,7 @@ const LenderCreditCheck = () => {
                                                 {searchResult.status || "Active"}
                                             </Badge>
                                         </div>
-                                        <CardDescription>Verified ID: {searchResult.id}</CardDescription>
+                                        <CardDescription>Verified ID: {maskIdNumber(searchResult.id)}</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4 text-sm">

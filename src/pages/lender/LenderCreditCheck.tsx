@@ -9,6 +9,7 @@ import { useCredit } from "@/context/CreditContext";
 import { Borrower } from "@/types";
 import { Search, ShieldCheck, AlertTriangle, CreditCard, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { maskIdNumber } from "@/lib/utils";
 
 const LenderCreditCheck = () => {
     const { borrowers } = useCredit();
@@ -183,7 +184,7 @@ const LenderCreditCheck = () => {
                                         </div>
                                         <CardDescription>
                                             Verified ID: <span className="font-mono text-zinc-900 font-medium">
-                                                {searchResult.id ? `${searchResult.id.substring(0, 6)}......${searchResult.id.slice(-2)}` : 'N/A'}
+                                                {maskIdNumber(searchResult.id)}
                                             </span>
                                         </CardDescription>
                                     </CardHeader>

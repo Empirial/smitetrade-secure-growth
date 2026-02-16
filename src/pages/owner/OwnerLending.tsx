@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, UserByOrder, QrCode, Calendar, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Search, UserCheck, QrCode, Calendar, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCredit } from "@/context/CreditContext";
 import { Loan, Borrower } from "@/types";
 import { toast } from "sonner";
+import { maskIdNumber } from "@/lib/utils";
 
 const OwnerLending = () => {
     const { borrowers, addBorrower, loans, createLoan, recordPayment } = useCredit(); // We'll implement this next

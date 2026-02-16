@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useCredit } from "@/context/CreditContext";
 import { Borrower } from "@/types";
 import { toast } from "sonner";
+import { maskIdNumber } from "@/lib/utils";
 
 const LenderClients = () => {
     const { borrowers, addBorrower, createLoan } = useCredit();
@@ -122,6 +123,12 @@ const LenderClients = () => {
                                             {borrower.id ? `${borrower.id.substring(0, 6)}......${borrower.id.slice(-2)}` : 'N/A'}
                                         </span>
                                     </div>
+                                    {borrower.idNumber && (
+                                        <div className="flex justify-between">
+                                            <span>ID Number:</span>
+                                            <span className="font-mono">{maskIdNumber(borrower.idNumber)}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between">
                                         <span>Phone:</span>
                                         <span>{borrower.phone}</span>

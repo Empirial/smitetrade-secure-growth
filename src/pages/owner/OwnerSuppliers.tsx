@@ -11,10 +11,10 @@ import { useState } from "react";
 
 const OwnerSuppliers = () => {
     const [suppliers, setSuppliers] = useState([
-        { id: 1, name: "Mega Wholesalers", contact: "Via Smitetrade Intermediary: 087 555 1234", products: "Soft Drinks, Snacks", status: "Active" },
-        { id: 2, name: "Fresh Farms", contact: "Via Smitetrade Intermediary: 087 555 1234", products: "Vegetables, Fruits", status: "Active" },
-        { id: 3, name: "Baker's Choice", contact: "Via Smitetrade Intermediary: 087 555 1234", products: "Bread, Pastries", status: "Inactive" },
-        { id: 4, name: "Dairy Direct", contact: "Via Smitetrade Intermediary: 087 555 1234", products: "Milk, Cheese, Yogurt", status: "Active" },
+        { id: 1, name: "Mega Wholesalers", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Soft Drinks, Snacks", status: "Active" },
+        { id: 2, name: "Fresh Farms", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Vegetables, Fruits", status: "Active" },
+        { id: 3, name: "Baker's Choice", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Bread, Pastries", status: "Inactive" },
+        { id: 4, name: "Dairy Direct", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Milk, Cheese, Yogurt", status: "Active" },
     ]);
 
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -25,7 +25,7 @@ const OwnerSuppliers = () => {
         setSuppliers([...suppliers, {
             id: Date.now(),
             name: newSupplier.name,
-            contact: "Via Smitetrade Intermediary: 087 555 1234",
+            contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za",
             products: newSupplier.products,
             status: "Active"
         }]);

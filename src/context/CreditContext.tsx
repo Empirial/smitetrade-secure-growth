@@ -139,9 +139,6 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Simulate Payment (For Customer Side) ---
     const simulatePayment = async (amount: number, paymentDate: Date) => {
-        // This is for the customer paying off their own credit
-        // It's different from "Lender recording a payment"
-        // usage: await simulatePayment(500, new Date());
         toast.success(`Payment of R${amount} simulated for ${paymentDate.toLocaleDateString()}`);
     };
 
@@ -161,18 +158,17 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         const photoUrl = photoFile
             ? URL.createObjectURL(photoFile)
             : "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop";
-
         const newBorrower = {
             id: idNumber,
             ssid,
             name,
             phone,
+            idNumber,
             rating: "New",
             score: 0,
             photoUrl
         };
         setBorrowers([...borrowers, newBorrower]);
-        // In real app: await setDoc(doc(db, "borrowers", ssid), newBorrower);
     };
 
     const createLoan = async (borrowerId: string, amount: number, dueDate: string) => {

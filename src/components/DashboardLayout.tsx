@@ -66,6 +66,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     ];
 
     const adminLinks = [
+        { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/admin/applications", label: "Applications", icon: User },
         { href: "/admin/pos-monitor", label: "POS Monitor", icon: LayoutDashboard },
         { href: "/admin/users", label: "Users", icon: Users },

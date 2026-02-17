@@ -6,14 +6,18 @@ import { Package, Truck, CheckCircle, RefreshCw } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner"; // Added missing import
 
+import { useStore } from "@/context/StoreContext";
+
 const CustomerOrders = () => {
     const navigate = useNavigate();
-    // Mock orders data
-    const orders = [
-        { id: "ORD-001", date: "2024-02-10", total: 1250, status: "Delivered", items: 4 },
-        { id: "ORD-002", date: "2024-02-12", total: 850, status: "Processing", items: 2 },
-        { id: "ORD-003", date: "2024-02-13", total: 3200, status: "Shipped", items: 12 },
-    ];
+    const { orders, user } = useStore();
+
+    // Filter orders for the current user
+    const myOrders = orders.filter(o => {
+        if (!user) return false;
+        // Match by ID if available, otherwise by name (legacy/mock support)
+        return o.userId === user.id || o.userId === user.uid || o.customerName === user.name;
+    });
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -53,7 +57,7 @@ const CustomerOrders = () => {
                                             {order.status}
                                         </Badge>
                                     </div>
-                                    <CardDescription>{order.date} • {order.items} Items</CardDescription>
+                                    <CardDescription>{format(new Date(order.date), "PPP")} • {order.items.length} Items</CardDescription>
                                     <p className="text-xs font-semibold text-emerald-600 mt-1">Estimated: 8am - 6pm</p>
                                 </div>
                                 <div className="text-right">

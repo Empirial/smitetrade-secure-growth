@@ -26,7 +26,7 @@ import { OrderSchema } from '@/lib/schemas';
 
 import { MOCK_USER, MOCK_LENDER, MOCK_PRODUCTS, MOCK_ORDERS, USE_MOCK_DATA } from '@/lib/constants';
 
-import { User, Product, Order, CartItem, UserRole } from "@/types";
+import { User, Product, Order, CartItem, UserRole, Supplier, StaffMember, Shift, Issue } from "@/types";
 
 interface FirebaseError extends Error {
     code: string;
@@ -65,7 +65,29 @@ interface StoreContextType {
     }) => Promise<void>;
     updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
     assignDriver: (orderId: string, driverId: string) => Promise<void>;
+    assignDriver: (orderId: string, driverId: string) => Promise<void>;
     isLoading: boolean;
+
+    // Suppliers
+    suppliers: Supplier[];
+    addSupplier: (supplier: Omit<Supplier, 'id' | 'status'>) => void;
+
+    // Staff
+    staff: StaffMember[];
+    addStaff: (staff: Omit<StaffMember, 'id'>) => void;
+
+    // Shifts
+    shifts: Shift[];
+    currentShift: Shift | null;
+    startShift: (float: number) => void;
+    endShift: (closingCash: number) => void;
+
+    // Wishlist
+    toggleWishlist: (productId: string) => void;
+
+    // Issues
+    issues: Issue[];
+    reportIssue: (issue: Omit<Issue, 'id' | 'timestamp' | 'status'>) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -79,6 +101,28 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         return saved ? JSON.parse(saved) : [];
     });
     const [isLoading, setIsLoading] = useState(true);
+
+    // --- Snag List State ---
+    const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
+        const saved = localStorage.getItem('smite_suppliers');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [staff, setStaff] = useState<StaffMember[]>(() => {
+        const saved = localStorage.getItem('smite_staff');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [shifts, setShifts] = useState<Shift[]>(() => {
+        const saved = localStorage.getItem('smite_shifts');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [currentShift, setCurrentShift] = useState<Shift | null>(() => {
+        const saved = localStorage.getItem('smite_current_shift');
+        return saved ? JSON.parse(saved) : null;
+    });
+    const [issues, setIssues] = useState<Issue[]>(() => {
+        const saved = localStorage.getItem('smite_issues');
+        return saved ? JSON.parse(saved) : [];
+    });
 
     // --- Auth Listener ---
     useEffect(() => {
@@ -150,8 +194,19 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         return () => unsubscribe();
     }, []);
 
-    // --- Persistence Effects for Cart ---
+    // --- Persistence Effects ---
     useEffect(() => localStorage.setItem('smite_cart', JSON.stringify(cart)), [cart]);
+    useEffect(() => localStorage.setItem('smite_suppliers', JSON.stringify(suppliers)), [suppliers]);
+    useEffect(() => localStorage.setItem('smite_staff', JSON.stringify(staff)), [staff]);
+    useEffect(() => localStorage.setItem('smite_shifts', JSON.stringify(shifts)), [shifts]);
+    useEffect(() => {
+        if (currentShift) {
+            localStorage.setItem('smite_current_shift', JSON.stringify(currentShift));
+        } else {
+            localStorage.removeItem('smite_current_shift');
+        }
+    }, [currentShift]);
+    useEffect(() => localStorage.setItem('smite_issues', JSON.stringify(issues)), [issues]);
 
     // --- Auth Actions ---
     const login = async (email: string, password: string, roleFallback?: UserRole) => {
@@ -535,12 +590,103 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    // --- Snag List Actions ---
+    const addSupplier = (supplierData: Omit<Supplier, 'id' | 'status'>) => {
+        const newSupplier: Supplier = {
+            ...supplierData,
+            id: `supp-${Date.now()}`,
+            status: 'Active'
+        };
+        setSuppliers(prev => [...prev, newSupplier]);
+        toast.success("Supplier added successfully");
+    };
+
+    const addStaff = (staffData: Omit<StaffMember, 'id'>) => {
+        const newStaff: StaffMember = {
+            ...staffData,
+            id: `staff-${Date.now()}`
+        };
+        setStaff(prev => [...prev, newStaff]);
+        toast.success("Staff member added successfully");
+    };
+
+    const startShift = (float: number) => {
+        if (currentShift) {
+            toast.error("Shift already active");
+            return;
+        }
+        const newShift: Shift = {
+            id: `shift-${Date.now()}`,
+            cashierId: user?.id || 'unknown',
+            cashierName: user?.name || 'Unknown',
+            startTime: new Date().toISOString(),
+            openingFloat: float,
+            totalSales: 0,
+            status: 'Open'
+        };
+        setCurrentShift(newShift);
+        toast.success("Shift started");
+    };
+
+    const endShift = (closingCash: number) => {
+        if (!currentShift) return;
+
+        // Calculate sales from orders during this shift (mock calculation for now, or just use current session sales)
+        // ideally we filter orders by time range of shift.
+        // For simplicity, we just save the shift record.
+
+        const closedShift: Shift = {
+            ...currentShift,
+            endTime: new Date().toISOString(),
+            closingCash,
+            status: 'Closed'
+        };
+
+        setShifts(prev => [closedShift, ...prev]);
+        setCurrentShift(null);
+        toast.success("Shift closed and report saved");
+    };
+
+    const toggleWishlist = (productId: string) => {
+        if (!user) return;
+
+        const currentWishlist = user.wishlist || [];
+        const exists = currentWishlist.includes(productId);
+
+        let newWishlist;
+        if (exists) {
+            newWishlist = currentWishlist.filter(id => id !== productId);
+            toast.info("Removed from wishlist");
+        } else {
+            newWishlist = [...currentWishlist, productId];
+            toast.success("Added to wishlist");
+        }
+
+        updateUser({ wishlist: newWishlist });
+    };
+
+    const reportIssue = (issueData: Omit<Issue, 'id' | 'timestamp' | 'status'>) => {
+        const newIssue: Issue = {
+            ...issueData,
+            id: `issue-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            status: 'Open'
+        };
+        setIssues(prev => [newIssue, ...prev]);
+        toast.success("Issue reported successfully");
+    };
+
     return (
         <StoreContext.Provider value={{
             user, login, register, logout, updateUser,
             products, addProduct, updateProduct, deleteProduct,
             cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
-            orders, placeOrder, updateOrderStatus, assignDriver, isLoading
+            orders, placeOrder, updateOrderStatus, assignDriver, isLoading,
+            suppliers, addSupplier,
+            staff, addStaff,
+            shifts, currentShift, startShift, endShift,
+            toggleWishlist,
+            issues, reportIssue
         }}>
             {children}
         </StoreContext.Provider>

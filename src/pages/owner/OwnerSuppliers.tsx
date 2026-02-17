@@ -7,28 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Truck } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useStore } from "@/context/StoreContext";
 
 const OwnerSuppliers = () => {
-    const [suppliers, setSuppliers] = useState([
-        { id: 1, name: "Mega Wholesalers", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Soft Drinks, Snacks", status: "Active" },
-        { id: 2, name: "Fresh Farms", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Vegetables, Fruits", status: "Active" },
-        { id: 3, name: "Baker's Choice", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Bread, Pastries", status: "Inactive" },
-        { id: 4, name: "Dairy Direct", contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za", products: "Milk, Cheese, Yogurt", status: "Active" },
-    ]);
-
+    const { suppliers, addSupplier } = useStore();
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newSupplier, setNewSupplier] = useState({ name: "", products: "" });
 
     const handleAddSupplier = () => {
         if (!newSupplier.name || !newSupplier.products) return;
-        setSuppliers([...suppliers, {
-            id: Date.now(),
+        addSupplier({
             name: newSupplier.name,
             contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za",
             products: newSupplier.products,
-            status: "Active"
-        }]);
+        });
         setIsAddOpen(false);
         setNewSupplier({ name: "", products: "" });
     };

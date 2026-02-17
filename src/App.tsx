@@ -71,6 +71,7 @@ import DriverIssues from "./pages/driver/DriverIssues";
 
 // Admin
 import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminApplications from "./pages/admin/AdminApplications";
 import AdminPOSMonitor from "./pages/admin/AdminPOSMonitor";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -165,6 +166,7 @@ const App = () => (
 
               {/* Admin Portal */}
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/applications" element={<AdminApplications />} />
               <Route path="/admin/pos-monitor" element={<AdminPOSMonitor />} />
               <Route path="/admin/users" element={<AdminUsers />} />

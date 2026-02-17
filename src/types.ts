@@ -21,6 +21,7 @@ export interface User {
         phone: string;
         defaultAddress: string;
     };
+    wishlist?: string[]; // Array of Product IDs
 }
 
 export interface Product {
@@ -53,6 +54,7 @@ export interface Order {
     status: 'Pending' | 'Paid' | 'Ready' | 'Out for Delivery' | 'Delivered';
     date: string;
     driverId?: string;
+    userId?: string; // Link to customer
     type?: 'instore' | 'online' | 'delivery';
 }
 
@@ -99,4 +101,46 @@ export interface Notification {
     message: string;
     date: string;
     read: boolean;
+}
+
+export interface Supplier {
+    id: string;
+    name: string;
+    contact: string;
+    products: string;
+    status: 'Active' | 'Inactive';
+}
+
+export interface StaffMember {
+    id: string;
+    name: string;
+    email: string;
+    role: 'cashier' | 'driver' | 'admin';
+    status: 'Active' | 'Inactive' | 'On Leave';
+    joined: string;
+    username?: string;
+    pin?: string;
+}
+
+export interface Shift {
+    id: string;
+    cashierId: string;
+    cashierName: string;
+    startTime: string;
+    endTime?: string;
+    openingFloat: number;
+    closingCash?: number;
+    totalSales: number;
+    discrepancy?: number;
+    status: 'Open' | 'Closed';
+}
+
+export interface Issue {
+    id: string;
+    driverId: string;
+    orderId?: string;
+    reason: string;
+    notes: string;
+    timestamp: string;
+    status: 'Open' | 'Resolved';
 }

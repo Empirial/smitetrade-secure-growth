@@ -17,70 +17,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 
-import { db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, addDoc } from "firebase/firestore";
-import { useEffect } from "react";
 import { useStore } from "@/context/StoreContext";
 
-// Define interface locally if not exported from context, or import it.
-// Assuming User interface matches mostly.
-interface StaffMember {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    status?: string; // Optional in User type?
-    joined?: string;
-    username?: string;
-    password?: string;
-    pin?: string;
-}
-
 const OwnerStaff = () => {
-    const [staff, setStaff] = useState<StaffMember[]>([]);
+    const { staff, addStaff } = useStore();
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [formData, setFormData] = useState({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
 
-    useEffect(() => {
-        // Fetch users who are cashiers or drivers
-        // In a real app, we would filter by storeId as well
-        const q = query(collection(db, "users"), where("role", "in", ["cashier", "driver"]));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const staffData = snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    name: data.name,
-                    email: data.email,
-                    role: data.role,
-                    username: data.username || "user1", // Mock defaults if missing
-                    password: data.password || "pass123",
-                    pin: data.pin || "0000",
-                    status: "Active", // Default for now
-                    joined: "2024-01-01" // Default
-                } as StaffMember;
-            });
-            setStaff(staffData);
-        });
-        return () => unsubscribe();
-    }, []);
-
-    const handleAddStaff = async () => {
-        // Create a local mock staff member immediately for UI feedback
-        const newStaff: StaffMember = {
-            id: `temp_${Date.now()}`,
+    const handleAddStaff = () => {
+        addStaff({
             name: formData.name,
             email: formData.email,
-            role: formData.role,
+            role: formData.role as 'cashier' | 'driver' | 'admin',
             username: formData.username,
-            password: formData.password,
-            pin: formData.pin,
+            // password: formData.password, // StoreContext doesn't store password in interface yet, but maybe we should?
+            // Actually StaffMember interface has password optional.
+            // Let's pass it if it's there.
+            // Wait, StoreContext addStaff takes Omit<StaffMember, 'id'>.
+            // StaffMember in types.ts:
+            // username?: string;
+            // password?: string;
+            // pin?: string;
             status: "Active",
-            joined: new Date().toISOString().split('T')[0]
-        };
-        setStaff([...staff, newStaff]);
+            joined: new Date().toISOString().split('T')[0],
+            pin: formData.pin
+        });
 
-        console.log("Creating staff with credentials:", formData);
         setIsAddOpen(false);
         setFormData({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
     };

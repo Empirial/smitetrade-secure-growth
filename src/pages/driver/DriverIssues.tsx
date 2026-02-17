@@ -10,19 +10,33 @@ import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { useStore } from "@/context/StoreContext";
+
 const DriverIssues = () => {
+    const { reportIssue, user } = useStore();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Controlled state
+    const [reason, setReason] = useState("customer_unavailable");
+    const [notes, setNotes] = useState("");
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate API
-        setTimeout(() => {
+
+        try {
+            reportIssue({
+                driverId: user?.id || "unknown",
+                reason,
+                notes
+            });
+            setTimeout(() => navigate(-1), 1000);
+        } catch (error) {
+            // handle error
+        } finally {
             setLoading(false);
-            toast.success("Issue reported. Dispatch has been notified.");
-            navigate("/driver/orders");
-        }, 1500);
+        }
     };
 
     return (
@@ -48,7 +62,7 @@ const DriverIssues = () => {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="reason">Reason</Label>
-                                <Select required>
+                                <Select required value={reason} onValueChange={setReason}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a reason" />
                                     </SelectTrigger>
@@ -69,6 +83,8 @@ const DriverIssues = () => {
                                     placeholder="Provide more context..."
                                     className="min-h-[100px]"
                                     required
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
                                 />
                             </div>
 

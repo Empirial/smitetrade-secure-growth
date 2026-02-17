@@ -8,8 +8,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Clock, DollarSign, Lock } from "lucide-react";
 
+import { useStore } from "@/context/StoreContext";
+
 const CashierShift = () => {
-    const [shiftActive, setShiftActive] = useState(false);
+    const { startShift, endShift, currentShift } = useStore();
     const [openingFloat, setOpeningFloat] = useState("");
     const [closingCash, setClosingCash] = useState("");
     const [loading, setLoading] = useState(false);
@@ -20,12 +22,9 @@ const CashierShift = () => {
             return;
         }
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setShiftActive(true);
-            setLoading(false);
-            toast.success("Shift started successfully.");
-        }, 1000);
+        startShift(parseFloat(openingFloat));
+        setLoading(false);
+        // Toast handled in context
     };
 
     const handleEndShift = () => {
@@ -34,14 +33,11 @@ const CashierShift = () => {
             return;
         }
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setShiftActive(false);
-            setOpeningFloat("");
-            setClosingCash("");
-            setLoading(false);
-            toast.success("Shift ended. Report generated.");
-        }, 1000);
+        endShift(parseFloat(closingCash));
+        setOpeningFloat("");
+        setClosingCash("");
+        setLoading(false);
+        // Toast handled in context
     };
 
     return (
@@ -52,7 +48,7 @@ const CashierShift = () => {
                     <p className="text-muted-foreground">Start and end your daily shifts securely.</p>
                 </div>
 
-                {!shiftActive ? (
+                {!currentShift ? (
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -85,14 +81,14 @@ const CashierShift = () => {
                                 End Current Shift
                             </CardTitle>
                             <CardDescription>
-                                Shift started at {new Date().toLocaleTimeString()}.
+                                Shift started at {new Date(currentShift.startTime).toLocaleTimeString()}.
                                 Please count cash in drawer.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="p-4 bg-slate-100 rounded-lg flex justify-between items-center mb-4">
                                 <span className="text-sm font-medium">Opening Float</span>
-                                <span className="font-bold">R {parseFloat(openingFloat).toFixed(2)}</span>
+                                <span className="font-bold">R {currentShift.openingFloat.toFixed(2)}</span>
                             </div>
 
                             <div className="space-y-2">

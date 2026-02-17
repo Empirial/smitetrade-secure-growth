@@ -11,16 +11,56 @@ import { Clock, MapPin, Store, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
-const OwnerShopSettings = () => {
-    const [loading, setLoading] = useState(false);
+import { useStore } from "@/context/StoreContext";
+import { useEffect } from "react";
 
-    const handleSave = () => {
+const OwnerShopSettings = () => {
+    const { user, updateUser } = useStore();
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        storeName: "",
+        currency: "ZAR",
+        address: "",
+        suburb: "",
+        city: "",
+        province: "",
+        postalCode: ""
+    });
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                storeName: user.storeName || "",
+                currency: user.storeDetails?.currency || "ZAR",
+                address: user.storeDetails?.address || "",
+                suburb: user.storeDetails?.suburb || "",
+                city: user.storeDetails?.city || "",
+                province: user.storeDetails?.province || "",
+                postalCode: user.storeDetails?.postalCode || ""
+            });
+        }
+    }, [user]);
+
+    const handleSave = async () => {
         setLoading(true);
-        // Simulate API
-        setTimeout(() => {
+        try {
+            await updateUser({
+                storeName: formData.storeName,
+                storeDetails: {
+                    address: formData.address,
+                    suburb: formData.suburb,
+                    city: formData.city,
+                    province: formData.province,
+                    postalCode: formData.postalCode,
+                    currency: formData.currency
+                }
+            });
+            // toast handles success in StoreContext
+        } catch (error) {
+            // toast handles error
+        } finally {
             setLoading(false);
-            toast.success("Shop settings saved successfully.");
-        }, 1000);
+        }
     };
 
     return (

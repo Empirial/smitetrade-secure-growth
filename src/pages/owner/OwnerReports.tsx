@@ -20,16 +20,32 @@ import { format } from "date-fns";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-const transactions = [
-    { id: "TRX-001", date: "2024-03-01", time: "08:30", items: 5, total: 120.00, method: "Cash", status: "Completed" },
-    { id: "TRX-002", date: "2024-03-01", time: "09:15", items: 2, total: 45.50, method: "Card", status: "Completed" },
-    { id: "TRX-003", date: "2024-03-01", time: "09:45", items: 1, total: 18.00, method: "Cash", status: "Completed" },
-    { id: "TRX-004", date: "2024-03-01", time: "10:20", items: 8, total: 350.00, method: "Card", status: "Completed" },
-    { id: "TRX-005", date: "2024-03-01", time: "11:00", items: 3, total: 85.00, method: "Cash", status: "Completed" },
-];
+import { useStore } from "@/context/StoreContext";
+import { useMemo } from "react";
 
 const OwnerReports = () => {
+    const { orders } = useStore();
     const [date, setDate] = useState<Date | undefined>(new Date());
+
+    const dailyStats = useMemo(() => {
+        if (!date) return { revenue: 0, count: 0, avg: 0, transactions: [] };
+
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const daysOrders = orders.filter(o => {
+            const orderDate = new Date(o.date);
+            return orderDate >= startOfDay && orderDate <= endOfDay;
+        });
+
+        const revenue = daysOrders.reduce((sum, o) => sum + o.total, 0);
+        const count = daysOrders.length;
+        const avg = count > 0 ? revenue / count : 0;
+
+        return { revenue, count, avg, transactions: daysOrders };
+    }, [orders, date]);
 
     return (
         <DashboardLayout role="owner">
@@ -76,7 +92,7 @@ const OwnerReports = () => {
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">R 618.50</div>
+                            <div className="text-2xl font-bold">R {dailyStats.revenue.toFixed(2)}</div>
                             <p className="text-xs text-muted-foreground">For selected date</p>
                         </CardContent>
                     </Card>
@@ -86,7 +102,7 @@ const OwnerReports = () => {
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">5</div>
+                            <div className="text-2xl font-bold">{dailyStats.count}</div>
                             <p className="text-xs text-muted-foreground">For selected date</p>
                         </CardContent>
                     </Card>
@@ -96,8 +112,8 @@ const OwnerReports = () => {
                             <CreditCard className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">R 123.70</div>
-                            <p className="text-xs text-muted-foreground">+2.5% vs yesterday</p>
+                            <div className="text-2xl font-bold">R {dailyStats.avg.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">Based on current selection</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -106,35 +122,44 @@ const OwnerReports = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle>Transactions</CardTitle>
-                        <CardDescription>List of all sales for {date ? format(date, "MMMM do, yyyy") : "Selected Date"}.</CardDescription>
+                        <CardDescription>List of sales for {date ? format(date, "MMMM do, yyyy") : "Selected Date"}.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Transaction ID</TableHead>
+                                    <TableHead>Order ID</TableHead>
                                     <TableHead>Time</TableHead>
+                                    <TableHead>Customer</TableHead>
                                     <TableHead>Items</TableHead>
-                                    <TableHead>Payment Method</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Total</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {transactions.map((trx) => (
-                                    <TableRow key={trx.id}>
-                                        <TableCell className="font-medium">{trx.id}</TableCell>
-                                        <TableCell>{trx.time}</TableCell>
-                                        <TableCell>{trx.items}</TableCell>
-                                        <TableCell>{trx.method}</TableCell>
-                                        <TableCell>
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                {trx.status}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold">R {trx.total.toFixed(2)}</TableCell>
+                                {dailyStats.transactions.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No transactions found for this date.</TableCell>
                                     </TableRow>
-                                ))}
+                                ) : (
+                                    dailyStats.transactions.map((trx) => (
+                                        <TableRow key={trx.id}>
+                                            <TableCell className="font-medium">#{trx.id.slice(-6)}</TableCell>
+                                            <TableCell>{format(new Date(trx.date), "HH:mm")}</TableCell>
+                                            <TableCell>{trx.customerName}</TableCell>
+                                            <TableCell>{trx.items.length}</TableCell>
+                                            <TableCell>
+                                                <span className={cn("inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                                                    trx.status === 'Paid' || trx.status === 'Delivered' ? "bg-green-100 text-green-800" :
+                                                        trx.status === 'Pending' ? "bg-yellow-100 text-yellow-800" : "bg-slate-100 text-slate-800"
+                                                )}>
+                                                    {trx.status}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold">R {trx.total.toFixed(2)}</TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>

@@ -28,7 +28,7 @@ const HeroSection = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-4xl font-extrabold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl max-w-5xl"
         >
-          The <span className="underline decoration-4 decoration-foreground/30 underline-offset-8">Sword & Shield</span> for Your Spaza's Future
+          The <span className="text-gradient-gold font-extrabold underline decoration-4 decoration-yellow-500/30 underline-offset-8">Sword & Shield</span> for Your Spaza's Future
         </motion.h1>
 
         {/* Subheadline */}

@@ -136,22 +136,22 @@
   }
 
   .text-gradient-gold {
-    @apply text-foreground;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700];
   }
 
   .text-gradient-blue {
-    @apply text-foreground;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500;
   }
 
   .glow-gold {
-    box-shadow: 0 0 40px -10px rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 50px -10px rgba(255, 215, 0, 0.4);
   }
 
   .glow-emerald {
-    box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 50px -10px rgba(16, 185, 129, 0.4);
   }
 
   .glow-blue {
-    box-shadow: 0 0 40px -10px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 50px -10px rgba(59, 130, 246, 0.4);
   }
 }

@@ -7,6 +7,20 @@ export interface User {
     email: string;
     role: UserRole;
     storeName?: string; // For Owners
+    storeDetails?: {
+        address: string;
+        suburb: string;
+        city: string;
+        province: string;
+        postalCode: string;
+        currency: string;
+    };
+    profileDetails?: {
+        firstName: string;
+        lastName: string;
+        phone: string;
+        defaultAddress: string;
+    };
 }
 
 export interface Product {

@@ -38,6 +38,7 @@ interface StoreContextType {
     login: (email: string, password: string, roleFallback?: UserRole) => Promise<void>;
     register: (email: string, password: string, name: string, role: UserRole, storeName?: string) => Promise<void>;
     logout: () => Promise<void>;
+    updateUser: (updates: Partial<User>) => Promise<void>;
 
     // Inventory
     products: Product[];
@@ -264,7 +265,28 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // --- Inventory Actions ---
+    // --- User Updates ---
+    const updateUser = async (updates: Partial<User>) => {
+        if (!user) return;
+
+        if (USE_MOCK_DATA) {
+            setUser(prev => prev ? { ...prev, ...updates } : null);
+            toast.success("Profile updated (Mock)");
+            return;
+        }
+
+        try {
+            const userRef = doc(db, "users", user.uid);
+            await updateDoc(userRef, updates);
+            setUser(prev => prev ? { ...prev, ...updates } : null);
+            toast.success("Profile updated successfully");
+        } catch (error) {
+            console.error("Update profile error:", error);
+            toast.error("Failed to update profile");
+            throw error;
+        }
+    };
+
     // --- Inventory Actions ---
     const addProduct = async (productData: Omit<Product, 'id' | 'status'>) => {
         if (USE_MOCK_DATA) {
@@ -515,7 +537,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <StoreContext.Provider value={{
-            user, login, register, logout,
+            user, login, register, logout, updateUser,
             products, addProduct, updateProduct, deleteProduct,
             cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
             orders, placeOrder, updateOrderStatus, assignDriver, isLoading

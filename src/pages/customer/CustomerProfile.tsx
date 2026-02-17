@@ -9,12 +9,54 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { toast } from "sonner";
 import { useCredit } from "@/context/CreditContext";
+import { useStore } from "@/context/StoreContext";
+import { useState, useEffect } from "react";
 
 const CustomerProfile = () => {
-    const { profile, isLoading } = useCredit();
+    const { user, updateUser } = useStore();
+    const { profile, isLoading: isCreditLoading } = useCredit();
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSave = () => {
-        toast.success("Profile updated successfully");
+    // Profile State
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [phone, setPhone] = useState("");
+    const [defaultAddress, setDefaultAddress] = useState("");
+
+    // Initialize state from user object
+    useEffect(() => {
+        if (user) {
+            // Split name if first/last not set yet
+            if (user.profileDetails) {
+                setFirstName(user.profileDetails.firstName || "");
+                setLastName(user.profileDetails.lastName || "");
+                setPhone(user.profileDetails.phone || "");
+                setDefaultAddress(user.profileDetails.defaultAddress || "");
+            } else if (user.name) {
+                const parts = user.name.split(" ");
+                setFirstName(parts[0] || "");
+                setLastName(parts.slice(1).join(" ") || "");
+            }
+        }
+    }, [user]);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            await updateUser({
+                name: `${firstName} ${lastName}`.trim(),
+                profileDetails: {
+                    firstName,
+                    lastName,
+                    phone,
+                    defaultAddress
+                }
+            });
+        } catch (error) {
+            // Toast handled in context
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -32,7 +74,7 @@ const CustomerProfile = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-emerald-700">
-                                {isLoading ? "..." : (profile ? `${profile.briScore.toFixed(1)}%` : "N/A")}
+                                {isCreditLoading ? "..." : (profile ? `${profile.briScore.toFixed(1)}%` : "N/A")}
                             </div>
                             <p className="text-xs text-emerald-600 mt-1">
                                 {profile ? profile.tier : "-"}
@@ -84,37 +126,39 @@ const CustomerProfile = () => {
                     <Card>
                         <CardHeader className="flex flex-row items-center gap-4">
                             <Avatar className="h-16 w-16">
-                                <AvatarImage src="/placeholder-user.jpg" />
-                                <AvatarFallback>LN</AvatarFallback>
+                                <AvatarImage src={`https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=10b981&color=fff`} />
+                                <AvatarFallback>{firstName.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <CardTitle>Lerato Nkosi</CardTitle>
-                                <CardDescription>lerato@example.com</CardDescription>
+                                <CardTitle>{firstName} {lastName}</CardTitle>
+                                <CardDescription>{user?.email}</CardDescription>
                             </div>
                         </CardHeader>
                         <CardContent className="grid gap-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">First Name</Label>
-                                    <Input id="name" defaultValue="Lerato" />
+                                    <Input id="name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="lastname">Last Name</Label>
-                                    <Input id="lastname" defaultValue="Nkosi" />
+                                    <Input id="lastname" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                                 </div>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="phone">Phone Number</Label>
-                                <Input id="phone" defaultValue="082 123 4567" />
+                                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="082 123 4567" />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="location">Default Location</Label>
-                                <Input id="location" defaultValue="Soweto, Zone 6" />
+                                <Input id="location" value={defaultAddress} onChange={(e) => setDefaultAddress(e.target.value)} placeholder="Soweto, Zone 6" />
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end gap-2">
                             <Button variant="outline">Cancel</Button>
-                            <Button onClick={handleSave}>Save Changes</Button>
+                            <Button onClick={handleSave} disabled={isSaving}>
+                                {isSaving ? "Saving..." : "Save Changes"}
+                            </Button>
                         </CardFooter>
                     </Card>
 
@@ -128,13 +172,15 @@ const CustomerProfile = () => {
                             <CardDescription>Manage your delivery locations.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="p-3 border rounded-md flex justify-between items-center bg-slate-50">
-                                <div>
-                                    <p className="font-medium text-sm">Zone 6 Store</p>
-                                    <p className="text-xs text-muted-foreground">123 Vilakazi St, Soweto</p>
+                            {defaultAddress && (
+                                <div className="p-3 border rounded-md flex justify-between items-center bg-slate-50">
+                                    <div>
+                                        <p className="font-medium text-sm">Default Address</p>
+                                        <p className="text-xs text-muted-foreground">{defaultAddress}</p>
+                                    </div>
+                                    <Badge>Default</Badge>
                                 </div>
-                                <Badge>Default</Badge>
-                            </div>
+                            )}
                             <div className="p-3 border rounded-md flex justify-between items-center">
                                 <div>
                                     <p className="font-medium text-sm">Home</p>

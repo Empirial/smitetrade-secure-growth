@@ -1,4 +1,3 @@
-import { Shield } from "lucide-react";
 import logo from "@/assets/smitetrade-logo.jpeg";
 
 const FooterSection = () => {
@@ -11,7 +10,6 @@ const FooterSection = () => {
       <div className="max-w-6xl mx-auto relative z-10 text-center">
         <div className="flex items-center justify-center gap-3 mb-6">
           <img src={logo} alt="SMITETRADE" className="w-12 h-12 rounded-lg object-contain" />
-          <Shield size={20} className="text-accent" />
         </div>
 
         <p className="text-muted-foreground text-lg max-w-lg mx-auto mb-8">

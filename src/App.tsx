@@ -31,6 +31,11 @@ import OwnerPricing from "./pages/owner/OwnerPricing";
 import OwnerSuppliers from "./pages/owner/OwnerSuppliers";
 import OwnerAlerts from "./pages/owner/OwnerAlerts";
 import OwnerAnalytics from "./pages/owner/OwnerAnalytics";
+import OwnerShiftReviews from "./pages/owner/OwnerShiftReviews";
+import OwnerExpenses from "./pages/owner/OwnerExpenses";
+import OwnerPromotions from "./pages/owner/OwnerPromotions";
+import OwnerStockAdjustment from "./pages/owner/OwnerStockAdjustment";
+import OwnerCustomers from "./pages/owner/OwnerCustomers";
 
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
@@ -126,6 +131,11 @@ const App = () => (
               <Route path="/owner/suppliers" element={<OwnerSuppliers />} />
               <Route path="/owner/alerts" element={<OwnerAlerts />} />
               <Route path="/owner/analytics" element={<OwnerAnalytics />} />
+              <Route path="/owner/shift-reviews" element={<OwnerShiftReviews />} />
+              <Route path="/owner/expenses" element={<OwnerExpenses />} />
+              <Route path="/owner/promotions" element={<OwnerPromotions />} />
+              <Route path="/owner/stock-adjustments" element={<OwnerStockAdjustment />} />
+              <Route path="/owner/customers" element={<OwnerCustomers />} />
 
               {/* Cashier Portal */}
               <Route path="/cashier/login" element={<CashierLogin />} />

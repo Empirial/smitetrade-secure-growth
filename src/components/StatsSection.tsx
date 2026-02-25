@@ -2,9 +2,9 @@ import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 
 const stats = [
-    { value: 500, label: "Shops Registered", suffix: "+" },
-    { value: 2, label: "Transactions Processed", suffix: "M+", prefix: "R" },
-    { value: 10000, label: "Active Users", suffix: "+" },
+    { value: 500, label: "Targeting Registered Shops", suffix: "+" },
+    { value: 2, label: "Targeting Transactions Processed", suffix: "M+", prefix: "R" },
+    { value: 10000, label: "Targeting Active Users", suffix: "+" },
 ];
 
 const Counter = ({ from, to, duration = 2, prefix = "", suffix = "" }: any) => {

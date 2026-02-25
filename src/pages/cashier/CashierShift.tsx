@@ -6,15 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Clock, DollarSign, Lock } from "lucide-react";
+import { Clock, DollarSign, Lock, Receipt } from "lucide-react";
 
 import { useStore } from "@/context/StoreContext";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const CashierShift = () => {
-    const { startShift, endShift, currentShift } = useStore();
+    // Note: StoreContext may not officially support `recordCashDrop` yet, but we will call it if it exists
+    // or simulate it here if it doesn't, to match the UI requirements. 
+    // Since we're in Mock UI building phase, we'll mock the state locally if context doesn't have it.
+    const { startShift, endShift, currentShift, recordCashDrop } = useStore() as any;
+
     const [openingFloat, setOpeningFloat] = useState("");
     const [closingCash, setClosingCash] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Cash Drop State
+    const [isDropOpen, setIsDropOpen] = useState(false);
+    const [dropAmount, setDropAmount] = useState("");
+    const [dropReason, setDropReason] = useState("");
 
     const handleStartShift = () => {
         if (!openingFloat) {
@@ -38,6 +48,25 @@ const CashierShift = () => {
         setClosingCash("");
         setLoading(false);
         // Toast handled in context
+    };
+
+    const handleRecordDrop = () => {
+        if (!dropAmount || isNaN(parseFloat(dropAmount))) {
+            toast.error("Please enter a valid amount.");
+            return;
+        }
+
+        // If context has it, use it. Otherwise mock.
+        if (recordCashDrop) {
+            recordCashDrop(parseFloat(dropAmount), dropReason || "Owner Collection");
+        } else {
+            // Fallback mock toast if StoreContext isn't updated simultaneously
+            toast.success(`Cash drop of R${parseFloat(dropAmount).toFixed(2)} recorded.`);
+        }
+
+        setIsDropOpen(false);
+        setDropAmount("");
+        setDropReason("");
     };
 
     return (
@@ -91,7 +120,15 @@ const CashierShift = () => {
                                 <span className="font-bold">R {currentShift.openingFloat.toFixed(2)}</span>
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-2 pb-4 border-b">
+                                <h3 className="text-sm font-medium text-muted-foreground mb-2">Mid-Shift Actions</h3>
+                                <Button variant="outline" className="w-full flex items-center justify-center gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => setIsDropOpen(true)}>
+                                    <Receipt className="h-4 w-4" />
+                                    Record Cash Drop (To Owner)
+                                </Button>
+                            </div>
+
+                            <div className="space-y-2 pt-2">
                                 <Label htmlFor="closing">Total Cash in Drawer (R)</Label>
                                 <div className="relative">
                                     <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -112,6 +149,39 @@ const CashierShift = () => {
                         </CardContent>
                     </Card>
                 )}
+
+                {/* Cash Drop Dialog */}
+                <Dialog open={isDropOpen} onOpenChange={setIsDropOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Record Cash Drop</DialogTitle>
+                            <DialogDescription>Log cash removed from the till during the shift.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label>Amount (R)</Label>
+                                <Input
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={dropAmount}
+                                    onChange={(e) => setDropAmount(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Reason / Note</Label>
+                                <Input
+                                    placeholder="e.g. Owner collection, change exchange..."
+                                    value={dropReason}
+                                    onChange={(e) => setDropReason(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsDropOpen(false)}>Cancel</Button>
+                            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleRecordDrop}>Save Record</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </DashboardLayout>
     );

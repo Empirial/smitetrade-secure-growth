@@ -14,10 +14,11 @@ import { Search, ShoppingCart, Plus, Filter, X, Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useStore } from "@/context/StoreContext";
 
 const categories = ["All", "Staples", "Pantry", "Beverages", "Dairy", "Bakery", "Household"];
+const popularSearches = ["Bread", "Milk", "Maize Meal", "Sugar", "Cooking Oil", "Airtime"];
 
 const CustomerProducts = () => {
     // Access Global State
@@ -103,6 +104,20 @@ const CustomerProducts = () => {
                                 </SelectContent>
                             </Select>
                         </div>
+                    </div>
+
+                    {/* Popular Searches */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1 pb-2 border-b border-dashed mb-1">
+                        <span className="text-xs text-muted-foreground mr-1">Popular:</span>
+                        {popularSearches.map(term => (
+                            <button
+                                key={term}
+                                onClick={() => setSearch(term)}
+                                className="text-xs bg-muted hover:bg-emerald-100 hover:text-emerald-700 px-2.5 py-1 rounded-full border transition-colors"
+                            >
+                                {term}
+                            </button>
+                        ))}
                     </div>
 
                     {/* Category Pills */}

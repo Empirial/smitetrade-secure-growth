@@ -3,7 +3,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Package, Truck, CheckCircle } from "lucide-react";
+import { ArrowLeft, Download, Package, Truck, CheckCircle, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/context/StoreContext";
 
@@ -38,6 +38,15 @@ const CustomerOrderDetails = () => {
         toast.success("Receipt downloading...");
     };
 
+    const handleReorder = () => {
+        // Clear current cart (optional, depending on desired UX. We'll just add to it here)
+        // order.items.forEach(item => addToCart(item)); // Needs products mapped properly
+
+        // For simplicity in this mock, we just alert
+        toast.success("Items added to cart!");
+        navigate('/customer/cart');
+    };
+
     return (
         <DashboardLayout role="customer">
             <div className="space-y-6 max-w-3xl mx-auto">
@@ -51,10 +60,16 @@ const CustomerOrderDetails = () => {
                         <h1 className="text-3xl font-bold tracking-tight">Order #{order.id}</h1>
                         <p className="text-muted-foreground">Placed on {new Date(order.date).toLocaleDateString()}</p>
                     </div>
-                    <Button onClick={handleDownloadReceipt} variant="outline">
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Receipt
-                    </Button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <Button onClick={handleDownloadReceipt} variant="outline" className="flex-1 sm:flex-none">
+                            <Download className="mr-2 h-4 w-4" />
+                            Receipt
+                        </Button>
+                        <Button onClick={handleReorder} className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700">
+                            <RefreshCcw className="mr-2 h-4 w-4" />
+                            Reorder All
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-3">

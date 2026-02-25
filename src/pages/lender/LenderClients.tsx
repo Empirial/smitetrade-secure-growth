@@ -123,10 +123,10 @@ const LenderClients = () => {
                                             {borrower.id ? `${borrower.id.substring(0, 6)}......${borrower.id.slice(-2)}` : 'N/A'}
                                         </span>
                                     </div>
-                                    {borrower.idNumber && (
+                                    {borrower.nationalId && (
                                         <div className="flex justify-between">
                                             <span>ID Number:</span>
-                                            <span className="font-mono">{maskIdNumber(borrower.idNumber)}</span>
+                                            <span className="font-mono">{maskIdNumber(borrower.nationalId)}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between">

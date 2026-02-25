@@ -2,9 +2,11 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CheckCircle2, CreditCard, Banknote, Landmark } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle2, CreditCard, Banknote, Landmark, ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useStore } from "@/context/StoreContext";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const CashierCheckout = () => {
     const location = useLocation();
@@ -12,6 +14,27 @@ const CashierCheckout = () => {
     const { placeOrder } = useStore();
     const { cart, total } = location.state || { cart: [], total: 0 };
     const [success, setSuccess] = useState(false);
+
+    // Payment State
+    const [paymentMethod, setPaymentMethod] = useState<"Select" | "Cash" | "Card" | "SS-ID">("Select");
+    const [amountTendered, setAmountTendered] = useState<string>("");
+    const [changeDue, setChangeDue] = useState<number>(0);
+
+    // Split Payments State
+    const [isSplitPayment, setIsSplitPayment] = useState(false);
+    const [splitAmounts, setSplitAmounts] = useState({ cash: "", card: "", ssid: "" });
+
+    // Calculate change dynamically
+    useEffect(() => {
+        if (paymentMethod === "Cash" && amountTendered) {
+            const tendered = parseFloat(amountTendered);
+            if (!isNaN(tendered) && tendered >= total) {
+                setChangeDue(tendered - total);
+            } else {
+                setChangeDue(0);
+            }
+        }
+    }, [amountTendered, total, paymentMethod]);
 
     if (success) {
         return (
@@ -32,70 +55,173 @@ const CashierCheckout = () => {
     }
 
     const handlePay = async () => {
-        // Simulate processing
-        // In real app: Integrated Payment Gateway logic here
+        // Validate Cash payment
+        if (paymentMethod === "Cash" || isSplitPayment) {
+            let totalPaid = 0;
+            if (isSplitPayment) {
+                totalPaid += parseFloat(splitAmounts.cash || "0");
+                totalPaid += parseFloat(splitAmounts.card || "0");
+                totalPaid += parseFloat(splitAmounts.ssid || "0");
+            } else if (paymentMethod === "Cash") {
+                totalPaid = parseFloat(amountTendered || "0");
+            }
+
+            if (!isSplitPayment && paymentMethod === "Cash" && totalPaid < total) {
+                // For simple cash pay, cannot be less than total
+                alert("Amount tendered is less than the total due.");
+                return;
+            }
+
+            if (isSplitPayment && Math.abs(totalPaid - total) > 0.01) {
+                // For split payments, must match exactly
+                // Provide small tolerance for float issues
+                if (totalPaid < total) {
+                    alert(`Split payments are short by R ${(total - totalPaid).toFixed(2)}`);
+                    return;
+                }
+            }
+        }
 
         // Place the order in the system
         await placeOrder({
             name: "Walk-in Customer",
             address: "In-Store",
-            items: cart, // Pass cart items explicitly if placeOrder supports it, or use StoreContext cart if it was synced (but CashierPOS has local cart)
-            // Wait, StoreContext.placeOrder uses the *global* cart. 
-            // CashierPOS uses a *local* cart state passed via navigation.
-            // I need to ensure placeOrder can accept items, or I need to handle it differently.
-            // Looking at StoreContext (from memory), placeOrder takes `orderDetails` and uses `cart` state.
-            // If Cashier has local cart, I should probably pass it to placeOrder or update the context.
-            // For now, let's assume placeOrder needs modification OR I just pass the items if the function allows.
-            // Checking StoreContext type in previous view... 
-            // placeOrder = async (orderDetails: any) => { ... const newOrder = { ...items: cart ... } }
-            // It uses the global cart.
-            // This is a disconnect. CashierPOS uses local cart.
-            // FIX: I should probably set the global cart to these items before placing, OR modify placeOrder to accept items.
-            // Since I can't easily see StoreContext right now, let's assume I need to pass items.
-            // Let's try passing 'items' in the object. If StoreContext ignores it, it uses global cart (which is empty for cashier).
-            // Actually, for the Mock Mode, I can likely just pass the items array in the `placeOrder` argument if I update StoreContext.
-            // BUT, to be safe and quick: I will just assume placeOrder takes overrides. 
-            // If not, I'll see it in testing (which I can't do). 
-            // BETTER PLAN: I will update StoreContext to allow passing `items` in `placeOrder`.
+            items: cart, // CashierPOS local cart synced to this payload
+            paymentMethod: isSplitPayment ? "Split" : paymentMethod,
         });
 
         setSuccess(true);
-    }
+    };
+
+    const handleSplitAmountChange = (method: 'cash' | 'card' | 'ssid', value: string) => {
+        setSplitAmounts(prev => ({ ...prev, [method]: value }));
+    };
+
+    const splitTotalPaid = parseFloat(splitAmounts.cash || "0") + parseFloat(splitAmounts.card || "0") + parseFloat(splitAmounts.ssid || "0");
+    const splitBalance = total - splitTotalPaid;
 
     return (
         <DashboardLayout role="cashier">
             <div className="max-w-3xl mx-auto grid md:grid-cols-2 gap-8">
                 <div>
                     <h1 className="text-2xl font-bold mb-4">Payment Selection</h1>
-                    <div className="grid gap-4">
-                        <Card className="cursor-pointer hover:border-emerald-500 transition-all border-2 border-transparent" onClick={handlePay}>
-                            <CardHeader className="flex flex-row items-center gap-4">
-                                <div className="bg-green-100 p-3 rounded-lg"><Banknote className="text-green-600" /></div>
-                                <div>
-                                    <CardTitle>Cash Payment</CardTitle>
-                                    <CardDescription>Receive cash from customer</CardDescription>
+
+                    {!isSplitPayment && paymentMethod === "Select" && (
+                        <div className="grid gap-4">
+                            <Card className="cursor-pointer hover:border-emerald-500 transition-all border-2 border-transparent" onClick={() => setPaymentMethod("Cash")}>
+                                <CardHeader className="flex flex-row items-center gap-4">
+                                    <div className="bg-green-100 p-3 rounded-lg"><Banknote className="text-green-600" /></div>
+                                    <div>
+                                        <CardTitle>Cash Payment</CardTitle>
+                                        <CardDescription>Receive cash from customer</CardDescription>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                            <Card className="cursor-pointer hover:border-blue-500 transition-all border-2 border-transparent" onClick={() => { setPaymentMethod("Card"); handlePay(); }}>
+                                <CardHeader className="flex flex-row items-center gap-4">
+                                    <div className="bg-blue-100 p-3 rounded-lg"><CreditCard className="text-blue-600" /></div>
+                                    <div>
+                                        <CardTitle>Card Machine</CardTitle>
+                                        <CardDescription>Use card terminal</CardDescription>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                            <Card className="cursor-pointer hover:border-amber-500 transition-all border-2 border-transparent" onClick={() => { setPaymentMethod("SS-ID"); handlePay(); }}>
+                                <CardHeader className="flex flex-row items-center gap-4">
+                                    <div className="bg-amber-100 p-3 rounded-lg"><Landmark className="text-amber-600" /></div>
+                                    <div>
+                                        <CardTitle>SS-ID Credit</CardTitle>
+                                        <CardDescription>Pay using SpazaScore Credit</CardDescription>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+
+                            <Button variant="outline" className="w-full mt-4 h-12 border-dashed" onClick={() => setIsSplitPayment(true)}>
+                                Split Payment (Multiple Methods)
+                            </Button>
+                        </div>
+                    )}
+
+                    {paymentMethod === "Cash" && !isSplitPayment && (
+                        <Card className="border-emerald-500 border-2">
+                            <CardHeader>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <Button variant="ghost" size="icon" onClick={() => setPaymentMethod("Select")} className="h-8 w-8 -ml-2">
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                    <CardTitle className="text-xl">Cash Payment</CardTitle>
+                                </div>
+                                <div className="space-y-6 pt-2">
+                                    <div className="space-y-2">
+                                        <Label className="text-lg">Amount Tendered (R)</Label>
+                                        <Input
+                                            type="number"
+                                            className="text-2xl h-14 font-bold tracking-wider"
+                                            placeholder="0.00"
+                                            autoFocus
+                                            value={amountTendered}
+                                            onChange={(e) => setAmountTendered(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="p-4 bg-slate-100 rounded-lg flex justify-between items-center">
+                                        <span className="text-lg font-medium">Change Due:</span>
+                                        <span className={`text-2xl font-bold ${changeDue > 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                                            R {changeDue.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <Button
+                                        className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700"
+                                        disabled={!amountTendered || parseFloat(amountTendered) < total}
+                                        onClick={handlePay}
+                                    >
+                                        Confirm & Print Receipt
+                                    </Button>
                                 </div>
                             </CardHeader>
                         </Card>
-                        <Card className="cursor-pointer hover:border-blue-500 transition-all border-2 border-transparent" onClick={handlePay}>
-                            <CardHeader className="flex flex-row items-center gap-4">
-                                <div className="bg-blue-100 p-3 rounded-lg"><CreditCard className="text-blue-600" /></div>
-                                <div>
-                                    <CardTitle>Card Machine</CardTitle>
-                                    <CardDescription>Use card terminal</CardDescription>
+                    )}
+
+                    {isSplitPayment && (
+                        <Card className="border-indigo-500 border-2">
+                            <CardHeader>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <Button variant="ghost" size="icon" onClick={() => setIsSplitPayment(false)} className="h-8 w-8 -ml-2">
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                    <CardTitle className="text-xl">Split Payment</CardTitle>
+                                </div>
+                                <div className="space-y-4 pt-2">
+                                    <div className="space-y-2">
+                                        <Label>Cash Amount (R)</Label>
+                                        <Input type="number" placeholder="0.00" value={splitAmounts.cash} onChange={(e) => handleSplitAmountChange('cash', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Card Amount (R)</Label>
+                                        <Input type="number" placeholder="0.00" value={splitAmounts.card} onChange={(e) => handleSplitAmountChange('card', e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>SS-ID Credit (R)</Label>
+                                        <Input type="number" placeholder="0.00" value={splitAmounts.ssid} onChange={(e) => handleSplitAmountChange('ssid', e.target.value)} />
+                                    </div>
+
+                                    <div className={`p-4 rounded-lg flex justify-between items-center ${splitBalance === 0 ? 'bg-green-100' : splitBalance < 0 ? 'bg-red-100' : 'bg-slate-100'}`}>
+                                        <span className="font-medium">{splitBalance > 0 ? 'Balance Remaining:' : splitBalance < 0 ? 'Overpaid (Change):' : 'Fully Paid:'}</span>
+                                        <span className={`text-xl font-bold ${splitBalance === 0 ? 'text-green-700' : splitBalance < 0 ? 'text-red-700' : ''}`}>
+                                            R {Math.abs(splitBalance).toFixed(2)}
+                                        </span>
+                                    </div>
+
+                                    <Button
+                                        className="w-full h-12"
+                                        disabled={splitBalance > 0} // Can only submit if fully paid or overpaid (which means change due)
+                                        onClick={handlePay}
+                                    >
+                                        Process Split Payment
+                                    </Button>
                                 </div>
                             </CardHeader>
                         </Card>
-                        <Card className="cursor-pointer hover:border-amber-500 transition-all border-2 border-transparent" onClick={handlePay}>
-                            <CardHeader className="flex flex-row items-center gap-4">
-                                <div className="bg-amber-100 p-3 rounded-lg"><Landmark className="text-amber-600" /></div>
-                                <div>
-                                    <CardTitle>SS-ID Credit</CardTitle>
-                                    <CardDescription>Pay using SpazaScore Credit</CardDescription>
-                                </div>
-                            </CardHeader>
-                        </Card>
-                    </div>
+                    )}
                 </div>
 
                 <div>

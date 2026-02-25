@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package, Banknote, FileText, Bell, AlertTriangle, Search, Heart } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package, Banknote, FileText, Bell, AlertTriangle, Search, Heart, Wallet, Receipt, Tag, ClipboardList, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import PageTransition from "@/components/PageTransition";
@@ -20,18 +20,23 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const ownerLinks = {
         Overview: [
             { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
+            { href: "/owner/customers", label: "Customers", icon: Users },
             { href: "/owner/profile", label: "Profile", icon: User },
             { href: "/owner/alerts", label: "Alerts", icon: Bell },
         ],
         Operations: [
             { href: "/owner/pos", label: "POS System", icon: ShoppingCart },
+            { href: "/owner/promotions", label: "Promotions", icon: Tag },
             { href: "/owner/orders", label: "Orders", icon: Box },
             { href: "/owner/inventory", label: "Inventory", icon: Package },
+            { href: "/owner/stock-adjustments", label: "Stock Adjustments", icon: ClipboardList },
             { href: "/owner/suppliers", label: "Suppliers", icon: Truck },
             { href: "/owner/lending", label: "Lending (P2P)", icon: Banknote },
         ],
         Management: [
-            { href: "/owner/staff", label: "Staff", icon: Users },
+            { href: "/owner/shift-reviews", label: "Shift Reviews", icon: Wallet },
+            { href: "/owner/expenses", label: "Expenses", icon: Receipt },
+            { href: "/owner/staff", label: "Staff", icon: Briefcase },
             { href: "/owner/reports", label: "Reports", icon: BarChart3 },
             { href: "/owner/pricing", label: "Pricing", icon: CreditCard },
             { href: "/owner/settings", label: "Settings", icon: Settings },

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Shield, Store, Zap } from "lucide-react";
+import logo from "@/assets/smitetrade-logo.jpeg";
 
 const HeroSection = () => {
   return (
@@ -15,10 +16,10 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center rounded-full border border-foreground/20 bg-foreground/5 px-3 py-1 text-sm font-medium backdrop-blur-sm"
+          className="inline-flex items-center rounded-full border border-foreground/20 bg-foreground/5 p-1 pr-4 text-sm font-medium backdrop-blur-sm shadow-sm"
         >
-          <span className="flex h-2 w-2 rounded-full bg-foreground mr-2" />
-          The Future of Townships
+          <img src={logo} alt="SMITETRADE" className="h-6 w-6 rounded-full object-cover mr-2" />
+          SMITETRADE
         </motion.div>
 
         {/* Headline */}

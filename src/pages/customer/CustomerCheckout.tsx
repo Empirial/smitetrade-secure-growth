@@ -9,8 +9,9 @@ import { useStore } from "@/context/StoreContext";
 import { useCredit } from "@/context/CreditContext";
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CreditCard, Banknote, Store } from "lucide-react";
+import { CreditCard, Banknote, Store, Wallet } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 const CustomerCheckout = () => {
@@ -18,10 +19,13 @@ const CustomerCheckout = () => {
     const { placeOrder, cartTotal, cart } = useStore();
     const { profile, purchaseOnCredit, simulatePayment } = useCredit();
 
-    // Simple state for the form
     const [step, setStep] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState("card");
     const [selectedStore, setSelectedStore] = useState("store_001");
+    const [allowSubstitutions, setAllowSubstitutions] = useState(false);
+
+    // Mock Wallet Balance
+    const [walletBalance] = useState(150.00);
 
     const [address, setAddress] = useState({
         street: "",
@@ -33,6 +37,17 @@ const CustomerCheckout = () => {
 
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Geofencing Validation (Mock 1818 as only serviceable zip for Soweto)
+        if (step === 1) {
+            if (address.zip !== '1818' && address.zip !== '1804' && address.zip !== '1868') {
+                toast.error("Sorry, your area is currently outside our 5km delivery radius.", {
+                    description: "We are expanding soon. Try a Soweto postal code (e.g., 1818)."
+                });
+                return;
+            }
+        }
+
         setStep(step + 1);
     };
 
@@ -46,6 +61,13 @@ const CustomerCheckout = () => {
         if (paymentMethod === 'credit') {
             const success = await purchaseOnCredit(total);
             if (!success) return; // Toast handled in context
+        } else if (paymentMethod === 'wallet') {
+            if (total > walletBalance) {
+                toast.error("Insufficient Spaza Wallet balance.");
+                return;
+            }
+            // Simulate wallet deduction
+            toast.success(`R ${total.toFixed(2)} deducted from Spaza Wallet.`);
         } else {
             // Simulate Card Payment
             await simulatePayment(total, new Date());
@@ -56,7 +78,10 @@ const CustomerCheckout = () => {
             name: "Current User",
             address: `${address.street}, ${address.city}`,
             paymentMethod,
-            storeId: selectedStore
+            storeId: selectedStore,
+            // Include substitutions preference
+            // @ts-ignore - store context signature might need updating eventually
+            allowSubstitutions: allowSubstitutions
         });
 
         navigate("/customer/payment"); // Or success page
@@ -189,6 +214,20 @@ const CustomerCheckout = () => {
                                             </div>
                                         ))}
                                     </div>
+
+                                    <div className="pt-4 border-t border-dashed">
+                                        <div className="flex items-center space-x-2 p-3 bg-blue-50/50 rounded-lg border border-blue-10>">
+                                            <Checkbox
+                                                id="substitutions"
+                                                checked={allowSubstitutions}
+                                                onCheckedChange={(checked) => setAllowSubstitutions(checked as boolean)}
+                                            />
+                                            <div className="space-y-1 leading-none">
+                                                <Label htmlFor="substitutions" className="cursor-pointer font-medium">Allow Substitutions?</Label>
+                                                <p className="text-xs text-muted-foreground">If an item is out of stock, the driver will bring a similar brand.</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
@@ -240,6 +279,30 @@ const CustomerCheckout = () => {
                                                         <span>Current Balance:</span>
                                                         <span className="font-mono text-red-500">R {profile?.balance.toFixed(2)}</span>
                                                     </div>
+                                                </div>
+                                            </Label>
+                                        </div>
+                                        <div>
+                                            <RadioGroupItem value="wallet" id="wallet" className="peer sr-only" />
+                                            <Label
+                                                htmlFor="wallet"
+                                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                            >
+                                                <div className="flex w-full items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Wallet className="mb-3 h-6 w-6 text-emerald-600" />
+                                                        <span className="font-semibold">Spaza Wallet</span>
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">Prepaid</span>
+                                                </div>
+                                                <div className="w-full mt-2 space-y-1">
+                                                    <div className="flex justify-between text-xs">
+                                                        <span>Available Balance:</span>
+                                                        <span className="font-mono text-emerald-600 font-bold">R {walletBalance.toFixed(2)}</span>
+                                                    </div>
+                                                    {walletBalance < (cartTotal + 20) && (
+                                                        <div className="text-xs text-red-500 mt-1">Insufficient balance. Please top up.</div>
+                                                    )}
                                                 </div>
                                             </Label>
                                         </div>

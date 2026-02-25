@@ -41,7 +41,7 @@ const OperationalSection = () => {
             Operational <span className="text-gradient-blue">Power</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Everything you need to run, grow, and professionalise your business — in one app.
+            Everything you need to run, grow, and professionalise your business in one app.
           </p>
         </motion.div>
 

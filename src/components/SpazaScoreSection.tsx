@@ -80,7 +80,7 @@ const SpazaScoreSection = () => {
               <span className="text-gradient-gold">Community Credit.</span>
             </h2>
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Meet the SpazaScore. We use real data—sales consistency, profit stability, and debt discipline—to give your customers a score they can finally use. No more paper ledgers; just smart lending.
+              Meet the SpazaScore. We use real data: sales consistency, profit stability, and debt discipline, to give your customers a score they can finally use. No more paper ledgers; just smart lending.
             </p>
 
             <div className="space-y-6">
@@ -89,7 +89,7 @@ const SpazaScoreSection = () => {
                   <Shield size={24} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground mb-1 font-[Orbitron] text-sm">SS-ID Passport</h3>
+                  <h3 className="font-semibold text-foreground mb-1 font-[Orbitron] text-sm">SS-ID</h3>
                   <p className="text-muted-foreground text-sm">
                     Give every customer a digital identity that travels with them to any shop in the network.
                   </p>

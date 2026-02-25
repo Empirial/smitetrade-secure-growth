@@ -28,7 +28,7 @@ const DiscoveryMapSection = () => {
             <span className="text-gradient-gold">Your Community.</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
-            Listing your shop on SMITETRADE means you aren't just a shop on a corner—you're a destination on the map. Let nearby customers find you, browse your shelf, and buy with confidence.
+            Listing your shop on SMITETRADE means you aren't just a shop on a corner, you're a destination on the map. Let nearby customers find you, browse your shelf, and buy with confidence.
           </p>
         </motion.div>
 

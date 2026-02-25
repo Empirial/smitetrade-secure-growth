@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
 import { toast } from "sonner";
+import { Briefcase } from "lucide-react";
 
 const OwnerLogin = () => {
     const navigate = useNavigate();
@@ -27,61 +28,75 @@ const OwnerLogin = () => {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-            <Card className="w-full max-w-sm shadow-lg">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold tracking-tight text-center">Owner Portal</CardTitle>
-                    <CardDescription className="text-center">
+        <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+            <div className="w-full max-w-md space-y-8">
+                <div className="text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-6">
+                        <Briefcase className="h-8 w-8 text-primary" />
+                    </div>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
+                        Owner Portal
+                    </h2>
+                    <p className="mt-2 text-sm text-muted-foreground">
                         Login to manage your business
-                    </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleLogin}>
-                    <CardContent className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="owner@smitetrade.com"
-                                required
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="password">Password</Label>
-                                <Link to="/forgot-password" className="text-xs text-primary underline underline-offset-4 hover:text-primary/80">
-                                    Forgot password?
-                                </Link>
+                    </p>
+                </div>
+
+                <Card className="border-border shadow-xl">
+                    <CardContent className="pt-8">
+                        <form onSubmit={handleLogin} className="space-y-6">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="owner@smitetrade.com"
+                                        required
+                                        className="bg-background"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="password">Password</Label>
+                                        <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+                                            Forgot password?
+                                        </Link>
+                                    </div>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        required
+                                        className="bg-background"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    />
+                                </div>
                             </div>
-                            <Input
-                                id="password"
-                                type="password"
-                                required
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            />
-                        </div>
+
+                            <Button type="submit" className="w-full shadow-md" disabled={loading}>
+                                {loading ? "Signing in..." : "Sign in"}
+                            </Button>
+                        </form>
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-4">
-                        <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={loading}>
-                            {loading ? "Signing in..." : "Sign in"}
-                        </Button>
-                        <div className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
-                            <div>
-                                Don't have an account?{" "}
-                                <Link to="/owner/register" className="text-primary underline underline-offset-4 hover:text-primary/80">
-                                    Sign up
-                                </Link>
-                            </div>
-                            <Link to="/" className="text-xs hover:text-primary">
-                                ← Back to Main Site
+                    <CardFooter className="flex flex-col gap-4 pb-8">
+                        <div className="text-center text-sm text-muted-foreground">
+                            Don't have an account?{" "}
+                            <Link to="/owner/register" className="font-medium text-primary hover:underline">
+                                Sign up
                             </Link>
                         </div>
                     </CardFooter>
-                </form>
-            </Card>
+                </Card>
+
+                <div className="text-center text-sm text-muted-foreground mt-8">
+                    <Link to="/" className="font-medium hover:text-primary transition-colors">
+                        &larr; Back to Main Site
+                    </Link>
+                </div>
+            </div>
         </div>
     );
 };

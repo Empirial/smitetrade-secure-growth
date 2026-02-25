@@ -81,6 +81,7 @@ interface StoreContextType {
     currentShift: Shift | null;
     startShift: (float: number) => void;
     endShift: (closingCash: number) => void;
+    recordCashDrop: (amount: number, reason: string) => void;
 
     // Wishlist
     toggleWishlist: (productId: string) => void;
@@ -647,6 +648,16 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Shift closed and report saved");
     };
 
+    const recordCashDrop = (amount: number, reason: string) => {
+        if (!currentShift) {
+            toast.error("No active shift to record drop against.");
+            return;
+        }
+
+        // In a real app, you'd add this to a subcollection or update the shift document
+        toast.success(`Cash drop of R${amount.toFixed(2)} recorded for: ${reason}`);
+    };
+
     const toggleWishlist = (productId: string) => {
         if (!user) return;
 
@@ -684,7 +695,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             orders, placeOrder, updateOrderStatus, assignDriver, isLoading,
             suppliers, addSupplier,
             staff, addStaff,
-            shifts, currentShift, startShift, endShift,
+            shifts, currentShift, startShift, endShift, recordCashDrop,
             toggleWishlist,
             issues, reportIssue
         }}>

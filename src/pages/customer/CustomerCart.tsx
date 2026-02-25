@@ -67,7 +67,7 @@ const CustomerCart = () => {
                             <CardContent className="p-6 space-y-6">
                                 <h2 className="font-semibold text-lg">Order Summary</h2>
 
-                                <div className="space-y-3 text-sm">
+                                <div className="space-y-3 text-sm flex-1">
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Subtotal</span>
                                         <span>R {cartTotal.toFixed(2)}</span>
@@ -86,11 +86,20 @@ const CustomerCart = () => {
                                     </div>
                                 </div>
 
-                                <Link to="/customer/checkout" >
-                                    <Button className="w-full h-12 text-lg mt-4" disabled={cart.length === 0}>
-                                        Checkout <ArrowRight className="ml-2 h-5 w-5" />
-                                    </Button>
-                                </Link>
+                                <div className="mt-6">
+                                    {cartTotal > 0 && cartTotal < 100 && (
+                                        <div className="mb-3 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200">
+                                            Minimum order for delivery is <strong>R 100.00</strong>. Please add R {(100 - cartTotal).toFixed(2)} more to your cart.
+                                        </div>
+                                    )}
+                                    <Link to={cartTotal >= 100 ? "/customer/checkout" : "#"} onClick={(e) => {
+                                        if (cartTotal < 100) e.preventDefault();
+                                    }}>
+                                        <Button className="w-full h-12 text-lg" disabled={cart.length === 0 || cartTotal < 100}>
+                                            Checkout <ArrowRight className="ml-2 h-5 w-5" />
+                                        </Button>
+                                    </Link>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>

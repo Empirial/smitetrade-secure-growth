@@ -71,7 +71,6 @@ const LenderApplications = () => {
 
                                 <div className="flex gap-2 justify-end pt-4 border-t">
                                     <Button variant="outline" size="sm" asChild>
-                                        {/* Link with query param to auto-search profile */}
                                         <Link to={`/lender/credit-check?q=${encodeURIComponent(app.borrower)}`}>
                                             <FileText className="mr-2 h-4 w-4" /> View Report
                                         </Link>
@@ -79,8 +78,10 @@ const LenderApplications = () => {
                                     <Button variant="destructive" size="sm">
                                         <X className="mr-2 h-4 w-4" /> Reject
                                     </Button>
-                                    <Button className="bg-emerald-600 hover:bg-emerald-700" size="sm">
-                                        <Check className="mr-2 h-4 w-4" /> Approve
+                                    <Button className="bg-emerald-600 hover:bg-emerald-700" size="sm" asChild>
+                                        <Link to={`/lender/quote?borrower=${encodeURIComponent(app.borrower)}&amount=${app.amount}&term=${parseInt(app.term, 10)}`}>
+                                            <FileText className="mr-2 h-4 w-4" /> Issue Quote (NCA)
+                                        </Link>
                                     </Button>
                                 </div>
                             </CardContent>

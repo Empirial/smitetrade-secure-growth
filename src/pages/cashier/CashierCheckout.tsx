@@ -163,10 +163,12 @@ const CashierCheckout = () => {
                                             onChange={(e) => setAmountTendered(e.target.value)}
                                         />
                                     </div>
-                                    <div className="p-4 bg-slate-100 rounded-lg flex justify-between items-center">
-                                        <span className="text-lg font-medium">Change Due:</span>
-                                        <span className={`text-2xl font-bold ${changeDue > 0 ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                                            R {changeDue.toFixed(2)}
+                                    <div className={`p-4 rounded-lg flex justify-between items-center ${changeDue > 0 ? 'bg-emerald-100' : (amountTendered && parseFloat(amountTendered) < total) ? 'bg-red-100' : 'bg-slate-100'}`}>
+                                        <span className="text-lg font-medium">
+                                            {changeDue > 0 ? 'Change Due:' : (amountTendered && parseFloat(amountTendered) < total) ? 'Short By:' : 'Change Due:'}
+                                        </span>
+                                        <span className={`text-2xl font-bold ${changeDue > 0 ? 'text-emerald-700' : (amountTendered && parseFloat(amountTendered) < total) ? 'text-red-700' : 'text-muted-foreground'}`}>
+                                            R {changeDue > 0 ? changeDue.toFixed(2) : (amountTendered && parseFloat(amountTendered) < total) ? (total - parseFloat(amountTendered)).toFixed(2) : '0.00'}
                                         </span>
                                     </div>
                                     <Button
@@ -212,11 +214,11 @@ const CashierCheckout = () => {
                                     </div>
 
                                     <Button
-                                        className="w-full h-12"
-                                        disabled={splitBalance > 0} // Can only submit if fully paid or overpaid (which means change due)
+                                        className={`w-full h-12 ${splitBalance === 0 ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                                        disabled={splitBalance > 0}
                                         onClick={handlePay}
                                     >
-                                        Process Split Payment
+                                        {splitBalance === 0 ? 'Complete Payment' : splitBalance < 0 ? 'Give Change & Complete' : 'Awaiting Full Payment'}
                                     </Button>
                                 </div>
                             </CardHeader>

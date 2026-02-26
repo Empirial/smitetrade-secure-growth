@@ -67,6 +67,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const driverLinks = [
         { href: "/driver/orders", label: "My Orders", icon: Box },
         { href: "/driver/out-to-deliver", label: "Active Deliveries", icon: Truck },
+        { href: "/driver/wallet", label: "Wallet & Earnings", icon: Wallet },
         { href: "/driver/issues", label: "Report Issue", icon: ShieldCheck },
     ];
 

@@ -34,8 +34,6 @@ import OwnerAnalytics from "./pages/owner/OwnerAnalytics";
 import OwnerShiftReviews from "./pages/owner/OwnerShiftReviews";
 import OwnerExpenses from "./pages/owner/OwnerExpenses";
 import OwnerPromotions from "./pages/owner/OwnerPromotions";
-import OwnerStockAdjustment from "./pages/owner/OwnerStockAdjustment";
-import OwnerCustomers from "./pages/owner/OwnerCustomers";
 
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
@@ -73,6 +71,7 @@ import DriverOutToDeliver from "./pages/driver/DriverOutToDeliver";
 import DriverDelivered from "./pages/driver/DriverDelivered";
 import DriverRoute from "./pages/driver/DriverRoute";
 import DriverIssues from "./pages/driver/DriverIssues";
+import DriverWallet from "./pages/driver/DriverWallet";
 
 // Admin
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -92,6 +91,7 @@ import LenderCollections from "./pages/lender/LenderCollections";
 import LenderApplications from "./pages/lender/LenderApplications";
 import LenderProfile from "./pages/lender/LenderProfile";
 import LenderCreditCheck from "./pages/lender/LenderCreditCheck";
+import LoanQuote from "./pages/lender/LoanQuote";
 
 const queryClient = new QueryClient();
 
@@ -134,8 +134,6 @@ const App = () => (
               <Route path="/owner/shift-reviews" element={<OwnerShiftReviews />} />
               <Route path="/owner/expenses" element={<OwnerExpenses />} />
               <Route path="/owner/promotions" element={<OwnerPromotions />} />
-              <Route path="/owner/stock-adjustments" element={<OwnerStockAdjustment />} />
-              <Route path="/owner/customers" element={<OwnerCustomers />} />
 
               {/* Cashier Portal */}
               <Route path="/cashier/login" element={<CashierLogin />} />
@@ -173,6 +171,7 @@ const App = () => (
               <Route path="/driver/delivered" element={<DriverDelivered />} />
               <Route path="/driver/route/:orderId" element={<DriverRoute />} />
               <Route path="/driver/issues" element={<DriverIssues />} />
+              <Route path="/driver/wallet" element={<DriverWallet />} />
 
               {/* Admin Portal */}
               <Route path="/admin/login" element={<AdminLogin />} />
@@ -192,6 +191,7 @@ const App = () => (
               <Route path="/lender/applications" element={<LenderApplications />} />
               <Route path="/lender/profile" element={<LenderProfile />} />
               <Route path="/lender/credit-check" element={<LenderCreditCheck />} />
+              <Route path="/lender/quote" element={<LoanQuote />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

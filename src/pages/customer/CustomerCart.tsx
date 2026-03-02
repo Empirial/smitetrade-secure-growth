@@ -30,19 +30,17 @@ const CustomerCart = () => {
                                     </div>
                                 ) : (
                                     cart.map((item) => (
-                                        <div key={item.id} className="flex gap-4 p-4 bg-white rounded-xl border shadow-sm items-center">
-                                            <div className="h-20 w-20 bg-muted rounded-lg flex items-center justify-center text-4xl shrink-0">
-                                                {item.image}
+                                        <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-card text-card-foreground border rounded-xl shadow-sm gap-4">
+                                            <div className="flex items-center gap-4 w-full sm:w-auto">
+                                                <div className="h-16 w-16 bg-muted/30 rounded-lg flex items-center justify-center text-3xl shrink-0">
+                                                    {item.image}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold">{item.name}</h3>
+                                                    <p className="text-muted-foreground text-sm">R{item.price.toFixed(2)} each</p>
+                                                </div>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold truncate">{item.name}</h3>
-                                                <p className="text-sm text-muted-foreground">{item.category}</p>
-                                                <p className="font-bold text-emerald-600 mt-1">R {item.price.toFixed(2)}</p>
-                                            </div>
-                                            <div className="flex flex-col items-end gap-2">
-                                                <Button size="icon" variant="ghost" className="text-destructive h-8 w-8" onClick={() => removeFromCart(item.id)}>
-                                                    <Trash2 size={16} />
-                                                </Button>
+                                            <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
                                                 <div className="flex items-center border rounded-lg bg-background">
                                                     <button
                                                         className="px-3 py-1 hover:bg-muted rounded-l-lg transition-colors"
@@ -54,6 +52,12 @@ const CustomerCart = () => {
                                                         onClick={() => updateCartQuantity(item.id, 1)}
                                                     >+</button>
                                                 </div>
+                                                <div className="font-bold text-lg min-w-[80px] text-right">
+                                                    R {(item.price * item.quantity).toFixed(2)}
+                                                </div>
+                                                <Button size="icon" variant="ghost" className="text-destructive h-8 w-8 ml-2" onClick={() => removeFromCart(item.id)}>
+                                                    <Trash2 size={16} />
+                                                </Button>
                                             </div>
                                         </div>
                                     ))

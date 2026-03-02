@@ -21,6 +21,15 @@ export interface User {
         phone: string;
         defaultAddress: string;
     };
+    stores?: {
+        id: string;
+        name: string;
+        address: string;
+        suburb: string;
+        city: string;
+        province: string;
+        postalCode: string;
+    }[];
     wishlist?: string[]; // Array of Product IDs
 }
 
@@ -30,8 +39,9 @@ export interface Product {
     price: number;
     category: string;
     stock: number;
-    image: string; // Emoji
     status: 'In Stock' | 'Low Stock' | 'Critical' | 'Out of Stock';
+    image?: string;
+    barcode?: string;
 }
 
 export interface CartItem extends Product {

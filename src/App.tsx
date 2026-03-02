@@ -34,6 +34,8 @@ import OwnerAnalytics from "./pages/owner/OwnerAnalytics";
 import OwnerShiftReviews from "./pages/owner/OwnerShiftReviews";
 import OwnerExpenses from "./pages/owner/OwnerExpenses";
 import OwnerPromotions from "./pages/owner/OwnerPromotions";
+import OwnerCustomers from "./pages/owner/OwnerCustomers";
+import OwnerCreditReview from "./pages/cashier/CashierCreditReview"; // Reusing the same component for now
 
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
@@ -60,7 +62,6 @@ import CustomerProfile from "./pages/customer/CustomerProfile";
 import CustomerOrderDetails from "./pages/customer/CustomerOrderDetails";
 import CustomerSupport from "./pages/customer/CustomerSupport";
 import CustomerOrders from "./pages/customer/CustomerOrders";
-import CustomerWishlist from "./pages/customer/CustomerWishlist";
 import BehavioralReliabilityIndex from "./pages/customer/BehavioralReliabilityIndex";
 
 // Driver
@@ -134,6 +135,8 @@ const App = () => (
               <Route path="/owner/shift-reviews" element={<OwnerShiftReviews />} />
               <Route path="/owner/expenses" element={<OwnerExpenses />} />
               <Route path="/owner/promotions" element={<OwnerPromotions />} />
+              <Route path="/owner/customers" element={<OwnerCustomers />} />
+              <Route path="/owner/credit-review" element={<OwnerCreditReview />} />
 
               {/* Cashier Portal */}
               <Route path="/cashier/login" element={<CashierLogin />} />
@@ -159,7 +162,6 @@ const App = () => (
               <Route path="/customer/profile" element={<CustomerProfile />} />
               <Route path="/customer/orders" element={<CustomerOrders />} />
               <Route path="/customer/orders/:id" element={<CustomerOrderDetails />} />
-              <Route path="/customer/wishlist" element={<CustomerWishlist />} />
               <Route path="/customer/credit-status" element={<BehavioralReliabilityIndex />} />
               <Route path="/customer/support" element={<CustomerSupport />} />
 

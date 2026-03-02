@@ -75,6 +75,8 @@ interface StoreContextType {
     // Staff
     staff: StaffMember[];
     addStaff: (staff: Omit<StaffMember, 'id'>) => void;
+    updateStaff: (id: string, updates: Partial<StaffMember>) => void;
+    deleteStaff: (id: string) => void;
 
     // Shifts
     shifts: Shift[];
@@ -611,6 +613,16 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Staff member added successfully");
     };
 
+    const updateStaff = (id: string, updates: Partial<StaffMember>) => {
+        setStaff(prev => prev.map(member => member.id === id ? { ...member, ...updates } : member));
+        toast.success("Staff profile updated");
+    };
+
+    const deleteStaff = (id: string) => {
+        setStaff(prev => prev.filter(member => member.id !== id));
+        toast.success("Staff member removed");
+    };
+
     const startShift = (float: number) => {
         if (currentShift) {
             toast.error("Shift already active");
@@ -694,7 +706,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
             orders, placeOrder, updateOrderStatus, assignDriver, isLoading,
             suppliers, addSupplier,
-            staff, addStaff,
+            staff, addStaff, updateStaff, deleteStaff,
             shifts, currentShift, startShift, endShift, recordCashDrop,
             toggleWishlist,
             issues, reportIssue

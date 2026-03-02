@@ -182,9 +182,6 @@ const CustomerProducts = () => {
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
                             >
                                 <Card className="overflow-hidden hover:shadow-md transition-shadow group h-full flex flex-col">
-                                    <div className="aspect-square bg-white flex items-center justify-center text-6xl group-hover:scale-105 transition-transform duration-300">
-                                        {product.image}
-                                    </div>
                                     <CardHeader className="p-4 pb-0">
                                         <div className="flex justify-between items-start mb-1">
                                             <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
@@ -205,17 +202,6 @@ const CustomerProducts = () => {
                                     </CardContent>
                                     <CardFooter className="p-4 pt-0 flex gap-2">
                                         <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="shrink-0"
-                                            onClick={() => {
-                                                // Mock Wishlist Add
-                                                import("sonner").then(({ toast }) => toast.success("Added to Wishlist"));
-                                            }}
-                                        >
-                                            <Heart className="h-4 w-4" />
-                                        </Button>
-                                        <Button
                                             className="w-full bg-emerald-600 hover:bg-emerald-700"
                                             size="sm"
                                             onClick={() => addToCart(product)}
@@ -229,7 +215,7 @@ const CustomerProducts = () => {
                     )}
                 </div>
             </div>
-        </DashboardLayout>
+        </DashboardLayout >
     );
 };
 

@@ -12,8 +12,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Banknote, Percent, CheckCircle, Info } from "lucide-react";
+import { useCredit } from "@/context/CreditContext";
+import GamificationStatus from "@/components/credit/GamificationStatus";
 
 const CustomerCreditApplication = () => {
+    const { profile } = useCredit();
     const [selectedLender, setSelectedLender] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showDisclaimer, setShowDisclaimer] = useState(false);
@@ -23,10 +26,6 @@ const CustomerCreditApplication = () => {
     const [term, setTerm] = useState("");
     const [reason, setReason] = useState("");
     const [paymentDate, setPaymentDate] = useState("");
-
-    // Mock Customer Data
-    const customerCreditScore = 750;
-    const creditStatus = "Excellent";
 
     // Mock Lender Offers
     const lenderOffers = [
@@ -67,32 +66,20 @@ const CustomerCreditApplication = () => {
                 </div>
 
                 {/* Credit Score Overview */}
-                <Card className="bg-slate-900 text-white border-none">
+                <Card className="border-t-4 border-t-indigo-500 shadow-xl overflow-hidden relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent pointer-events-none" />
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <ShieldCheck className="h-5 w-5 text-emerald-400" />
-                            Your Credit Profile
+                            <ShieldCheck className="h-5 w-5 text-indigo-500" />
+                            Your BIR Score
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid md:grid-cols-3 gap-6">
-                        <div className="text-center md:text-left">
-                            <p className="text-sm text-slate-400 mb-1">Current Score</p>
-                            <div className="flex items-baseline gap-2 justify-center md:justify-start">
-                                <span className="text-4xl font-bold text-emerald-400">{customerCreditScore}</span>
-                                <span className="text-sm font-medium text-emerald-500">GOOD</span>
-                            </div>
-                        </div>
-                        <div className="col-span-2 space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span>Credit Health</span>
-                                <span>{customerCreditScore} / 850</span>
-                            </div>
-                            <Progress value={(customerCreditScore / 850) * 100} className="h-2 bg-slate-700" />
-                            <p className="text-xs text-slate-400 flex items-center gap-1">
-                                <Info className="h-3 w-3" />
-                                Updated today based on your trading history.
-                            </p>
-                        </div>
+                    <CardContent>
+                        {profile ? (
+                            <GamificationStatus tier={profile.tier} score={profile.briScore} />
+                        ) : (
+                            <div className="text-muted-foreground animate-pulse">Loading Profile...</div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -140,7 +127,7 @@ const CustomerCreditApplication = () => {
                 </div>
 
                 {/* Application Action */}
-                <div className="flex flex-col gap-6 bg-slate-50 p-6 rounded-lg border border-slate-100">
+                <div className="flex flex-col gap-6 bg-slate-900 p-6 rounded-lg border border-slate-800 text-slate-100 shadow-xl">
                     <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                             <h3 className="font-semibold text-lg">Loan Details</h3>
@@ -208,8 +195,8 @@ const CustomerCreditApplication = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col md:flex-row justify-between items-center pt-4 border-t gap-4">
-                        <div className="text-sm text-muted-foreground order-2 md:order-1">
+                    <div className="flex flex-col md:flex-row justify-between items-center pt-4 border-t border-slate-800 gap-4">
+                        <div className="text-sm text-slate-400 order-2 md:order-1">
                             By clicking Apply, you agree to the terms of the selected lender.
                         </div>
                         <Button

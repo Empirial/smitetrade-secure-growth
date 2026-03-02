@@ -116,8 +116,8 @@ const LenderCreditCheck = () => {
                         {searchResult ? (
                             <>
                                 {/* Identity Header */}
-                                <div className="flex items-center gap-6 bg-white p-6 rounded-lg border shadow-sm">
-                                    <div className="h-24 w-24 rounded-full bg-gray-100 overflow-hidden border-4 border-gray-50 shadow-inner">
+                                <div className="flex items-center gap-6 bg-card text-card-foreground p-6 rounded-lg border shadow-sm">
+                                    <div className="h-24 w-24 rounded-full bg-muted overflow-hidden border-4 border-background shadow-inner">
                                         {searchResult.photoUrl ? (
                                             <img src={searchResult.photoUrl} alt={searchResult.name} className="h-full w-full object-cover" />
                                         ) : (

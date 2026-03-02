@@ -4,6 +4,7 @@ import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Tr
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import PageTransition from "@/components/PageTransition";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useStore } from "@/context/StoreContext";
 import logo from "@/assets/smitetrade-logo.jpeg";
 
@@ -29,7 +30,6 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
             { href: "/owner/promotions", label: "Promotions", icon: Tag },
             { href: "/owner/orders", label: "Orders", icon: Box },
             { href: "/owner/inventory", label: "Inventory", icon: Package },
-            { href: "/owner/stock-adjustments", label: "Stock Adjustments", icon: ClipboardList },
             { href: "/owner/suppliers", label: "Suppliers", icon: Truck },
             { href: "/owner/lending", label: "Lending (P2P)", icon: Banknote },
         ],
@@ -39,6 +39,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
             { href: "/owner/staff", label: "Staff", icon: Briefcase },
             { href: "/owner/reports", label: "Reports", icon: BarChart3 },
             { href: "/owner/pricing", label: "Pricing", icon: CreditCard },
+            { href: "/owner/credit-review", label: "Credit Review", icon: ShieldCheck },
             { href: "/owner/settings", label: "Settings", icon: Settings },
         ]
     };
@@ -56,7 +57,6 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const customerLinks = [
         { href: "/customer/products", label: "Shop", icon: ShoppingCart },
         { href: "/customer/orders", label: "My Orders", icon: Box },
-        { href: "/customer/wishlist", label: "Wishlist", icon: Heart },
         { href: "/customer/tracking", label: "Tracking", icon: Truck },
         { href: "/customer/cart", label: "My Cart", icon: ShoppingCart },
         { href: "/customer/apply-credit", label: "Get a Loan", icon: Banknote },
@@ -87,6 +87,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
         { href: "/lender/applications", label: "Applications", icon: FileText },
         { href: "/lender/collections", label: "Collections", icon: AlertTriangle }, // Changed icon
         { href: "/lender/credit-check", label: "Credit Check", icon: Search },
+        { href: "/owner/credit-review", label: "Credit Review", icon: ShieldCheck }, // Corrected route
         { href: "/lender/profile", label: "Profile", icon: User },
     ];
 
@@ -119,11 +120,11 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
                                         to={link.href}
                                         onClick={() => setIsOpen(false)}
                                         className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group ${location.pathname === link.href
-                                            ? "bg-emerald-50 text-emerald-600 font-medium shadow-sm"
-                                            : "text-muted-foreground hover:bg-slate-50 hover:text-slate-900"
+                                            ? "bg-primary/10 text-primary font-medium shadow-sm"
+                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                             }`}
                                     >
-                                        <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location.pathname === link.href ? "text-emerald-600" : ""
+                                        <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location.pathname === link.href ? "text-primary" : ""
                                             }`} />
                                         {link.label}
                                     </Link>
@@ -144,11 +145,11 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
                                                 to={link.href}
                                                 onClick={() => setIsOpen(false)}
                                                 className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group ${location.pathname === link.href
-                                                    ? "bg-emerald-50 text-emerald-600 font-medium shadow-sm"
-                                                    : "text-muted-foreground hover:bg-slate-50 hover:text-slate-900"
+                                                    ? "bg-primary/10 text-primary font-medium shadow-sm"
+                                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     }`}
                                             >
-                                                <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location.pathname === link.href ? "text-emerald-600" : ""
+                                                <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location.pathname === link.href ? "text-primary" : ""
                                                     }`} />
                                                 {link.label}
                                             </Link>
@@ -176,7 +177,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     return (
         <div className="min-h-screen bg-background flex">
             {/* Desktop Sidebar */}
-            <div className="hidden md:block w-64 shrink-0 z-20">
+            <div className="hidden md:block w-64 shrink-0 z-20 sticky top-0 h-screen">
                 <NavContent />
             </div>
 
@@ -198,9 +199,11 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
             {/* Main Content */}
             <main className="flex-1 overflow-auto md:pt-0 pt-16">
                 <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-                    <PageTransition>
-                        {children}
-                    </PageTransition>
+                    <ErrorBoundary>
+                        <PageTransition>
+                            {children}
+                        </PageTransition>
+                    </ErrorBoundary>
                 </div>
             </main>
         </div>

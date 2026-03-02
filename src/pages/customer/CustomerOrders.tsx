@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Package, Truck, CheckCircle, RefreshCw } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner"; // Added missing import
+import { format } from "date-fns";
 
 import { useStore } from "@/context/StoreContext";
 
@@ -46,7 +47,7 @@ const CustomerOrders = () => {
                 </div>
 
                 <div className="grid gap-4">
-                    {orders.map((order) => (
+                    {myOrders.map((order) => (
                         <Card key={order.id} className="hover:shadow-md transition-shadow">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <div>
@@ -87,7 +88,7 @@ const CustomerOrders = () => {
                         </Card>
                     ))}
 
-                    {orders.length === 0 && (
+                    {myOrders.length === 0 && (
                         <div className="text-center py-12">
                             <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                             <h3 className="text-lg font-medium text-muted-foreground">No orders found</h3>

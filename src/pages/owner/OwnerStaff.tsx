@@ -20,31 +20,58 @@ import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
 
 const OwnerStaff = () => {
-    const { staff, addStaff } = useStore();
+    const { staff, addStaff, updateStaff, deleteStaff } = useStore();
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [editId, setEditId] = useState<string | null>(null);
     const [formData, setFormData] = useState({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
 
     const handleAddStaff = () => {
-        addStaff({
-            name: formData.name,
-            email: formData.email,
-            role: formData.role as 'cashier' | 'driver' | 'admin',
-            username: formData.username,
-            // password: formData.password, // StoreContext doesn't store password in interface yet, but maybe we should?
-            // Actually StaffMember interface has password optional.
-            // Let's pass it if it's there.
-            // Wait, StoreContext addStaff takes Omit<StaffMember, 'id'>.
-            // StaffMember in types.ts:
-            // username?: string;
-            // password?: string;
-            // pin?: string;
-            status: "Active",
-            joined: new Date().toISOString().split('T')[0],
-            pin: formData.pin
-        });
+        if (editId) {
+            updateStaff(editId, {
+                name: formData.name,
+                email: formData.email,
+                role: formData.role as 'cashier' | 'driver' | 'admin',
+                username: formData.username,
+                password: formData.password,
+                pin: formData.pin
+            });
+        } else {
+            addStaff({
+                name: formData.name,
+                email: formData.email,
+                role: formData.role as 'cashier' | 'driver' | 'admin',
+                username: formData.username,
+                status: "Active",
+                joined: new Date().toISOString().split('T')[0],
+                pin: formData.pin,
+                password: formData.password
+            });
+        }
 
         setIsAddOpen(false);
+        setEditId(null);
         setFormData({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
+    };
+
+    const handleEditClick = (member: any) => {
+        setEditId(member.id);
+        setFormData({
+            name: member.name,
+            email: member.email || "",
+            role: member.role,
+            username: member.username || "",
+            password: member.password || "",
+            pin: member.pin || ""
+        });
+        setIsAddOpen(true);
+    };
+
+    const handleOpenChange = (open: boolean) => {
+        setIsAddOpen(open);
+        if (!open) {
+            setEditId(null);
+            setFormData({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
+        }
     };
 
     const getRoleIcon = (role: string) => {
@@ -74,7 +101,7 @@ const OwnerStaff = () => {
                         <p className="text-muted-foreground">Manage your employees, roles, and access.</p>
                     </div>
                     <div>
-                        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                        <Dialog open={isAddOpen} onOpenChange={handleOpenChange}>
                             <DialogTrigger asChild>
                                 <Button>
                                     <UserPlus className="h-4 w-4 mr-2" /> Add Staff Member
@@ -82,9 +109,9 @@ const OwnerStaff = () => {
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Add New Employee</DialogTitle>
+                                    <DialogTitle>{editId ? "Edit Employee Details" : "Add New Employee"}</DialogTitle>
                                     <DialogDescription>
-                                        Create a profile for a new cashier or driver.
+                                        {editId ? "Update access credentials and details" : "Create a profile for a new cashier or driver."}
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
@@ -158,7 +185,7 @@ const OwnerStaff = () => {
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button onClick={handleAddStaff}>Create Account</Button>
+                                    <Button onClick={handleAddStaff}>{editId ? "Save Changes" : "Create Account"}</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -166,54 +193,60 @@ const OwnerStaff = () => {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {staff.map((member) => (
-                        <Card key={member.id}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-base font-medium">
-                                    {member.name}
-                                </CardTitle>
-                                <Badge variant={getStatusColor(member.status || "") as "default" | "secondary" | "destructive" | "outline"}>{member.status}</Badge>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                                    {getRoleIcon(member.role.charAt(0).toUpperCase() + member.role.slice(1))}
-                                    {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                                </div>
-                                <div className="text-xs text-muted-foreground mb-4">
-                                    Joined: {member.joined} <br />
-                                    Email: {member.email}
-                                </div>
-                                <div className="bg-slate-50 p-2 rounded text-xs space-y-1 border border-slate-100 mb-4">
-                                    <div className="font-semibold text-slate-700">Login Details</div>
-                                    <div className="grid grid-cols-2 gap-x-2">
-                                        <span className="text-muted-foreground">Username:</span>
-                                        <span className="font-mono">{member.username || "-"}</span>
-                                        <span className="text-muted-foreground">Password:</span>
-                                        <span className="font-mono">{member.password || "-"}</span>
-                                        <span className="text-muted-foreground">POS PIN:</span>
-                                        <span className="font-mono">{member.pin || "-"}</span>
+                    {staff.length === 0 ? (
+                        <div className="col-span-1 border-2 border-dashed border-slate-200 rounded-lg p-12 text-center text-muted-foreground">
+                            <Users className="h-8 w-8 mx-auto mb-4 text-slate-300" />
+                            <p>No staff members found.</p>
+                            <p className="text-sm">Click "Add Staff Member" to create your first employee account.</p>
+                        </div>
+                    ) : (
+                        staff.map((member) => (
+                            <Card key={member.id}>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-base font-medium">
+                                        {member.name}
+                                    </CardTitle>
+                                    <Badge variant={getStatusColor(member.status || "") as "default" | "secondary" | "destructive" | "outline"}>{member.status}</Badge>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                                        {getRoleIcon(member.role.charAt(0).toUpperCase() + member.role.slice(1))}
+                                        {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                                     </div>
-                                </div>
-                                <div className="flex justify-end">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuItem>View Profile</DropdownMenuItem>
-                                            <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="text-red-600">Deactivate User</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                    <div className="text-xs text-muted-foreground mb-4">
+                                        Joined: {member.joined} <br />
+                                        Email: {member.email}
+                                    </div>
+                                    <div className="bg-slate-50 p-2 rounded text-xs space-y-1 border border-slate-100 mb-4">
+                                        <div className="font-semibold text-slate-700">Login Details</div>
+                                        <div className="grid grid-cols-2 gap-x-2">
+                                            <span className="text-muted-foreground">Username:</span>
+                                            <span className="font-mono">{member.username || "-"}</span>
+                                            <span className="text-muted-foreground">Password:</span>
+                                            <span className="font-mono">{member.password || "-"}</span>
+                                            <span className="text-muted-foreground">POS PIN:</span>
+                                            <span className="font-mono">{member.pin || "-"}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuItem onClick={() => handleEditClick(member)}>Edit Details</DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-red-600" onClick={() => deleteStaff(member.id)}>Delete Account</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )))}
                 </div>
             </div>
         </DashboardLayout>

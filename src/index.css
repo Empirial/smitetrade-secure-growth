@@ -92,11 +92,16 @@
     @apply border-border;
   }
 
+  html {
+    background-color: #020617;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
     /* Radial Gradient Background */
     background: radial-gradient(circle at center, #1e293b, #020617);
+    background-attachment: fixed;
     min-height: 100vh;
   }
 

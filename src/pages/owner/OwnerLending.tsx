@@ -177,7 +177,7 @@ const OwnerLending = () => {
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Photo</div>
                                     )}
-                                    <div className="absolute top-2 right-2 bg-white/90 p-1 rounded-full shadow-sm">
+                                    <div className="absolute top-2 right-2 bg-background/90 p-1 rounded-full shadow-sm">
                                         <QrCode className="h-4 w-4 text-emerald-600" />
                                     </div>
                                 </div>

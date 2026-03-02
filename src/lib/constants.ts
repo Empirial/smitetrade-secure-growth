@@ -20,10 +20,10 @@ export const MOCK_LENDER: User = {
 };
 
 export const MOCK_PRODUCTS: Product[] = [
-    { id: "p1", name: "Bread", price: 15.00, category: "Bakery", stock: 50, image: "🍞", status: "In Stock" },
-    { id: "p2", name: "Milk", price: 22.50, category: "Dairy", stock: 10, image: "🥛", status: "Low Stock" },
-    { id: "p3", name: "Eggs", price: 35.00, category: "Pantry", stock: 0, image: "🥚", status: "Out of Stock" },
-    { id: "p4", name: "Coke", price: 18.00, category: "Beverages", stock: 100, image: "🥤", status: "In Stock" },
+    { id: "p1", name: "Bread", price: 15.00, category: "Bakery", stock: 50, status: "In Stock" },
+    { id: "p2", name: "Milk", price: 22.50, category: "Dairy", stock: 10, status: "Low Stock" },
+    { id: "p3", name: "Eggs", price: 35.00, category: "Pantry", stock: 0, status: "Out of Stock" },
+    { id: "p4", name: "Coke", price: 18.00, category: "Beverages", stock: 100, status: "In Stock" },
 ];
 
 export const MOCK_ORDERS: Order[] = [

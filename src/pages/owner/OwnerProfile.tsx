@@ -17,26 +17,36 @@ const OwnerProfile = () => {
     const [name, setName] = useState(user?.name || "");
     const [email, setEmail] = useState(user?.email || "");
 
-    // Store State
-    const [storeName, setStoreName] = useState(user?.storeName || "");
-    const [storeAddress, setStoreAddress] = useState(user?.storeDetails?.address || "");
-    const [storeSuburb, setStoreSuburb] = useState(user?.storeDetails?.suburb || "");
-    const [storeCity, setStoreCity] = useState(user?.storeDetails?.city || "");
-    const [storeProvince, setStoreProvince] = useState(user?.storeDetails?.province || "Gauteng");
-    const [storePostalCode, setStorePostalCode] = useState(user?.storeDetails?.postalCode || "");
+    interface StoreDetails {
+        id: string;
+        name: string;
+        address: string;
+        suburb: string;
+        city: string;
+        province: string;
+        postalCode: string;
+    }
 
-    // Update local state when user updates (e.g. initial load)
+    const [stores, setStores] = useState<StoreDetails[]>([]);
+
     useEffect(() => {
         if (user) {
             setName(user.name || "");
             setEmail(user.email || "");
-            setStoreName(user.storeName || "");
-            if (user.storeDetails) {
-                setStoreAddress(user.storeDetails.address || "");
-                setStoreSuburb(user.storeDetails.suburb || "");
-                setStoreCity(user.storeDetails.city || "");
-                setStoreProvince(user.storeDetails.province || "Gauteng");
-                setStorePostalCode(user.storeDetails.postalCode || "");
+
+            // Migrate single store to array if needed
+            if (user.stores) {
+                setStores(user.stores);
+            } else if (user.storeName) {
+                setStores([{
+                    id: 'default-1',
+                    name: user.storeName,
+                    address: user.storeDetails?.address || "",
+                    suburb: user.storeDetails?.suburb || "",
+                    city: user.storeDetails?.city || "",
+                    province: user.storeDetails?.province || "Gauteng",
+                    postalCode: user.storeDetails?.postalCode || ""
+                }]);
             }
         }
     }, [user]);
@@ -56,21 +66,45 @@ const OwnerProfile = () => {
         setIsLoading(true);
         try {
             await updateUser({
-                storeName,
-                storeDetails: {
-                    address: storeAddress,
-                    suburb: storeSuburb,
-                    city: storeCity,
-                    province: storeProvince,
-                    postalCode: storePostalCode,
-                    currency: "ZAR (R)"
-                }
+                stores: stores,
+                // Keep the first store as primary for backward compatibility
+                ...(stores.length > 0 && {
+                    storeName: stores[0].name,
+                    storeDetails: {
+                        address: stores[0].address,
+                        suburb: stores[0].suburb,
+                        city: stores[0].city,
+                        province: stores[0].province,
+                        postalCode: stores[0].postalCode,
+                        currency: "ZAR (R)"
+                    }
+                })
             });
         } catch (error) {
             // Toast handled in context
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleAddStore = () => {
+        setStores([...stores, {
+            id: `store-${Date.now()}`,
+            name: "New Store",
+            address: "",
+            suburb: "",
+            city: "",
+            province: "Gauteng",
+            postalCode: ""
+        }]);
+    };
+
+    const handleUpdateStore = (id: string, field: keyof StoreDetails, value: string) => {
+        setStores(stores.map(store => store.id === id ? { ...store, [field]: value } : store));
+    };
+
+    const handleRemoveStore = (id: string) => {
+        setStores(stores.filter(store => store.id !== id));
     };
 
     return (
@@ -82,7 +116,7 @@ const OwnerProfile = () => {
                 </Avatar>
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">{name || "Store Owner"}</h1>
-                    <p className="text-muted-foreground">Owner • {storeName || "My Spaza Shop"}</p>
+                    <p className="text-muted-foreground">Owner • {stores[0]?.name || "My Spaza Shop"}{stores.length > 1 ? ` (+${stores.length - 1} more)` : ''}</p>
                 </div>
             </div>
 
@@ -128,55 +162,71 @@ const OwnerProfile = () => {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="storename">Store Name</Label>
-                                <Input id="storename" value={storeName} onChange={(e) => setStoreName(e.target.value)} />
+                            <div className="flex justify-between items-center">
+                                <Label htmlFor="currency">Currency</Label>
+                                <Button size="sm" variant="outline" onClick={handleAddStore}>+ Add Another Store</Button>
                             </div>
 
-                            <div className="border-t pt-2 mt-2">
-                                <h3 className="font-semibold mb-3">Location Details</h3>
-                                <div className="grid gap-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="street">Street Address</Label>
-                                        <Input id="street" placeholder="123 Main Street" value={storeAddress} onChange={(e) => setStoreAddress(e.target.value)} />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                            {stores.map((store, index) => (
+                                <div key={store.id} className="border rounded-lg p-4 relative bg-card text-card-foreground">
+                                    {stores.length > 1 && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 h-8 w-8 p-0"
+                                            onClick={() => handleRemoveStore(store.id)}
+                                        >
+                                            X
+                                        </Button>
+                                    )}
+                                    <h3 className="font-semibold mb-3">Store #{index + 1}</h3>
+                                    <div className="grid gap-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="suburb">Suburb</Label>
-                                            <Input id="suburb" placeholder="e.g. Soweto" value={storeSuburb} onChange={(e) => setStoreSuburb(e.target.value)} />
+                                            <Label>Store Name</Label>
+                                            <Input value={store.name} onChange={(e) => handleUpdateStore(store.id, 'name', e.target.value)} />
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="city">City</Label>
-                                            <Input id="city" placeholder="e.g. Johannesburg" value={storeCity} onChange={(e) => setStoreCity(e.target.value)} />
+                                            <Label>Street Address</Label>
+                                            <Input placeholder="123 Main Street" value={store.address} onChange={(e) => handleUpdateStore(store.id, 'address', e.target.value)} />
                                         </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="province">Province</Label>
-                                            <Select value={storeProvince} onValueChange={setStoreProvince}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Province" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Gauteng">Gauteng</SelectItem>
-                                                    <SelectItem value="KZN">KwaZulu-Natal</SelectItem>
-                                                    <SelectItem value="WC">Western Cape</SelectItem>
-                                                    <SelectItem value="EC">Eastern Cape</SelectItem>
-                                                    <SelectItem value="FS">Free State</SelectItem>
-                                                    <SelectItem value="MP">Mpumalanga</SelectItem>
-                                                    <SelectItem value="NW">North West</SelectItem>
-                                                    <SelectItem value="NC">Northern Cape</SelectItem>
-                                                    <SelectItem value="LP">Limpopo</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label>Suburb</Label>
+                                                <Input placeholder="e.g. Soweto" value={store.suburb} onChange={(e) => handleUpdateStore(store.id, 'suburb', e.target.value)} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>City</Label>
+                                                <Input placeholder="e.g. Johannesburg" value={store.city} onChange={(e) => handleUpdateStore(store.id, 'city', e.target.value)} />
+                                            </div>
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="postalCode">Postal Code</Label>
-                                            <Input id="postalCode" placeholder="0000" value={storePostalCode} onChange={(e) => setStorePostalCode(e.target.value)} />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label>Province</Label>
+                                                <Select value={store.province} onValueChange={(val) => handleUpdateStore(store.id, 'province', val)}>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select Province" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Gauteng">Gauteng</SelectItem>
+                                                        <SelectItem value="KZN">KwaZulu-Natal</SelectItem>
+                                                        <SelectItem value="WC">Western Cape</SelectItem>
+                                                        <SelectItem value="EC">Eastern Cape</SelectItem>
+                                                        <SelectItem value="FS">Free State</SelectItem>
+                                                        <SelectItem value="MP">Mpumalanga</SelectItem>
+                                                        <SelectItem value="NW">North West</SelectItem>
+                                                        <SelectItem value="NC">Northern Cape</SelectItem>
+                                                        <SelectItem value="LP">Limpopo</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Postal Code</Label>
+                                                <Input placeholder="0000" value={store.postalCode} onChange={(e) => handleUpdateStore(store.id, 'postalCode', e.target.value)} />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            ))}
 
                             <div className="grid gap-2 border-t pt-4">
                                 <Label htmlFor="currency">Currency</Label>

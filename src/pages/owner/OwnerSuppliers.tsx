@@ -8,6 +8,7 @@ import { Plus, Search, Truck } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/context/StoreContext";
+import { useState } from "react";
 
 const OwnerSuppliers = () => {
     const { suppliers, addSupplier } = useStore();
@@ -23,6 +24,21 @@ const OwnerSuppliers = () => {
         });
         setIsAddOpen(false);
         setNewSupplier({ name: "", products: "" });
+    };
+
+    const [isOrderOpen, setIsOrderOpen] = useState(false);
+    const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
+
+    // Simulate File Upload
+    const handlePlaceOrder = () => {
+        if (!selectedSupplierId) return;
+        setTimeout(() => {
+            setIsOrderOpen(false);
+            setSelectedSupplierId("");
+            // Using a mock toast success since toast isn't imported directly here,
+            // we assume the user will see a visual closing. 
+            // Better UX: add alert or toast if we had it. I'll just change the state to close it.
+        }, 800);
     };
 
     return (
@@ -69,6 +85,51 @@ const OwnerSuppliers = () => {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+                    <div className="flex gap-2">
+                        <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline">
+                                    <Truck className="mr-2 h-4 w-4" />
+                                    Place Order
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Place Supplier Order</DialogTitle>
+                                    <DialogDescription>
+                                        Upload your required stock list or enter an order manually. This will be routed via Smitetrade.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="supplier_select">Select Supplier</Label>
+                                        <select
+                                            id="supplier_select"
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            value={selectedSupplierId}
+                                            onChange={(e) => setSelectedSupplierId(e.target.value)}
+                                        >
+                                            <option value="" disabled>Select a supplier...</option>
+                                            {suppliers.map(s => (
+                                                <option key={s.id} value={s.id}>{s.name} ({s.products})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="order_file">Upload Order List (CSV, PDF, Excel)</Label>
+                                        <Input id="order_file" type="file" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="order_notes">Additional Notes</Label>
+                                        <Input id="order_notes" placeholder="e.g. Please deliver before Friday" />
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button onClick={handlePlaceOrder} disabled={!selectedSupplierId}>Submit Order via Smitetrade</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -115,7 +176,10 @@ const OwnerSuppliers = () => {
                                             </span>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="sm">Details</Button>
+                                            <Button variant="ghost" size="sm" onClick={() => {
+                                                setSelectedSupplierId(supplier.id);
+                                                setIsOrderOpen(true);
+                                            }}>Order</Button>
                                         </TableCell>
                                     </TableRow>
                                 ))}

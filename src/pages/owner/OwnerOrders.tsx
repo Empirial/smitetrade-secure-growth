@@ -12,14 +12,21 @@ const OwnerOrders = () => {
     const { orders } = useStore();
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState("all");
+    const [filterDate, setFilterDate] = useState("");
 
     // Filter logic
     const filteredOrders = orders.filter(order => {
         const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.id.toString().includes(searchTerm);
-        // Data structure update pending: 'type' field. defaulting to show all for now.
+
+        let matchesDate = true;
+        if (filterDate) {
+            const orderDateStr = new Date(order.date).toISOString().split('T')[0];
+            matchesDate = orderDateStr === filterDate;
+        }
+
         const matchesType = true;
-        return matchesSearch && matchesType;
+        return matchesSearch && matchesDate && matchesType;
     });
 
     return (
@@ -32,7 +39,7 @@ const OwnerOrders = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                     <div className="relative flex-1">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -42,6 +49,12 @@ const OwnerOrders = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
+                    <Input
+                        type="date"
+                        className="w-full md:w-[150px]"
+                        value={filterDate}
+                        onChange={(e) => setFilterDate(e.target.value)}
+                    />
                     <Select value={filterType} onValueChange={setFilterType}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Filter by Type" />

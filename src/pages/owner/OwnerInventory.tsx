@@ -16,6 +16,7 @@ const OwnerInventory = () => {
 
     const [searchTerm, setSearchTerm] = useState("");
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [editId, setEditId] = useState<string | null>(null);
 
     // Form state handling
     const [formData, setFormData] = useState({ name: "", category: "", price: "", stock: "", barcode: "" });
@@ -46,16 +47,47 @@ const OwnerInventory = () => {
     };
 
     const handleAddProduct = () => {
-        addProduct({
-            name: formData.name,
-            category: formData.category,
-            price: parseFloat(formData.price),
-            stock: parseInt(formData.stock),
-            barcode: formData.barcode, // Add to product
-            image: "📦" // Default emoji for new products
-        });
+        if (editId) {
+            updateProduct(editId, {
+                name: formData.name,
+                category: formData.category,
+                price: parseFloat(formData.price),
+                stock: parseInt(formData.stock),
+                barcode: formData.barcode
+            });
+        } else {
+            addProduct({
+                name: formData.name,
+                category: formData.category,
+                price: parseFloat(formData.price),
+                stock: parseInt(formData.stock),
+                barcode: formData.barcode,
+                image: "📦"
+            });
+        }
         setIsAddOpen(false);
+        setEditId(null);
         setFormData({ name: "", category: "", price: "", stock: "", barcode: "" });
+    };
+
+    const openEditForm = (product: any) => {
+        setEditId(product.id);
+        setFormData({
+            name: product.name,
+            category: product.category,
+            price: product.price.toString(),
+            stock: product.stock.toString(),
+            barcode: product.barcode || ""
+        });
+        setIsAddOpen(true);
+    };
+
+    const handleOpenChange = (open: boolean) => {
+        setIsAddOpen(open);
+        if (!open) {
+            setEditId(null);
+            setFormData({ name: "", category: "", price: "", stock: "", barcode: "" });
+        }
     };
 
     return (
@@ -67,7 +99,7 @@ const OwnerInventory = () => {
                         <p className="text-muted-foreground">Manage your products, stock levels, and pricing.</p>
                     </div>
                     <div className="flex gap-2 w-full md:w-auto">
-                        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                        <Dialog open={isAddOpen} onOpenChange={handleOpenChange}>
                             <DialogTrigger asChild>
                                 <Button className="w-full md:w-auto">
                                     <Plus className="h-4 w-4 mr-2" /> Add Product
@@ -75,9 +107,9 @@ const OwnerInventory = () => {
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Add New Product</DialogTitle>
+                                    <DialogTitle>{editId ? "Edit Product" : "Add New Product"}</DialogTitle>
                                     <DialogDescription>
-                                        Enter the details of the new item to add to your shop's inventory.
+                                        {editId ? "Update the details for this inventory item." : "Enter the details of the new item to add to your shop's inventory."}
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
@@ -178,7 +210,7 @@ const OwnerInventory = () => {
                                     </div>
 
                                     <div className="flex gap-2 pt-2">
-                                        <Button variant="outline" size="sm" className="flex-1" onClick={() => setIsAddOpen(true)}>
+                                        <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditForm(product)}>
                                             <Edit className="h-3 w-3 mr-2" /> Edit
                                         </Button>
                                         <Button
@@ -226,7 +258,7 @@ const OwnerInventory = () => {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditForm(product)}>
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
                                                     <Button

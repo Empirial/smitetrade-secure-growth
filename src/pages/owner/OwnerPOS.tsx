@@ -94,7 +94,7 @@ const OwnerPOS = () => {
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search products..."
-                                className="pl-9 bg-white"
+                                className="pl-9 bg-background"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -102,7 +102,7 @@ const OwnerPOS = () => {
                         {/* Camera / Custom Item Button */}
                         <Dialog open={isCustomOpen} onOpenChange={setIsCustomOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="outline" size="icon" className="shrink-0 bg-white hover:bg-emerald-50 text-emerald-600 border-emerald-200">
+                                <Button variant="outline" size="icon" className="shrink-0 bg-background hover:bg-emerald-50 text-emerald-600 border-emerald-200">
                                     <Camera className="h-4 w-4" />
                                 </Button>
                             </DialogTrigger>
@@ -155,20 +155,11 @@ const OwnerPOS = () => {
                                 <button
                                     key={product.id}
                                     onClick={() => addToCart(product)}
-                                    className="group relative flex flex-col items-center justify-center p-6 rounded-xl border border-dashed hover:border-solid hover:border-emerald-500 bg-white hover:shadow-md transition-all h-32"
+                                    className={`group relative flex flex-col items-center justify-center p-4 rounded-xl border border-border/50 hover:border-emerald-500 shadow-sm transition-all h-32 ${product.color.split(' ')[0] /* Use just the bg- color */}`}
                                 >
-                                    <div className={`mb-2 h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg ${product.color}`}>
-                                        {/* Show Image if available (for custom items), else initial */}
-                                        {/* Show Image if available (for custom items), else initial */}
-                                        {(product as POSProduct).image && (product as POSProduct).image?.startsWith('blob') ? (
-                                            <img src={(product as POSProduct).image} alt={product.name} className="h-full w-full rounded-full object-cover" />
-                                        ) : (
-                                            product.name.charAt(0)
-                                        )}
-                                    </div>
-                                    <span className="font-medium text-center text-sm line-clamp-2">{product.name}</span>
-                                    <span className="mt-1 font-bold text-emerald-600">R{product.price.toFixed(2)}</span>
-                                    <div className="absolute inset-0 bg-emerald-50/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                                    <span className="font-semibold text-center text-sm line-clamp-2 mt-2 px-2">{product.name}</span>
+                                    <span className="mt-2 font-bold text-emerald-600 bg-white/80 px-3 py-1 rounded-full text-sm">R{product.price.toFixed(2)}</span>
+                                    <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center backdrop-blur-[1px]">
                                         <Plus className="h-8 w-8 text-emerald-600" />
                                     </div>
                                 </button>
@@ -180,7 +171,7 @@ const OwnerPOS = () => {
                 {/* Cart - Right Side */}
                 <Card className="w-full lg:w-[400px] flex flex-col h-full shadow-xl border-t-4 border-t-emerald-500">
                     <CardContent className="p-0 flex flex-col h-full">
-                        <div className="p-4 border-b bg-emerald-50/50">
+                        <div className="p-4 border-b bg-muted/40 text-foreground">
                             <h2 className="font-semibold flex items-center gap-2">
                                 <ShoppingCart size={18} /> Current Sale
                             </h2>
@@ -195,9 +186,9 @@ const OwnerPOS = () => {
                             ) : (
                                 <div className="space-y-3">
                                     {cart.map(item => (
-                                        <div key={item.id} className="flex items-center justify-between p-3 bg-white border rounded-lg shadow-sm">
+                                        <div key={item.id} className="flex items-center justify-between p-3 bg-card border rounded-lg shadow-sm">
                                             <div className="flex-1">
-                                                <div className="font-medium">{item.name}</div>
+                                                <div className="font-medium text-foreground">{item.name}</div>
                                                 <div className="text-sm text-muted-foreground">R{item.price} x {item.quantity}</div>
                                             </div>
                                             <div className="flex items-center gap-2">

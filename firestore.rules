@@ -187,5 +187,15 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update: if isAdmin();
     }
+
+    // --- Support Tickets Collection ---
+    match /support_tickets/{ticketId} {
+      // Users can read their own tickets; admin can read all
+      allow read: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      // Any signed-in user can create a ticket
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Admin can update tickets (status, replies)
+      allow update: if isAdmin();
+    }
   }
 }

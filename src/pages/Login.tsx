@@ -66,7 +66,7 @@ const Login = () => {
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
-                                <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 mb-4">
+                                <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4">
                                     <CreditCard size={24} />
                                 </div>
                                 <h3 className="font-semibold text-lg mb-1">Cashier</h3>

@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle2, CreditCard, Banknote, Landmark, ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/context/StoreContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePaystack } from "@/hooks/usePaystack";
 
 const CashierCheckout = () => {
     const location = useLocation();

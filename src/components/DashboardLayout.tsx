@@ -124,6 +124,7 @@ const getLinks = (role: string) => {
 
 const NavContent = ({ role, location, navigate, isOpen, setIsOpen, logout }: any) => {
     const { ownerLinks, cashierLinks, customerLinks, driverLinks, adminLinks, lenderLinks, links } = getLinks(role);
+    const { unreadCount } = useNotifications();
     const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
         OVERVIEW: true,
         OPERATIONS: true,

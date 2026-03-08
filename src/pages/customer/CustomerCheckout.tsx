@@ -17,7 +17,8 @@ import { toast } from "sonner";
 
 const CustomerCheckout = () => {
     const navigate = useNavigate();
-    const { placeOrder, cartTotal, cart } = useStore();
+    const { placeOrder, cartTotal, cart, stores } = useStore();
+    const activeStores = stores.filter(s => s.status === 'Active');
     const { profile, purchaseOnCredit, simulatePayment } = useCredit();
 
     const [step, setStep] = useState(1);

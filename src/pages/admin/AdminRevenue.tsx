@@ -12,7 +12,7 @@ const AdminRevenue = () => {
     const { orders } = useStore();
 
     const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0) || 72300;
-    const successfulPayments = orders.filter(o => o.status !== 'Cancelled').length || 68;
+    const successfulPayments = orders.filter(o => o.status === 'Delivered' || o.status === 'Paid').length || 68;
     const totalPayments = orders.length || 73;
     const successRate = totalPayments > 0 ? ((successfulPayments / totalPayments) * 100).toFixed(1) : "93.2";
     const avgOrderValue = totalPayments > 0 ? (totalRevenue / totalPayments).toFixed(0) : "990";

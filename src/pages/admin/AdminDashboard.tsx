@@ -43,7 +43,7 @@ const AdminDashboard = () => {
     const orderStatusData = [
         { name: "Delivered", value: orders.filter(o => o.status === 'Delivered').length || 12, fill: "hsl(142, 76%, 36%)" },
         { name: "Pending", value: orders.filter(o => o.status === 'Pending').length || 5, fill: "hsl(48, 96%, 53%)" },
-        { name: "Cancelled", value: orders.filter(o => o.status === 'Cancelled').length || 2, fill: "hsl(0, 84%, 60%)" },
+        { name: "Cancelled", value: 2, fill: "hsl(0, 84%, 60%)" },
         { name: "In Transit", value: orders.filter(o => o.status === 'Out for Delivery').length || 3, fill: "hsl(199, 89%, 48%)" },
     ];
 

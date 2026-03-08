@@ -79,11 +79,16 @@ const getLinks = (role: string) => {
 
     const adminLinks = [
         { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+        { href: "/admin/stores", label: "Stores", icon: Settings },
+        { href: "/admin/revenue", label: "Revenue", icon: Banknote },
+        { href: "/admin/credit-overview", label: "Credit Overview", icon: ShieldCheck },
+        { href: "/admin/users", label: "Users", icon: Users },
+        { href: "/admin/support", label: "Support Tickets", icon: Heart },
         { href: "/admin/applications", label: "Applications", icon: User },
         { href: "/admin/pos-monitor", label: "POS Monitor", icon: LayoutDashboard },
-        { href: "/admin/users", label: "Users", icon: Users },
         { href: "/admin/audit-logs", label: "Audit Logs", icon: ShieldCheck },
-        { href: "/admin/disputes", label: "Disputes", icon: ShieldCheck },
+        { href: "/admin/disputes", label: "Disputes", icon: AlertTriangle },
     ];
 
     const lenderLinks = [

@@ -19,9 +19,9 @@ interface StatCardProps {
 
 const StatCard = ({ title, value, subtext, icon: Icon, color, isLoading }: StatCardProps) => (
     <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            <Icon className={`h-4 w-4 ${color}`} />
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 gap-2">
+            <CardTitle className="text-sm font-medium leading-tight">{title}</CardTitle>
+            <Icon className={`h-4 w-4 shrink-0 ${color}`} />
         </CardHeader>
         <CardContent>
             {isLoading ? (
@@ -76,7 +76,7 @@ const OwnerDashboard = () => {
                 <p className="text-muted-foreground">Overview of your business performance.</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 <StatCard
                     title="Total Revenue"
                     value={`R ${totalRevenue.toFixed(2)}`}
@@ -105,11 +105,11 @@ const OwnerDashboard = () => {
                     icon={Users}
                     color="text-blue-500"
                 />
-                <Link to="/cashier/credit-review">
-                    <Card className="hover:border-indigo-500 transition-all cursor-pointer h-full border-dashed border-2">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Credit Check</CardTitle>
-                            <Users className="h-4 w-4 text-indigo-500" />
+                <Link to="/owner/credit-review" className="h-full">
+                    <Card className="hover:border-indigo-500 transition-all cursor-pointer h-full border-dashed border-2 flex flex-col justify-between">
+                        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 gap-2">
+                            <CardTitle className="text-sm font-medium leading-tight">Credit Check</CardTitle>
+                            <Users className="h-4 w-4 shrink-0 text-indigo-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">Lookup</div>
@@ -119,23 +119,23 @@ const OwnerDashboard = () => {
                 </Link>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-7">
-                <Card className="col-span-4">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 mt-4">
+                <Card className="lg:col-span-2 xl:col-span-3">
                     <CardHeader>
                         <CardTitle>Sales Overview</CardTitle>
                         <CardDescription>
                             Comparing daily sales and profit margins.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="pl-2">
-                        <div className="h-[300px]">
+                    <CardContent className="p-0 sm:p-6 sm:pl-2">
+                        <div className="h-[300px] w-full mt-4">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData}>
+                                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                                    <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `R${value}`} />
+                                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                                    <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `R${value}`} dx={-10} />
                                     <Tooltip cursor={{ fill: 'transparent' }} />
-                                    <Legend />
+                                    <Legend verticalAlign="top" height={36} iconType="circle" />
                                     <Bar dataKey="sales" fill="#10b981" radius={[4, 4, 0, 0]} name="Sales" />
                                     <Bar dataKey="profit" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Profit" />
                                 </BarChart>
@@ -144,7 +144,7 @@ const OwnerDashboard = () => {
                     </CardContent>
                 </Card>
 
-                <Card className="col-span-3">
+                <Card className="lg:col-span-1 xl:col-span-2">
                     <CardHeader>
                         <CardTitle>Recent Activity</CardTitle>
                         <CardDescription>
@@ -157,17 +157,17 @@ const OwnerDashboard = () => {
                                 <p className="text-sm text-muted-foreground text-center py-4">No recent orders.</p>
                             ) : (
                                 recentActivity.map((order) => (
-                                    <div key={order.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xs">
+                                    <div key={order.id} className="flex items-center justify-between border-b pb-2 last:border-0 gap-2">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xs shrink-0">
                                                 {order.customerName.charAt(0)}
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-medium">{order.id} - {order.customerName}</p>
+                                            <div className="min-w-0 pr-2">
+                                                <p className="text-sm font-medium truncate" title={`${order.id} - ${order.customerName}`}>{order.id} - {order.customerName}</p>
                                                 <p className="text-xs text-muted-foreground">{new Date(order.date).toLocaleTimeString()}</p>
                                             </div>
                                         </div>
-                                        <div className="font-medium text-sm">+R {order.total.toFixed(2)}</div>
+                                        <div className="font-medium text-sm text-right shrink-0 whitespace-nowrap whitespace-pre">+R {order.total.toFixed(2)}</div>
                                     </div>
                                 ))
                             )}

@@ -25,17 +25,16 @@ import OwnerInventory from "./pages/owner/OwnerInventory";
 import OwnerLending from "./pages/owner/OwnerLending";
 import OwnerStaff from "./pages/owner/OwnerStaff";
 import OwnerReports from "./pages/owner/OwnerReports";
-import OwnerShopSettings from "./pages/owner/OwnerShopSettings";
 import OwnerOrders from "./pages/owner/OwnerOrders";
 import OwnerPricing from "./pages/owner/OwnerPricing";
 import OwnerSuppliers from "./pages/owner/OwnerSuppliers";
 import OwnerAlerts from "./pages/owner/OwnerAlerts";
 import OwnerAnalytics from "./pages/owner/OwnerAnalytics";
-import OwnerShiftReviews from "./pages/owner/OwnerShiftReviews";
+
 import OwnerExpenses from "./pages/owner/OwnerExpenses";
-import OwnerPromotions from "./pages/owner/OwnerPromotions";
+
 import OwnerCustomers from "./pages/owner/OwnerCustomers";
-import OwnerCreditReview from "./pages/cashier/CashierCreditReview"; // Reusing the same component for now
+import OwnerCreditReview from "./pages/owner/OwnerCreditReview";
 
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
@@ -58,6 +57,8 @@ import CustomerPayment from "./pages/customer/CustomerPayment";
 import CustomerTracking from "./pages/customer/CustomerTracking";
 import CustomerCreditReview from "./pages/customer/CustomerCreditReview";
 import CustomerCreditApplication from "./pages/customer/CustomerCreditApplication";
+import CustomerLenderRegistration from "./pages/customer/CustomerLenderRegistration";
+import CustomerAlerts from "./pages/customer/CustomerAlerts";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import CustomerOrderDetails from "./pages/customer/CustomerOrderDetails";
 import CustomerSupport from "./pages/customer/CustomerSupport";
@@ -73,6 +74,7 @@ import DriverDelivered from "./pages/driver/DriverDelivered";
 import DriverRoute from "./pages/driver/DriverRoute";
 import DriverIssues from "./pages/driver/DriverIssues";
 import DriverWallet from "./pages/driver/DriverWallet";
+import DriverProfile from "./pages/driver/DriverProfile";
 
 // Admin
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -85,6 +87,7 @@ import AdminDisputes from "./pages/admin/AdminDisputes";
 
 // Lender
 import LenderLogin from "./pages/lender/LenderLogin";
+import LenderRegister from "./pages/lender/LenderRegister";
 import LenderDashboard from "./pages/lender/LenderDashboard";
 import LenderClients from "./pages/lender/LenderClients";
 import LenderLoans from "./pages/lender/LenderLoans";
@@ -126,15 +129,14 @@ const App = () => (
               <Route path="/owner/inventory" element={<OwnerInventory />} />
               <Route path="/owner/staff" element={<OwnerStaff />} />
               <Route path="/owner/reports" element={<OwnerReports />} />
-              <Route path="/owner/settings" element={<OwnerShopSettings />} />
               <Route path="/owner/orders" element={<OwnerOrders />} />
               <Route path="/owner/pricing" element={<OwnerPricing />} />
               <Route path="/owner/suppliers" element={<OwnerSuppliers />} />
               <Route path="/owner/alerts" element={<OwnerAlerts />} />
               <Route path="/owner/analytics" element={<OwnerAnalytics />} />
-              <Route path="/owner/shift-reviews" element={<OwnerShiftReviews />} />
+
               <Route path="/owner/expenses" element={<OwnerExpenses />} />
-              <Route path="/owner/promotions" element={<OwnerPromotions />} />
+
               <Route path="/owner/customers" element={<OwnerCustomers />} />
               <Route path="/owner/credit-review" element={<OwnerCreditReview />} />
 
@@ -159,6 +161,8 @@ const App = () => (
               <Route path="/customer/tracking" element={<CustomerTracking />} />
               <Route path="/customer/credit-review" element={<CustomerCreditReview />} />
               <Route path="/customer/apply-credit" element={<CustomerCreditApplication />} />
+              <Route path="/customer/lender-registration" element={<CustomerLenderRegistration />} />
+              <Route path="/customer/alerts" element={<CustomerAlerts />} />
               <Route path="/customer/profile" element={<CustomerProfile />} />
               <Route path="/customer/orders" element={<CustomerOrders />} />
               <Route path="/customer/orders/:id" element={<CustomerOrderDetails />} />
@@ -174,6 +178,7 @@ const App = () => (
               <Route path="/driver/route/:orderId" element={<DriverRoute />} />
               <Route path="/driver/issues" element={<DriverIssues />} />
               <Route path="/driver/wallet" element={<DriverWallet />} />
+              <Route path="/driver/profile" element={<DriverProfile />} />
 
               {/* Admin Portal */}
               <Route path="/admin/login" element={<AdminLogin />} />
@@ -186,6 +191,7 @@ const App = () => (
 
               {/* Lender Portal */}
               <Route path="/lender/login" element={<LenderLogin />} />
+              <Route path="/lender/register" element={<LenderRegister />} />
               <Route path="/lender/dashboard" element={<LenderDashboard />} />
               <Route path="/lender/clients" element={<LenderClients />} />
               <Route path="/lender/loans" element={<LenderLoans />} />

@@ -6,26 +6,28 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, Receipt, TrendingDown } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-
-const initialExpenses = [
-    { id: "EXP-101", date: "2023-10-25 09:30", category: "Supplier Payment", description: "Paid bread delivery cash", amount: 450.00, loggedBy: "Owner" },
-    { id: "EXP-102", date: "2023-10-24 12:15", category: "Wages", description: "Paid cleaner for the week", amount: 350.00, loggedBy: "Owner" },
-    { id: "EXP-103", date: "2023-10-22 15:45", category: "Utilities", description: "Bought pre-paid electricity", amount: 200.00, loggedBy: "Owner" },
-    { id: "EXP-104", date: "2023-10-20 08:00", category: "Transport", description: "Taxi fare for emergency stock", amount: 50.00, loggedBy: "Owner" },
-];
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FileText, Plus, Receipt, TrendingDown, Calendar, User, Tag, ArrowRight } from "lucide-react";
+import { useStore } from "@/context/StoreContext";
 
 const OwnerExpenses = () => {
     const { toast } = useToast();
-    const [expenses, setExpenses] = useState(initialExpenses);
+    const { expenses, addExpense } = useStore();
 
     // Form State
     const [amount, setAmount] = useState("");
     const [category, setCategory] = useState("Operational");
     const [description, setDescription] = useState("");
 
-    const handleAddExpense = () => {
+    const [selectedExpense, setSelectedExpense] = useState<any>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const handleRowClick = (expense: any) => {
+        setSelectedExpense(expense);
+        setIsDialogOpen(true);
+    };
+
+    const handleAddExpense = async () => {
         if (!amount || !description) {
             toast({
                 title: "Error",
@@ -35,16 +37,12 @@ const OwnerExpenses = () => {
             return;
         }
 
-        const newExpense = {
-            id: `EXP-${100 + expenses.length + 1}`,
-            date: new Date().toLocaleString('en-ZA').replace(',', ''), // format quick
+        await addExpense({
             category,
             description,
             amount: parseFloat(amount),
-            loggedBy: "Owner"
-        };
+        });
 
-        setExpenses([newExpense, ...expenses]);
         setAmount("");
         setDescription("");
         setCategory("Operational");
@@ -66,7 +64,7 @@ const OwnerExpenses = () => {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Card className="col-span-1 border-dashed border-2 bg-slate-50">
+                    <Card className="col-span-1 border-dashed border-2 bg-transparent">
                         <CardHeader>
                             <CardTitle>Log New Expense</CardTitle>
                             <CardDescription>Record cash removed from shop.</CardDescription>
@@ -138,7 +136,11 @@ const OwnerExpenses = () => {
                                 </TableHeader>
                                 <TableBody>
                                     {expenses.map((expense) => (
-                                        <TableRow key={expense.id}>
+                                        <TableRow
+                                            key={expense.id}
+                                            className="cursor-pointer hover:bg-muted/50"
+                                            onClick={() => handleRowClick(expense)}
+                                        >
                                             <TableCell className="text-muted-foreground text-sm">{expense.date}</TableCell>
                                             <TableCell className="font-medium">{expense.category}</TableCell>
                                             <TableCell>{expense.description}</TableCell>
@@ -160,6 +162,61 @@ const OwnerExpenses = () => {
                         </CardContent>
                     </Card>
                 </div>
+
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Expense Details</DialogTitle>
+                            <DialogDescription>
+                                Reference: {selectedExpense?.id}
+                            </DialogDescription>
+                        </DialogHeader>
+                        {selectedExpense && (
+                            <div className="space-y-6 pt-4">
+                                <div className="p-4 bg-muted/50 rounded-lg flex items-center justify-between border">
+                                    <div className="flex flex-col">
+                                        <span className="text-sm text-muted-foreground">Total Amount</span>
+                                        <span className="text-2xl font-bold text-red-500">-R {selectedExpense.amount.toFixed(2)}</span>
+                                    </div>
+                                    <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                                        <TrendingDown className="h-6 w-6 text-red-500" />
+                                    </div>
+                                </div>
+                                <div className="grid gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium">Date & Time</span>
+                                            <span className="text-sm text-muted-foreground">{selectedExpense.date}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Tag className="h-5 w-5 text-muted-foreground" />
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium">Category</span>
+                                            <span className="text-sm text-muted-foreground">{selectedExpense.category}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <User className="h-5 w-5 text-muted-foreground" />
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium">Logged By</span>
+                                            <span className="text-sm text-muted-foreground">{selectedExpense.loggedBy}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium">Description / Reason</span>
+                                            <span className="text-sm text-muted-foreground">{selectedExpense.description}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
+
             </div>
         </DashboardLayout>
     );

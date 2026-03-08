@@ -6,10 +6,30 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStore } from "@/context/StoreContext";
+import { useCredit } from "@/context/CreditContext";
 import { Switch } from "@/components/ui/switch";
+import { Globe, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 
 const LenderProfile = () => {
     const { user } = useStore();
+    const { addLenderOffer } = useCredit();
+
+    const handlePublishProfile = () => {
+        // Mock publishing the lender's custom rates to the marketplace
+        const newOffer = {
+            id: `lender-${Date.now()}`,
+            name: "Smitetrade Secured Partner",
+            rate: "15%", // hardcoded for demo, normally would come from State
+            term: "60 Days",
+            maxAmount: 50000,
+            minScore: 680,
+            features: ["Verified Lender", "Custom Terms"],
+            description: "A newly verified lending partner offering competitive terms for growing Spaza shops."
+        };
+        addLenderOffer(newOffer);
+        toast.success("Profile Published!", { description: "Your lending offer is now live on the Customer Marketplace." });
+    };
 
     return (
         <DashboardLayout role="lender">
@@ -29,8 +49,8 @@ const LenderProfile = () => {
                         <div className="grid gap-6 md:grid-cols-2">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>Personal Information</CardTitle>
-                                    <CardDescription>Update your contact details.</CardDescription>
+                                    <CardTitle>Personal & Business Information</CardTitle>
+                                    <CardDescription>Update your contact and business details.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="flex items-center gap-4 mb-4">
@@ -44,13 +64,15 @@ const LenderProfile = () => {
                                         <Label htmlFor="name">Full Name</Label>
                                         <Input id="name" defaultValue="Lufuno Lender" />
                                     </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input id="email" defaultValue={user?.email || "lender@smitetrade.com"} />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="phone">Phone Number</Label>
-                                        <Input id="phone" defaultValue="+27 12 345 6789" />
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="email">Email</Label>
+                                            <Input id="email" defaultValue={user?.email || "lender@smitetrade.com"} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="phone">Phone Number</Label>
+                                            <Input id="phone" defaultValue="+27 12 345 6789" />
+                                        </div>
                                     </div>
                                 </CardContent>
                                 <CardFooter>
@@ -110,32 +132,6 @@ const LenderProfile = () => {
                     <TabsContent value="settings" className="space-y-6 mt-6">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Lending Parameters</CardTitle>
-                                <CardDescription>Set your default interest rates and loan terms.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="interest">Default Interest Rate (%)</Label>
-                                        <Input id="interest" placeholder="e.g. 5.0" defaultValue="5.0" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="max-term">Max Loan Term (Days)</Label>
-                                        <Input id="max-term" placeholder="e.g. 30" defaultValue="30" />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="max-amount">Maximum Loan Amount (R)</Label>
-                                    <Input id="max-amount" placeholder="e.g. 50000" defaultValue="50000" />
-                                </div>
-                            </CardContent>
-                            <CardFooter>
-                                <Button>Save Settings</Button>
-                            </CardFooter>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
                                 <CardTitle>Notifications</CardTitle>
                                 <CardDescription>Manage your notification preferences.</CardDescription>
                             </CardHeader>
@@ -155,6 +151,73 @@ const LenderProfile = () => {
                                     <Switch id="overdue" defaultChecked />
                                 </div>
                             </CardContent>
+                        </Card>
+
+                        <Card className="border-emerald-500/20 shadow-sm bg-card">
+                            <CardHeader className="pb-4 border-b border-emerald-500/20 bg-emerald-500/5">
+                                <div className="flex items-center gap-2">
+                                    <Globe className="h-5 w-5 text-emerald-500" />
+                                    <CardTitle>Marketplace Visibility</CardTitle>
+                                </div>
+                                <CardDescription>Allow customers to see your profile and apply matching your interest rates.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="pt-6 space-y-8">
+                                <div className="space-y-4">
+                                    <div>
+                                        <h3 className="text-lg font-medium">Lending Parameters</h3>
+                                        <p className="text-sm text-muted-foreground">Set your default interest rates and loan terms.</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="interest">Default Interest Rate (%)</Label>
+                                            <Input id="interest" placeholder="e.g. 5.0" defaultValue="5.0" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="max-term">Max Loan Term (Days)</Label>
+                                            <Input id="max-term" placeholder="e.g. 30" defaultValue="30" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="max-amount">Maximum Loan Amount (R)</Label>
+                                        <Input id="max-amount" placeholder="e.g. 50000" defaultValue="50000" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 pt-6 border-t border-emerald-500/20">
+                                    <h3 className="text-lg font-medium">Public Profile</h3>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="pubBusinessName">Public Business Name</Label>
+                                            <Input id="pubBusinessName" defaultValue="Smitetrade Secured Partner" />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="pubAddress">Public Office Address</Label>
+                                            <Input id="pubAddress" defaultValue="123 Financial District, Sandton, 2196" />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="pubEmail">Public Email Address</Label>
+                                            <Input id="pubEmail" type="email" defaultValue="contact@smitetrade.com" />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="pubPhone">Public Phone Number</Label>
+                                            <Input id="pubPhone" type="tel" defaultValue="+27 11 123 4567" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-4 p-4 border rounded-lg border-emerald-500/20 bg-emerald-500/5">
+                                    <ShieldCheck className="h-8 w-8 text-emerald-500 shrink-0" />
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium">Verification Status</p>
+                                        <p className="text-xs text-muted-foreground">Your business documents have been verified. You are clear to publish your offers to the Smitetrade ecosystem.</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700" onClick={handlePublishProfile}>
+                                    Upload Profile to System
+                                </Button>
+                            </CardFooter>
                         </Card>
                     </TabsContent>
                 </Tabs>

@@ -4,13 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, FileText, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCredit } from "@/context/CreditContext";
 
 const LenderApplications = () => {
-    // Mock applications data
-    const applications = [
-        { id: 1, borrower: "Lufuno Mphela", amount: 5000, term: "30 Days", reason: "Inventory Restock", creditScore: 780, date: "2024-02-12", ssid: "SS-ID0001" },
-        { id: 2, borrower: "Thabo Mbeki", amount: 2500, term: "14 Days", reason: "Equipment Repair", creditScore: 650, date: "2024-02-11", ssid: "SS-ID0002" },
-    ];
+    const { applications, approveApplication, rejectApplication } = useCredit();
 
     return (
         <DashboardLayout role="lender">
@@ -59,7 +56,7 @@ const LenderApplications = () => {
                                     </div>
                                 </div>
 
-                                <div className="bg-slate-50 p-3 rounded-md border border-slate-100 mb-4 flex items-center gap-3">
+                                <div className="bg-secondary/20 p-3 rounded-md border border-border mb-4 flex items-center gap-3">
                                     <div className={`h-8 w-8 rounded-full flex items-center justify-center ${app.creditScore >= 700 ? "bg-emerald-100 text-emerald-600" : "bg-yellow-100 text-yellow-600"}`}>
                                         {app.creditScore >= 700 ? <Check className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                                     </div>
@@ -75,18 +72,30 @@ const LenderApplications = () => {
                                             <FileText className="mr-2 h-4 w-4" /> View Report
                                         </Link>
                                     </Button>
-                                    <Button variant="destructive" size="sm">
+                                    <Button variant="destructive" size="sm" onClick={() => rejectApplication(app.id)}>
                                         <X className="mr-2 h-4 w-4" /> Reject
                                     </Button>
-                                    <Button className="bg-emerald-600 hover:bg-emerald-700" size="sm" asChild>
+                                    <Button className="bg-emerald-600 hover:bg-emerald-700" size="sm" onClick={() => approveApplication(app.id)}>
+                                        <Check className="mr-2 h-4 w-4" /> Approve
+                                    </Button>
+                                    <Button variant="secondary" size="sm" asChild>
                                         <Link to={`/lender/quote?borrower=${encodeURIComponent(app.borrower)}&amount=${app.amount}&term=${parseInt(app.term, 10)}`}>
-                                            <FileText className="mr-2 h-4 w-4" /> Issue Quote (NCA)
+                                            <FileText className="mr-2 h-4 w-4" /> Draft Custom Quote
                                         </Link>
                                     </Button>
                                 </div>
                             </CardContent>
                         </Card>
                     ))}
+                    {applications.length === 0 && (
+                        <Card className="border-dashed">
+                            <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                                <Check className="h-12 w-12 mb-4 text-emerald-500 opacity-20" />
+                                <p className="text-lg font-medium">All Caught Up!</p>
+                                <p className="text-sm">No new applications to review.</p>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </div>
         </DashboardLayout>

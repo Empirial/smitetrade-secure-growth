@@ -16,10 +16,19 @@ interface CreditContextType {
     addBorrower: (name: string, phone: string, idNumber: string, photoFile?: File) => Promise<void>;
     createLoan: (borrowerId: string, amount: number, dueDate: string) => Promise<void>;
     recordPayment: (loanId: string) => Promise<void>;
+    applications: any[];
+    approveApplication: (appId: string) => Promise<void>;
+    rejectApplication: (appId: string) => void;
+    confirmTransfer: (loanId: string) => void;
+    restructureLoan: (loanId: string, newAmount: number, newDueDate: string) => void;
+    sendReminder: (borrowerId: string, type: string) => void;
     notifications: Notification[];
     clearNotifications: () => void;
     // Customer Actions
     purchaseOnCredit: (amount: number) => Promise<boolean>;
+    // Marketplace
+    lenderOffers: any[];
+    addLenderOffer: (offer: any) => void;
 }
 
 const CreditContext = createContext<CreditContextType | undefined>(undefined);
@@ -137,6 +146,60 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         { id: "loan_1", borrowerId: "9001015009087", borrowerName: "Lufuno Mphela", amount: 500, dueDate: "2026-03-01", status: "active" }
     ]);
 
+    // --- Applications State (Mock) ---
+    const [applications, setApplications] = useState<any[]>([
+        { id: "app_1", borrower: "Thabo Mbeki", amount: 2500, term: "14 Days", reason: "Equipment Repair", creditScore: 650, date: "2024-02-11", ssid: "SS-ID0002" },
+        { id: "app_2", borrower: "Sipho Khumalo", amount: 10000, term: "90 Days", reason: "Stock Expansion", creditScore: 710, date: "2024-02-12", ssid: "SS-ID0003" } // New applicant not in borrowers yet
+    ]);
+
+    // --- Marketplace State ---
+    const [lenderOffers, setLenderOffers] = useState<any[]>([
+        {
+            id: "lender-1",
+            name: "Swift Capital",
+            rate: "12%",
+            term: "30 Days",
+            maxAmount: 5000,
+            minScore: 650,
+            features: ["Instant Approval", "No hidden fees"],
+            description: "Swift Capital provides fast and reliable funding for Spaza shops needing quick inventory restocks. With minimal paperwork and instant approval algorithms, you get the cash you need within hours."
+        },
+        {
+            id: "lender-2",
+            name: "Growth Fund",
+            rate: "10.5%",
+            term: "14 Days",
+            maxAmount: 3000,
+            minScore: 700,
+            features: ["Low Rates", "Flexible Repayment"],
+            description: "Growth Fund offers highly competitive interest rates for shop owners with excellent repayment histories. Our flexible repayment terms mean you can pay back when your sales peak."
+        },
+        {
+            id: "lender-3",
+            name: "EasyAccess Loans",
+            rate: "15%",
+            term: "60 Days",
+            maxAmount: 10000,
+            minScore: 600,
+            features: ["High Limits", "Longer Terms"],
+            description: "Designed for larger capital investments like equipment upgrades or bulk purchasing. EasyAccess allows for higher borrowing limits with comfortably spaced-out 60-day terms."
+        },
+        {
+            id: "lender-4",
+            name: "Community Trust",
+            rate: "11%",
+            term: "45 Days",
+            maxAmount: 7500,
+            minScore: 680,
+            features: ["Community Focus", "Grace Period"],
+            description: "A lender dedicated to local business growth. Enjoy a generous grace period and personalized support to ensure your business thrives."
+        },
+    ]);
+
+    const addLenderOffer = (offer: any) => {
+        setLenderOffers(prev => [...prev, offer]);
+    };
+
     // --- Simulate Payment (For Customer Side) ---
     const simulatePayment = async (amount: number, paymentDate: Date) => {
         toast.success(`Payment of R${amount} simulated for ${paymentDate.toLocaleDateString()}`);
@@ -251,6 +314,68 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
     const clearNotifications = () => setNotifications([]);
 
+    // --- Lender Applications Actions ---
+    const approveApplication = async (appId: string) => {
+        const app = applications.find(a => a.id === appId);
+        if (!app) return;
+
+        // 1. Check if borrower already exists, if not, add them automatically
+        let borrowerId = borrowers.find(b => b.ssid === app.ssid)?.id;
+
+        if (!borrowerId) {
+            borrowerId = `GUEST_${Date.now()}`;
+            const newBorrower = {
+                id: borrowerId,
+                ssid: app.ssid,
+                name: app.borrower,
+                phone: "000 000 0000", // Needs to be filled in later
+                rating: app.creditScore >= 700 ? "Good" : "Risk",
+                score: app.creditScore,
+                photoUrl: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop"
+            };
+            setBorrowers(prev => [...prev, newBorrower]);
+        }
+
+        // 2. Create the loan with "pending" status (funds not transferred yet)
+        const newLoan: Loan = {
+            id: `loan_${Date.now()}`,
+            borrowerId,
+            borrowerName: app.borrower,
+            amount: app.amount,
+            // Calculate a simple due date for demo
+            dueDate: new Date(Date.now() + parseInt(app.term) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            status: "pending" // IMPORTANT: Setting to pending
+        };
+        setLoans(prev => [...prev, newLoan]);
+
+        // 3. Remove application
+        setApplications(prev => prev.filter(a => a.id !== appId));
+        toast.success(`${app.borrower}'s application approved. Waiting for funds transfer transfer.`);
+    };
+
+    const rejectApplication = (appId: string) => {
+        setApplications(prev => prev.filter(a => a.id !== appId));
+        toast.error("Application Rejected", { description: "The applicant has been notified." });
+    };
+
+    const confirmTransfer = (loanId: string) => {
+        setLoans(prev => prev.map(l => l.id === loanId ? { ...l, status: "active" } : l));
+        toast.success("Funds transfer confirmed! Loan is now Active.");
+    };
+
+    const restructureLoan = (loanId: string, newAmount: number, newDueDate: string) => {
+        setLoans(prev => prev.map(l => l.id === loanId ? { ...l, amount: newAmount, dueDate: newDueDate, status: "active" } : l));
+        toast.success("Loan successfully restructured! The client has been updated.");
+    };
+
+    const sendReminder = (borrowerId: string, type: string) => {
+        // Find borrower to show realistic toast
+        const borrower = borrowers.find(b => b.id === borrowerId);
+
+        // Log note in real app, we'll just show a toast here for the MVP
+        toast.success(`${type} email successfully sent to ${borrower?.name || "the client"}!`);
+    };
+
     // --- Customer Actions ---
     const purchaseOnCredit = async (amount: number): Promise<boolean> => {
         if (!profile) return false;
@@ -288,9 +413,17 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
             addBorrower,
             createLoan,
             recordPayment,
+            applications,
+            approveApplication,
+            rejectApplication,
+            confirmTransfer,
+            restructureLoan,
+            sendReminder,
             notifications,
             clearNotifications,
-            purchaseOnCredit
+            purchaseOnCredit,
+            lenderOffers,
+            addLenderOffer
         }}>
             {children}
         </CreditContext.Provider>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useStore } from "@/context/StoreContext";
 import { useState } from "react";
 import { Search } from "lucide-react";
@@ -13,6 +14,15 @@ const OwnerOrders = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [filterDate, setFilterDate] = useState("");
+
+    // Details Dialog State
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const handleRowClick = (order: any) => {
+        setSelectedOrder(order);
+        setIsDialogOpen(true);
+    };
 
     // Filter logic
     const filteredOrders = orders.filter(order => {
@@ -94,7 +104,11 @@ const OwnerOrders = () => {
                                     </TableRow>
                                 ) : (
                                     filteredOrders.map((order) => (
-                                        <TableRow key={order.id}>
+                                        <TableRow
+                                            key={order.id}
+                                            className="cursor-pointer hover:bg-muted/50"
+                                            onClick={() => handleRowClick(order)}
+                                        >
                                             <TableCell className="font-medium">#{order.id}</TableCell>
                                             <TableCell>{order.customerName}</TableCell>
                                             <TableCell>
@@ -117,6 +131,49 @@ const OwnerOrders = () => {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Order Details Dialog */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Order Details #{selectedOrder?.id}</DialogTitle>
+                        <DialogDescription>
+                            Placed on {selectedOrder && new Date(selectedOrder.date).toLocaleString()}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedOrder && (
+                        <div className="space-y-4 py-4">
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="font-semibold text-muted-foreground">Customer:</span>
+                                <span className="font-medium">{selectedOrder.customerName}</span>
+                            </div>
+
+                            <div>
+                                <h4 className="font-semibold text-sm text-muted-foreground mb-3 uppercase tracking-wider">Order Items</h4>
+                                <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
+                                    {selectedOrder.items?.map((item: any, i: number) => (
+                                        <div key={i} className="flex justify-between text-sm items-center">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs">{item.quantity}x</span>
+                                                <span>{item.name}</span>
+                                            </div>
+                                            <span className="font-medium">R {(item.price * item.quantity).toFixed(2)}</span>
+                                        </div>
+                                    ))}
+                                    {(!selectedOrder.items || selectedOrder.items.length === 0) && (
+                                        <div className="text-sm text-muted-foreground italic">No item details available.</div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center border-t pt-4">
+                                <span className="font-bold text-lg">Total</span>
+                                <span className="text-xl font-bold text-emerald-600">R {selectedOrder.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </DashboardLayout>
     );
 };

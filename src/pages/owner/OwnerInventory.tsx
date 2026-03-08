@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Edit, Trash2, Package, ScanLine } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
@@ -15,6 +16,7 @@ const OwnerInventory = () => {
     const { products, addProduct, deleteProduct } = useStore();
 
     const [searchTerm, setSearchTerm] = useState("");
+    const [filterCategory, setFilterCategory] = useState("All");
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
 
@@ -31,10 +33,14 @@ const OwnerInventory = () => {
         }, 1000);
     };
 
-    const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const uniqueCategories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
+
+    const filteredProducts = products.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.category.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = filterCategory === "All" || p.category === filterCategory;
+        return matchesSearch && matchesCategory;
+    });
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -124,12 +130,23 @@ const OwnerInventory = () => {
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="category" className="text-right">Category</Label>
-                                        <Input
-                                            id="category"
-                                            className="col-span-3"
-                                            value={formData.category}
-                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        />
+                                        <div className="col-span-3">
+                                            <Select value={formData.category} onValueChange={(val) => setFormData({ ...formData, category: val })}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Bakery">Bakery</SelectItem>
+                                                    <SelectItem value="Beverages">Beverages</SelectItem>
+                                                    <SelectItem value="Dairy">Dairy</SelectItem>
+                                                    <SelectItem value="Pantry">Pantry</SelectItem>
+                                                    <SelectItem value="Snacks">Snacks</SelectItem>
+                                                    <SelectItem value="Staples">Staples</SelectItem>
+                                                    <SelectItem value="Services">Services</SelectItem>
+                                                    <SelectItem value="Custom">Custom</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="price" className="text-right">Price (R)</Label>
@@ -167,14 +184,27 @@ const OwnerInventory = () => {
                                 <CardTitle>Current Stock</CardTitle>
                                 <CardDescription>Overview of all items currently in your shop.</CardDescription>
                             </div>
-                            <div className="relative w-full md:w-64">
-                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search products..."
-                                    className="pl-8"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
+                            <div className="flex gap-2 w-full md:w-auto">
+                                <Select value={filterCategory} onValueChange={setFilterCategory}>
+                                    <SelectTrigger className="w-[140px]">
+                                        <SelectValue placeholder="Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Categories</SelectItem>
+                                        {uniqueCategories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <div className="relative w-full md:w-64">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search products..."
+                                        className="pl-8"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </CardHeader>

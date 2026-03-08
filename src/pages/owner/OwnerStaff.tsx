@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Truck, Shield, MoreHorizontal, UserPlus } from "lucide-react";
+import { User, Truck, Shield, MoreHorizontal, UserPlus, Users, Check, Flag, Wallet } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,12 +15,21 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 import { useStore } from "@/context/StoreContext";
+import { StaffMember } from "@/types";
+
+// Remove mock data for shift records
 
 const OwnerStaff = () => {
-    const { staff, addStaff, updateStaff, deleteStaff } = useStore();
+    const { staff, addStaff, updateStaff, deleteStaff, shifts } = useStore();
+    const { toast } = useToast();
+
+    // Staff state
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
     const [formData, setFormData] = useState({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
@@ -32,9 +41,9 @@ const OwnerStaff = () => {
                 email: formData.email,
                 role: formData.role as 'cashier' | 'driver' | 'admin',
                 username: formData.username,
-                password: formData.password,
+                password: formData.password as string,
                 pin: formData.pin
-            });
+            } as Partial<StaffMember>);
         } else {
             addStaff({
                 name: formData.name,
@@ -44,8 +53,8 @@ const OwnerStaff = () => {
                 status: "Active",
                 joined: new Date().toISOString().split('T')[0],
                 pin: formData.pin,
-                password: formData.password
-            });
+                password: formData.password as string
+            } as Omit<StaffMember, 'id'>);
         }
 
         setIsAddOpen(false);
@@ -74,16 +83,28 @@ const OwnerStaff = () => {
         }
     };
 
+    const handleShiftAction = async (id: string, action: 'Resolved' | 'Flagged') => {
+        // Implement updating shift status in Firebase through context if needed
+        // For now, since `shifts` comes from context correctly, we mock 
+        // updating the local status to reflect visually
+        toast({
+            title: `Shift ${action}`,
+            description: `Shift ${id} has been marked as ${action.toLowerCase()}.`,
+            variant: action === 'Flagged' ? "destructive" : "default",
+        });
+    };
+
     const getRoleIcon = (role: string) => {
-        switch (role) {
-            case "Cashier": return <User className="h-4 w-4" />;
-            case "Driver": return <Truck className="h-4 w-4" />;
-            case "Owner": return <Shield className="h-4 w-4" />;
+        switch (role.toLowerCase()) {
+            case "cashier": return <User className="h-4 w-4" />;
+            case "driver": return <Truck className="h-4 w-4" />;
+            case "admin": return <Shield className="h-4 w-4" />;
+            case "owner": return <Shield className="h-4 w-4" />;
             default: return <User className="h-4 w-4" />;
         }
     };
 
-    const getStatusColor = (status: string) => {
+    const getStaffStatusColor = (status: string) => {
         switch (status) {
             case "Active": return "default";
             case "On Leave": return "secondary";
@@ -92,162 +113,287 @@ const OwnerStaff = () => {
         }
     };
 
+    const getShiftStatusColor = (status: string) => {
+        switch (status) {
+            case "Resolved": return "bg-green-100 text-green-800 border-green-200";
+            case "Pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+            case "Flagged": return "bg-red-100 text-red-800 border-red-200";
+            default: return "bg-gray-100 text-gray-800";
+        }
+    };
+
+    const getShiftVarianceColor = (variance: number) => {
+        if (variance < 0) return "text-red-500 font-medium";
+        if (variance > 0) return "text-green-500 font-medium";
+        return "text-muted-foreground";
+    };
+
     return (
         <DashboardLayout role="owner">
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Staff Management</h1>
-                        <p className="text-muted-foreground">Manage your employees, roles, and access.</p>
-                    </div>
-                    <div>
-                        <Dialog open={isAddOpen} onOpenChange={handleOpenChange}>
-                            <DialogTrigger asChild>
-                                <Button>
-                                    <UserPlus className="h-4 w-4 mr-2" /> Add Staff Member
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>{editId ? "Edit Employee Details" : "Add New Employee"}</DialogTitle>
-                                    <DialogDescription>
-                                        {editId ? "Update access credentials and details" : "Create a profile for a new cashier or driver."}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="name" className="text-right">Full Name</Label>
-                                        <Input
-                                            id="name"
-                                            className="col-span-3"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="email" className="text-right">Email</Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            className="col-span-3"
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="role" className="text-right">Role</Label>
-                                        <Select
-                                            value={formData.role}
-                                            onValueChange={(value) => setFormData({ ...formData, role: value })}
-                                        >
-                                            <SelectTrigger className="col-span-3">
-                                                <SelectValue placeholder="Select a role" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Cashier">Cashier</SelectItem>
-                                                <SelectItem value="Driver">Driver</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4 border-t pt-4 mt-2">
-                                        <h3 className="col-span-4 font-semibold mb-2">Login Credentials</h3>
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="username" className="text-right">Username</Label>
-                                        <Input
-                                            id="username"
-                                            className="col-span-3"
-                                            value={formData.username}
-                                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                            placeholder="johndoe"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="password" className="text-right">Password</Label>
-                                        <Input
-                                            id="password"
-                                            className="col-span-3"
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            placeholder="Secret123!"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="pin" className="text-right">PIN</Label>
-                                        <Input
-                                            id="pin"
-                                            maxLength={4}
-                                            className="col-span-3"
-                                            value={formData.pin}
-                                            onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
-                                            placeholder="1234 (For POS)"
-                                        />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button onClick={handleAddStaff}>{editId ? "Save Changes" : "Create Account"}</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                        <h1 className="text-3xl font-bold tracking-tight">Staff & Shifts</h1>
+                        <p className="text-muted-foreground">Manage your employees, roles, and review daily shifts.</p>
                     </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {staff.length === 0 ? (
-                        <div className="col-span-1 border-2 border-dashed border-slate-200 rounded-lg p-12 text-center text-muted-foreground">
-                            <Users className="h-8 w-8 mx-auto mb-4 text-slate-300" />
-                            <p>No staff members found.</p>
-                            <p className="text-sm">Click "Add Staff Member" to create your first employee account.</p>
-                        </div>
-                    ) : (
-                        staff.map((member) => (
-                            <Card key={member.id}>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-base font-medium">
-                                        {member.name}
-                                    </CardTitle>
-                                    <Badge variant={getStatusColor(member.status || "") as "default" | "secondary" | "destructive" | "outline"}>{member.status}</Badge>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                                        {getRoleIcon(member.role.charAt(0).toUpperCase() + member.role.slice(1))}
-                                        {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground mb-4">
-                                        Joined: {member.joined} <br />
-                                        Email: {member.email}
-                                    </div>
-                                    <div className="bg-slate-50 p-2 rounded text-xs space-y-1 border border-slate-100 mb-4">
-                                        <div className="font-semibold text-slate-700">Login Details</div>
-                                        <div className="grid grid-cols-2 gap-x-2">
-                                            <span className="text-muted-foreground">Username:</span>
-                                            <span className="font-mono">{member.username || "-"}</span>
-                                            <span className="text-muted-foreground">Password:</span>
-                                            <span className="font-mono">{member.password || "-"}</span>
-                                            <span className="text-muted-foreground">POS PIN:</span>
-                                            <span className="font-mono">{member.pin || "-"}</span>
+                <Tabs defaultValue="staff" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+                        <TabsTrigger value="staff">Staff Management</TabsTrigger>
+                        <TabsTrigger value="shifts">Shift Reviews</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="staff" className="space-y-6 mt-6">
+                        <div className="flex justify-end">
+                            <Dialog open={isAddOpen} onOpenChange={handleOpenChange}>
+                                <DialogTrigger asChild>
+                                    <Button>
+                                        <UserPlus className="h-4 w-4 mr-2" /> Add Staff Member
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>{editId ? "Edit Employee Details" : "Add New Employee"}</DialogTitle>
+                                        <DialogDescription>
+                                            {editId ? "Update access credentials and details" : "Create a profile for a new cashier or driver."}
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="name" className="text-right">Full Name</Label>
+                                            <Input
+                                                id="name"
+                                                className="col-span-3"
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="email" className="text-right">Email</Label>
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                className="col-span-3"
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="role" className="text-right">Role</Label>
+                                            <Select
+                                                value={formData.role}
+                                                onValueChange={(value) => setFormData({ ...formData, role: value })}
+                                            >
+                                                <SelectTrigger className="col-span-3">
+                                                    <SelectValue placeholder="Select a role" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Cashier">Cashier</SelectItem>
+                                                    <SelectItem value="Driver">Driver</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4 border-t pt-4 mt-2">
+                                            <h3 className="col-span-4 font-semibold mb-2">Login Credentials</h3>
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="username" className="text-right">Username</Label>
+                                            <Input
+                                                id="username"
+                                                className="col-span-3"
+                                                value={formData.username}
+                                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                                placeholder="johndoe"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="password" className="text-right">Password</Label>
+                                            <Input
+                                                id="password"
+                                                className="col-span-3"
+                                                value={formData.password}
+                                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                                placeholder="Secret123!"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="pin" className="text-right">PIN</Label>
+                                            <Input
+                                                id="pin"
+                                                maxLength={4}
+                                                className="col-span-3"
+                                                value={formData.pin}
+                                                onChange={(e) => setFormData({ ...formData, pin: e.target.value })}
+                                                placeholder="1234 (For POS)"
+                                            />
                                         </div>
                                     </div>
-                                    <div className="flex justify-end">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => handleEditClick(member)}>Edit Details</DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-red-600" onClick={() => deleteStaff(member.id)}>Delete Account</DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
+                                    <DialogFooter>
+                                        <Button onClick={handleAddStaff}>{editId ? "Save Changes" : "Create Account"}</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {staff.length === 0 ? (
+                                <div className="col-span-1 border-2 border-dashed border-slate-200 rounded-lg p-12 text-center text-muted-foreground">
+                                    <Users className="h-8 w-8 mx-auto mb-4 text-slate-300" />
+                                    <p>No staff members found.</p>
+                                    <p className="text-sm">Click "Add Staff Member" to create your first employee account.</p>
+                                </div>
+                            ) : (
+                                staff.map((member) => (
+                                    <Card key={member.id}>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                            <CardTitle className="text-base font-medium">
+                                                {member.name}
+                                            </CardTitle>
+                                            <Badge variant={getStaffStatusColor(member.status || "") as "default" | "secondary" | "destructive" | "outline"}>
+                                                {member.status}
+                                            </Badge>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                                                {getRoleIcon(member.role)}
+                                                {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mb-4">
+                                                Joined: {member.joined} <br />
+                                                Email: {member.email}
+                                            </div>
+                                            <div className="bg-slate-50 p-2 rounded text-xs space-y-1 border border-slate-100 mb-4">
+                                                <div className="font-semibold text-slate-700">Login Details</div>
+                                                <div className="grid grid-cols-2 gap-x-2">
+                                                    <span className="text-muted-foreground">Username:</span>
+                                                    <span className="font-mono">{member.username || "-"}</span>
+                                                    <span className="text-muted-foreground">Password:</span>
+                                                    <span className="font-mono">{(member as StaffMember).password || "-"}</span>
+                                                    <span className="text-muted-foreground">POS PIN:</span>
+                                                    <span className="font-mono">{member.pin || "-"}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={() => handleEditClick(member)}>Edit Details</DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem className="text-red-600" onClick={() => deleteStaff(member.id)}>Delete Account</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )))}
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="shifts" className="space-y-6 mt-6">
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                    <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
+                                    <Wallet className="h-4 w-4 text-amber-500" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{shifts.filter(s => s.status === 'Pending').length}</div>
+                                    <p className="text-xs text-muted-foreground">Shifts waiting for approval</p>
                                 </CardContent>
                             </Card>
-                        )))}
-                </div>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                    <CardTitle className="text-sm font-medium">Flagged Shifts</CardTitle>
+                                    <Flag className="h-4 w-4 text-red-500" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{shifts.filter(s => s.status === 'Flagged').length}</div>
+                                    <p className="text-xs text-muted-foreground">Requires immediate attention</p>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                    <CardTitle className="text-sm font-medium">Total Shortage</CardTitle>
+                                    <span className="text-red-500 text-sm font-bold">-R 250.00</span>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">3 Shifts</div>
+                                    <p className="text-xs text-muted-foreground">Impacted by shortages (7 Days)</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Recent Shifts</CardTitle>
+                                <CardDescription>Review and approve end-of-day till declarations.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Shift ID</TableHead>
+                                            <TableHead>Cashier</TableHead>
+                                            <TableHead>Date / Time</TableHead>
+                                            <TableHead className="text-right">System Expected</TableHead>
+                                            <TableHead className="text-right">Actual Count</TableHead>
+                                            <TableHead className="text-right">Variance</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {shifts.map((shift) => (
+                                            <TableRow key={shift.id}>
+                                                <TableCell className="font-medium">{shift.id}</TableCell>
+                                                <TableCell>{shift.cashierName}</TableCell>
+                                                <TableCell>{new Date(shift.endTime || shift.startTime).toLocaleString('en-ZA')}</TableCell>
+                                                <TableCell className="text-right">R {(shift.totalSales + shift.openingFloat).toFixed(2)}</TableCell>
+                                                <TableCell className="text-right font-medium">R {(shift.closingCash || 0).toFixed(2)}</TableCell>
+                                                <TableCell className={`text-right ${getShiftVarianceColor(shift.discrepancy || 0)}`}>
+                                                    {(shift.discrepancy && shift.discrepancy > 0) ? '+' : ''}R {(shift.discrepancy || 0).toFixed(2)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className={getShiftStatusColor(shift.status)}>
+                                                        {shift.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {shift.status === 'Pending' && (
+                                                        <div className="flex justify-end gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-8 border-green-200 hover:bg-green-50 hover:text-green-700"
+                                                                onClick={() => handleShiftAction(shift.id, 'Resolved')}
+                                                            >
+                                                                <Check className="h-4 w-4 mr-1" /> Accept
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-8 border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700"
+                                                                onClick={() => handleShiftAction(shift.id, 'Flagged')}
+                                                            >
+                                                                <Flag className="h-4 w-4 mr-1" /> Flag
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </DashboardLayout>
     );

@@ -9,12 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, User, FileText, Search, MoreHorizontal, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useCredit } from "@/context/CreditContext";
-import { Borrower } from "@/types";
+import { Borrower, Loan } from "@/types";
 import { toast } from "sonner";
 import { maskIdNumber } from "@/lib/utils";
 
 const LenderClients = () => {
-    const { borrowers, addBorrower, createLoan } = useCredit();
+    const { borrowers, loans, addBorrower, createLoan, confirmTransfer } = useCredit();
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isLoanOpen, setIsLoanOpen] = useState(false);
     const [selectedBorrower, setSelectedBorrower] = useState<string | null>(null);
@@ -144,40 +144,165 @@ const LenderClients = () => {
                                         <span className={borrower.score > 3 ? 'text-green-600 font-bold' : ''}>{borrower.score}%</span>
                                     </div>
                                 </div>
-                                <Button
-                                    className="w-full"
-                                    variant="secondary"
-                                    onClick={() => { setSelectedBorrower(borrower.id); setIsLoanOpen(true); }}
-                                >
-                                    <FileText className="mr-2 h-4 w-4" /> New Loan
-                                </Button>
+                                {/* Pending Loans Check */}
+                                {(() => {
+                                    const pendingLoan = loans.find(l => l.borrowerId === borrower.id && l.status === "pending");
+                                    if (pendingLoan) {
+                                        return (
+                                            <Button
+                                                className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    confirmTransfer(pendingLoan.id);
+                                                    setIsLoanOpen(false);
+                                                }}
+                                            >
+                                                Confirm Transfer (R {pendingLoan.amount})
+                                            </Button>
+                                        );
+                                    }
+
+                                    return (
+                                        <Button
+                                            className="w-full mt-2"
+                                            variant="secondary"
+                                            onClick={() => { setSelectedBorrower(borrower.id); setIsLoanOpen(true); }}
+                                        >
+                                            <FileText className="mr-2 h-4 w-4" /> Confirm loan
+                                        </Button>
+                                    );
+                                })()}
                             </CardContent>
                         </Card>
                     ))}
                 </div>
 
-                {/* Create Loan Dialog */}
+                {/* Client Profile & Loan Dialog */}
                 <Dialog open={isLoanOpen} onOpenChange={setIsLoanOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Issue Loan</DialogTitle>
-                            <DialogDescription>
-                                Authorize funds for {selectedBorrower ? borrowers.find(b => b.id === selectedBorrower)?.name : 'Client'}.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                                <Label>Amount (R)</Label>
-                                <Input type="number" value={newLoan.amount} onChange={e => setNewLoan({ ...newLoan, amount: e.target.value })} placeholder="0.00" />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Due Date</Label>
-                                <Input type="date" value={newLoan.date} onChange={e => setNewLoan({ ...newLoan, date: e.target.value })} />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button onClick={handleCreateLoan}>Confirm Transfer</Button>
-                        </DialogFooter>
+                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                        {selectedBorrower && (() => {
+                            const client = borrowers.find(b => b.id === selectedBorrower);
+                            const clientLoans = loans.filter((l: Loan) => l.borrowerId === selectedBorrower);
+                            const activeLoans = clientLoans.filter((l: Loan) => l.status === 'active');
+                            const pastLoans = clientLoans.filter((l: Loan) => l.status === 'paid' || l.status === 'default');
+
+                            if (!client) return null;
+
+                            return (
+                                <>
+                                    <DialogHeader>
+                                        <div className="flex items-center gap-4 mb-2">
+                                            <div className="h-16 w-16 rounded-full bg-secondary/30 flex items-center justify-center overflow-hidden">
+                                                {client.photoUrl ? (
+                                                    <img src={client.photoUrl} alt={client.name} className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <User className="h-8 w-8 text-muted-foreground" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <DialogTitle className="text-2xl">{client.name}</DialogTitle>
+                                                <DialogDescription className="font-mono mt-1 text-emerald-500">
+                                                    SS:ID {client.ssid}
+                                                </DialogDescription>
+                                            </div>
+                                        </div>
+                                    </DialogHeader>
+
+                                    <div className="grid md:grid-cols-2 gap-6 py-4">
+                                        {/* Left Col: Profile & History */}
+                                        <div className="space-y-6">
+                                            <div className="bg-secondary/20 p-4 rounded-lg space-y-3">
+                                                <h3 className="font-semibold border-b border-border pb-2 text-sm uppercase tracking-wider text-muted-foreground">Client Details</h3>
+                                                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                                                    <span className="text-muted-foreground">ID Number</span>
+                                                    <span className="font-mono text-right">{client.nationalId ? maskIdNumber(client.nationalId) : client.id?.substring(0, 8) + '...'}</span>
+                                                    <span className="text-muted-foreground">Phone</span>
+                                                    <span className="text-right">{client.phone}</span>
+                                                    <span className="text-muted-foreground">Risk Score</span>
+                                                    <span className="text-right font-medium text-emerald-500">{client.score}%</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                                                    <span>Active Loans</span>
+                                                    <Badge variant="secondary">{activeLoans.length}</Badge>
+                                                </h3>
+                                                {activeLoans.length > 0 ? (
+                                                    <div className="space-y-2">
+                                                        {activeLoans.map((loan: Loan) => (
+                                                            <div key={loan.id} className="bg-secondary/10 border border-border rounded-md p-3 flex justify-between items-center text-sm">
+                                                                <div>
+                                                                    <div className="font-medium">R {loan.amount}</div>
+                                                                    <div className="text-xs text-muted-foreground">Due: {loan.dueDate}</div>
+                                                                </div>
+                                                                <Badge className="bg-blue-500/20 text-blue-500 hover:bg-blue-500/30">Active</Badge>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm text-muted-foreground bg-secondary/10 p-4 rounded-md text-center">No active loans</div>
+                                                )}
+                                            </div>
+
+                                            {pastLoans.length > 0 && (
+                                                <div className="space-y-3">
+                                                    <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                                                        <span>Past Loans</span>
+                                                        <Badge variant="outline">{pastLoans.length}</Badge>
+                                                    </h3>
+                                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                                                        {pastLoans.map((loan: Loan) => (
+                                                            <div key={loan.id} className="bg-secondary/5 border border-border rounded-md p-3 flex justify-between items-center text-sm opacity-80">
+                                                                <div>
+                                                                    <div className="font-medium">R {loan.amount}</div>
+                                                                    <div className="text-xs text-muted-foreground">Due: {loan.dueDate}</div>
+                                                                </div>
+                                                                <Badge variant={loan.status === 'paid' ? 'outline' : 'destructive'} className={loan.status === 'paid' ? 'text-emerald-500 border-emerald-500/30 bg-emerald-500/10' : ''}>
+                                                                    {loan.status === 'paid' ? 'Paid' : 'Defaulted'}
+                                                                </Badge>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Right Col: Issue New Loan */}
+                                        <div className="space-y-4 bg-secondary/10 p-5 rounded-xl border border-border">
+                                            <div>
+                                                <h3 className="font-semibold text-lg flex items-center gap-2">
+                                                    <FileText className="h-4 w-4 text-emerald-500" />
+                                                    Issue New Loan
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground mt-1 mb-4">Authorize new funds for {client.name}.</p>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className="grid gap-2">
+                                                    <Label>Amount (R)</Label>
+                                                    <Input type="number" value={newLoan.amount} onChange={e => setNewLoan({ ...newLoan, amount: e.target.value })} placeholder="0.00" className="bg-background text-lg py-6 font-medium" />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Due Date</Label>
+                                                    <Input type="date" value={newLoan.date} onChange={e => setNewLoan({ ...newLoan, date: e.target.value })} className="bg-background" />
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-4 mt-6 border-t border-border">
+                                                <Button
+                                                    className="w-full bg-emerald-600 hover:bg-emerald-700 py-6 text-base shadow-lg shadow-emerald-900/20"
+                                                    onClick={handleCreateLoan}
+                                                    disabled={!newLoan.amount || !newLoan.date}
+                                                >
+                                                    Confirm Loan Transfer
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </DialogContent>
                 </Dialog>
             </div>

@@ -26,7 +26,7 @@ import { OrderSchema } from '@/lib/schemas';
 
 import { MOCK_USER, MOCK_LENDER, MOCK_PRODUCTS, MOCK_ORDERS, USE_MOCK_DATA } from '@/lib/constants';
 
-import { User, Product, Order, CartItem, UserRole, Supplier, StaffMember, Shift, Issue } from "@/types";
+import { User, Product, Order, CartItem, UserRole, Supplier, StaffMember, Shift, Issue, Customer, Expense } from "@/types";
 
 interface FirebaseError extends Error {
     code: string;
@@ -91,6 +91,17 @@ interface StoreContextType {
     // Issues
     issues: Issue[];
     reportIssue: (issue: Omit<Issue, 'id' | 'timestamp' | 'status'>) => void;
+
+    // Customers
+    customers: Customer[];
+    addCustomer: (customer: Omit<Customer, 'id' | 'totalSpend' | 'tabBalance' | 'lastVisit'>) => Promise<void>;
+    updateCustomer: (id: string, updates: Partial<Customer>) => Promise<void>;
+    settleCustomerTab: (id: string, amount: number) => Promise<void>;
+
+    // Expenses
+    expenses: Expense[];
+    addExpense: (expense: Omit<Expense, 'id' | 'date' | 'loggedBy'>) => Promise<void>;
+    deleteExpense: (id: string) => Promise<void>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -126,6 +137,10 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         const saved = localStorage.getItem('smite_issues');
         return saved ? JSON.parse(saved) : [];
     });
+
+    // --- New States ---
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
 
     // --- Auth Listener ---
     useEffect(() => {
@@ -197,11 +212,58 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         return () => unsubscribe();
     }, []);
 
-    // --- Persistence Effects ---
+    useEffect(() => {
+        if (!user) return; // Only fetch if logged in
+        if (USE_MOCK_DATA) return;
+
+        // Fetch Customers
+        const customersQ = query(collection(db, "customers"), orderBy("name"));
+        const unsubCustomers = onSnapshot(customersQ, (snapshot) => {
+            setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Customer[]);
+        });
+
+        // Fetch Expenses
+        const expensesQ = query(collection(db, "expenses"), orderBy("date", "desc"));
+        const unsubExpenses = onSnapshot(expensesQ, (snapshot) => {
+            setExpenses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[]);
+        });
+
+        // Fetch Suppliers
+        const suppliersQ = query(collection(db, "suppliers"), orderBy("name"));
+        const unsubSuppliers = onSnapshot(suppliersQ, (snapshot) => {
+            setSuppliers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Supplier[]);
+        });
+
+        // Fetch Staff
+        const staffQ = query(collection(db, "staff"), orderBy("name"));
+        const unsubStaff = onSnapshot(staffQ, (snapshot) => {
+            setStaff(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StaffMember[]);
+        });
+
+        // Fetch Shifts
+        const shiftsQ = query(collection(db, "shifts"), orderBy("startTime", "desc"));
+        const unsubShifts = onSnapshot(shiftsQ, (snapshot) => {
+            setShifts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Shift[]);
+        });
+
+        // Fetch Issues
+        const issuesQ = query(collection(db, "issues"), orderBy("timestamp", "desc"));
+        const unsubIssues = onSnapshot(issuesQ, (snapshot) => {
+            setIssues(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Issue[]);
+        });
+
+        return () => {
+            unsubCustomers();
+            unsubExpenses();
+            unsubSuppliers();
+            unsubStaff();
+            unsubShifts();
+            unsubIssues();
+        };
+    }, [user]);
+
+    // --- Local Storage (Cart Only) ---
     useEffect(() => localStorage.setItem('smite_cart', JSON.stringify(cart)), [cart]);
-    useEffect(() => localStorage.setItem('smite_suppliers', JSON.stringify(suppliers)), [suppliers]);
-    useEffect(() => localStorage.setItem('smite_staff', JSON.stringify(staff)), [staff]);
-    useEffect(() => localStorage.setItem('smite_shifts', JSON.stringify(shifts)), [shifts]);
     useEffect(() => {
         if (currentShift) {
             localStorage.setItem('smite_current_shift', JSON.stringify(currentShift));
@@ -209,7 +271,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             localStorage.removeItem('smite_current_shift');
         }
     }, [currentShift]);
-    useEffect(() => localStorage.setItem('smite_issues', JSON.stringify(issues)), [issues]);
 
     // --- Auth Actions ---
     const login = async (email: string, password: string, roleFallback?: UserRole) => {
@@ -594,42 +655,93 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // --- Snag List Actions ---
-    const addSupplier = (supplierData: Omit<Supplier, 'id' | 'status'>) => {
-        const newSupplier: Supplier = {
-            ...supplierData,
-            id: `supp-${Date.now()}`,
-            status: 'Active'
-        };
-        setSuppliers(prev => [...prev, newSupplier]);
-        toast.success("Supplier added successfully");
+    const addSupplier = async (supplierData: Omit<Supplier, 'id' | 'status'>) => {
+        if (USE_MOCK_DATA) {
+            const newSupplier: Supplier = {
+                ...supplierData,
+                id: `supp-${Date.now()}`,
+                status: 'Active'
+            };
+            setSuppliers(prev => [...prev, newSupplier]);
+            toast.success("Supplier added successfully (Mock)");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "suppliers"), {
+                ...supplierData,
+                status: 'Active',
+                createdAt: new Date().toISOString()
+            });
+            toast.success("Supplier added successfully");
+        } catch (error) {
+            toast.error("Failed to add supplier");
+            throw error;
+        }
     };
 
-    const addStaff = (staffData: Omit<StaffMember, 'id'>) => {
-        const newStaff: StaffMember = {
-            ...staffData,
-            id: `staff-${Date.now()}`
-        };
-        setStaff(prev => [...prev, newStaff]);
-        toast.success("Staff member added successfully");
+    const addStaff = async (staffData: Omit<StaffMember, 'id'>) => {
+        if (USE_MOCK_DATA) {
+            const newStaff: StaffMember = {
+                ...staffData,
+                id: `staff-${Date.now()}`
+            };
+            setStaff(prev => [...prev, newStaff]);
+            toast.success("Staff member added successfully (Mock)");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "staff"), {
+                ...staffData,
+                createdAt: new Date().toISOString()
+            });
+            toast.success("Staff member added successfully");
+        } catch (error) {
+            toast.error("Failed to add staff");
+            throw error;
+        }
     };
 
-    const updateStaff = (id: string, updates: Partial<StaffMember>) => {
-        setStaff(prev => prev.map(member => member.id === id ? { ...member, ...updates } : member));
-        toast.success("Staff profile updated");
+    const updateStaff = async (id: string, updates: Partial<StaffMember>) => {
+        if (USE_MOCK_DATA) {
+            setStaff(prev => prev.map(member => member.id === id ? { ...member, ...updates } : member));
+            toast.success("Staff profile updated (Mock)");
+            return;
+        }
+
+        try {
+            await updateDoc(doc(db, "staff", id), updates);
+            toast.success("Staff profile updated");
+        } catch (error) {
+            toast.error("Failed to update staff");
+            throw error;
+        }
     };
 
-    const deleteStaff = (id: string) => {
-        setStaff(prev => prev.filter(member => member.id !== id));
-        toast.success("Staff member removed");
+    const deleteStaff = async (id: string) => {
+        if (USE_MOCK_DATA) {
+            setStaff(prev => prev.filter(member => member.id !== id));
+            toast.success("Staff member removed (Mock)");
+            return;
+        }
+
+        try {
+            await deleteDoc(doc(db, "staff", id));
+            toast.success("Staff member removed");
+        } catch (error) {
+            toast.error("Failed to delete staff");
+            throw error;
+        }
     };
 
-    const startShift = (float: number) => {
+    const startShift = async (float: number) => {
         if (currentShift) {
             toast.error("Shift already active");
             return;
         }
-        const newShift: Shift = {
-            id: `shift-${Date.now()}`,
+
+        const newShiftData = {
             cashierId: user?.id || 'unknown',
             cashierName: user?.name || 'Unknown',
             startTime: new Date().toISOString(),
@@ -637,37 +749,72 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             totalSales: 0,
             status: 'Open'
         };
-        setCurrentShift(newShift);
-        toast.success("Shift started");
+
+        if (USE_MOCK_DATA) {
+            setCurrentShift({ id: `shift-${Date.now()}`, ...newShiftData } as Shift);
+            toast.success("Shift started (Mock)");
+            return;
+        }
+
+        try {
+            const shiftRef = await addDoc(collection(db, "shifts"), newShiftData);
+            setCurrentShift({ id: shiftRef.id, ...newShiftData } as Shift);
+            toast.success("Shift started");
+        } catch (error) {
+            toast.error("Failed to start shift");
+            throw error;
+        }
     };
 
-    const endShift = (closingCash: number) => {
+    const endShift = async (closingCash: number) => {
         if (!currentShift) return;
 
-        // Calculate sales from orders during this shift (mock calculation for now, or just use current session sales)
-        // ideally we filter orders by time range of shift.
-        // For simplicity, we just save the shift record.
-
-        const closedShift: Shift = {
-            ...currentShift,
+        const closedData = {
             endTime: new Date().toISOString(),
             closingCash,
             status: 'Closed'
         };
 
-        setShifts(prev => [closedShift, ...prev]);
-        setCurrentShift(null);
-        toast.success("Shift closed and report saved");
+        if (USE_MOCK_DATA) {
+            const closedShift: Shift = { ...currentShift, ...closedData } as Shift;
+            setShifts(prev => [closedShift, ...prev]);
+            setCurrentShift(null);
+            toast.success("Shift closed and report saved (Mock)");
+            return;
+        }
+
+        try {
+            await updateDoc(doc(db, "shifts", currentShift.id), closedData);
+            setCurrentShift(null);
+            toast.success("Shift closed and report saved");
+        } catch (error) {
+            toast.error("Failed to close shift");
+            throw error;
+        }
     };
 
-    const recordCashDrop = (amount: number, reason: string) => {
+    const recordCashDrop = async (amount: number, reason: string) => {
         if (!currentShift) {
             toast.error("No active shift to record drop against.");
             return;
         }
 
-        // In a real app, you'd add this to a subcollection or update the shift document
-        toast.success(`Cash drop of R${amount.toFixed(2)} recorded for: ${reason}`);
+        if (USE_MOCK_DATA) {
+            toast.success(`Cash drop of R${amount.toFixed(2)} recorded for: ${reason} (Mock)`);
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, `shifts/${currentShift.id}/cashDrops`), {
+                amount,
+                reason,
+                timestamp: new Date().toISOString()
+            });
+            toast.success(`Cash drop of R${amount.toFixed(2)} recorded for: ${reason}`);
+        } catch (error) {
+            toast.error("Failed to record cash drop");
+            throw error;
+        }
     };
 
     const toggleWishlist = (productId: string) => {
@@ -699,6 +846,124 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Issue reported successfully");
     };
 
+    // --- Customer Actions ---
+    const addCustomer = async (customer: Omit<Customer, 'id' | 'totalSpend' | 'tabBalance' | 'lastVisit'>) => {
+        if (USE_MOCK_DATA) {
+            const newCustomer: Customer = {
+                ...customer,
+                id: `cust-${Date.now()}`,
+                totalSpend: 0,
+                tabBalance: 0,
+                lastVisit: new Date().toISOString()
+            };
+            setCustomers(prev => [...prev, newCustomer]);
+            toast.success("Customer added successfully (Mock)");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "customers"), {
+                ...customer,
+                totalSpend: 0,
+                tabBalance: 0,
+                lastVisit: new Date().toISOString()
+            });
+            toast.success("Customer added successfully");
+        } catch (error) {
+            toast.error("Failed to add customer");
+            throw error;
+        }
+    };
+
+    const updateCustomer = async (id: string, updates: Partial<Customer>) => {
+        if (USE_MOCK_DATA) {
+            setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+            toast.success("Customer updated (Mock)");
+            return;
+        }
+
+        try {
+            await updateDoc(doc(db, "customers", id), updates);
+            toast.success("Customer updated");
+        } catch (error) {
+            toast.error("Failed to update customer");
+            throw error;
+        }
+    };
+
+    const settleCustomerTab = async (id: string, amount: number) => {
+        if (USE_MOCK_DATA) {
+            setCustomers(prev => prev.map(c => {
+                if (c.id === id) {
+                    const newBalance = Math.max(0, c.tabBalance - amount);
+                    return { ...c, tabBalance: newBalance };
+                }
+                return c;
+            }));
+            toast.success(`Tab settled by R${amount.toFixed(2)} (Mock)`);
+            return;
+        }
+
+        try {
+            const customerRef = doc(db, "customers", id);
+            const customerSnap = await getDoc(customerRef);
+
+            if (customerSnap.exists()) {
+                const currentBalance = customerSnap.data().tabBalance || 0;
+                const newBalance = Math.max(0, currentBalance - amount);
+                await updateDoc(customerRef, { tabBalance: newBalance });
+                toast.success(`Tab settled by R${amount.toFixed(2)}`);
+            }
+        } catch (error) {
+            toast.error("Failed to settle tab");
+            throw error;
+        }
+    };
+
+    // --- Expense Actions ---
+    const addExpense = async (expense: Omit<Expense, 'id' | 'date' | 'loggedBy'>) => {
+        if (USE_MOCK_DATA) {
+            const newExpense: Expense = {
+                ...expense,
+                id: `exp-${Date.now()}`,
+                date: new Date().toISOString(),
+                loggedBy: user?.name || 'Unknown'
+            };
+            setExpenses(prev => [...prev, newExpense]);
+            toast.success("Expense logged (Mock)");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "expenses"), {
+                ...expense,
+                date: new Date().toISOString(),
+                loggedBy: user?.name || 'Unknown',
+                userId: user?.uid || 'unknown'
+            });
+            toast.success("Expense logged");
+        } catch (error) {
+            toast.error("Failed to log expense");
+            throw error;
+        }
+    };
+
+    const deleteExpense = async (id: string) => {
+        if (USE_MOCK_DATA) {
+            setExpenses(prev => prev.filter(e => e.id !== id));
+            toast.success("Expense removed (Mock)");
+            return;
+        }
+
+        try {
+            await deleteDoc(doc(db, "expenses", id));
+            toast.success("Expense removed");
+        } catch (error) {
+            toast.error("Failed to delete expense");
+            throw error;
+        }
+    };
+
     return (
         <StoreContext.Provider value={{
             user, login, register, logout, updateUser,
@@ -709,7 +974,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             staff, addStaff, updateStaff, deleteStaff,
             shifts, currentShift, startShift, endShift, recordCashDrop,
             toggleWishlist,
-            issues, reportIssue
+            issues, reportIssue,
+            customers, addCustomer, updateCustomer, settleCustomerTab,
+            expenses, addExpense, deleteExpense
         }}>
             {children}
         </StoreContext.Provider>

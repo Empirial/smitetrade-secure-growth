@@ -81,7 +81,12 @@ const LenderLogin = () => {
                         </form>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4 pb-8">
-                        {/* Optional extra lender-specific footer links could go here */}
+                        <div className="text-center text-sm text-muted-foreground w-full">
+                            Don't have an account?{" "}
+                            <Link to="/lender/register" className="font-medium text-primary hover:underline">
+                                Sign up
+                            </Link>
+                        </div>
                     </CardFooter>
                 </Card>
 

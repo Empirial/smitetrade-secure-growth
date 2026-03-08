@@ -144,13 +144,13 @@ const DriverWallet = () => {
                     <CardContent>
                         <div className="space-y-4">
                             {transactions.map((tx) => (
-                                <div key={tx.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                                <div key={tx.id} className="flex justify-between items-center p-3 border rounded-lg bg-card hover:bg-muted/50 transition-colors">
                                     <div className="flex items-center gap-4">
-                                        <div className={`p-2 rounded-full ${tx.type === 'earned' ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                                        <div className={`p-2 rounded-full ${tx.type === 'earned' ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
                                             {tx.type === 'earned' ? (
-                                                <ArrowDownRight className={`h-4 w-4 text-emerald-600`} />
+                                                <ArrowDownRight className={`h-4 w-4 text-emerald-500`} />
                                             ) : (
-                                                <ArrowUpRight className={`h-4 w-4 text-amber-600`} />
+                                                <ArrowUpRight className={`h-4 w-4 text-amber-500`} />
                                             )}
                                         </div>
                                         <div>
@@ -158,7 +158,7 @@ const DriverWallet = () => {
                                             <p className="text-xs text-muted-foreground">{tx.date} • {tx.id}</p>
                                         </div>
                                     </div>
-                                    <div className={`font-bold ${tx.type === 'earned' ? 'text-emerald-600' : ''}`}>
+                                    <div className={`font-bold ${tx.type === 'earned' ? 'text-emerald-500' : ''}`}>
                                         {tx.type === 'earned' ? '+' : '-'} R{tx.amount.toFixed(2)}
                                     </div>
                                 </div>

@@ -69,9 +69,9 @@ const OwnerAlerts = () => {
                             ) : (
                                 <div className="space-y-2">
                                     {lowStockItems.map(item => (
-                                        <div key={item.id} className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                        <div key={item.id} className="flex items-center justify-between p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
                                             <span className="font-medium">{item.name}</span>
-                                            <span className="text-sm text-amber-700 font-bold">{item.stock} remaining</span>
+                                            <span className="text-sm text-amber-500 font-bold">{item.stock} remaining</span>
                                         </div>
                                     ))}
                                 </div>
@@ -88,7 +88,7 @@ const OwnerAlerts = () => {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted transition-colors">
                                 <div className="h-2 w-2 mt-2 rounded-full bg-blue-500" />
                                 <div>
                                     <p className="font-medium text-sm">System Update Scheduled</p>
@@ -96,7 +96,7 @@ const OwnerAlerts = () => {
                                 </div>
                                 <span className="ml-auto text-xs text-muted-foreground">2h ago</span>
                             </div>
-                            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted transition-colors">
                                 <div className="h-2 w-2 mt-2 rounded-full bg-gray-300" />
                                 <div>
                                     <p className="font-medium text-sm">Backup Completed</p>

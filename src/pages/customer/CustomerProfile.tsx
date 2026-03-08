@@ -20,7 +20,9 @@ const CustomerProfile = () => {
     // Profile State
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+    const [idNumber, setIdNumber] = useState("");
     const [defaultAddress, setDefaultAddress] = useState("");
 
     // Initialize state from user object
@@ -32,10 +34,13 @@ const CustomerProfile = () => {
                 setLastName(user.profileDetails.lastName || "");
                 setPhone(user.profileDetails.phone || "");
                 setDefaultAddress(user.profileDetails.defaultAddress || "");
+                setEmail(user.email || "");
+                setIdNumber(user.profileDetails.IDNumber || "");
             } else if (user.name) {
                 const parts = user.name.split(" ");
                 setFirstName(parts[0] || "");
                 setLastName(parts.slice(1).join(" ") || "");
+                setEmail(user.email || "");
             }
         }
     }, [user]);
@@ -45,11 +50,13 @@ const CustomerProfile = () => {
         try {
             await updateUser({
                 name: `${firstName} ${lastName}`.trim(),
+                email: email,
                 profileDetails: {
                     firstName,
                     lastName,
                     phone,
-                    defaultAddress
+                    defaultAddress,
+                    IDNumber: idNumber,
                 }
             });
         } catch (error) {
@@ -80,7 +87,7 @@ const CustomerProfile = () => {
                                 {profile ? profile.tier : "-"}
                             </p>
                             <Button size="sm" variant="link" className="px-0 text-emerald-800" asChild>
-                                <Link to="/customer/credit-status">View Details &rarr;</Link>
+                                <Link to="/customer/credit-review">View Details &rarr;</Link>
                             </Button>
                         </CardContent>
                     </Card>
@@ -123,7 +130,7 @@ const CustomerProfile = () => {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                    <Card>
+                    <Card className="flex flex-col h-full">
                         <CardHeader className="flex flex-row items-center gap-4">
                             <Avatar className="h-16 w-16">
                                 <AvatarImage src={`https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=10b981&color=fff`} />
@@ -134,7 +141,7 @@ const CustomerProfile = () => {
                                 <CardDescription>{user?.email}</CardDescription>
                             </div>
                         </CardHeader>
-                        <CardContent className="grid gap-6">
+                        <CardContent className="grid gap-6 flex-1">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">First Name</Label>
@@ -145,51 +152,89 @@ const CustomerProfile = () => {
                                     <Input id="lastname" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                                 </div>
                             </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="phone">Phone Number</Label>
+                                    <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="082 123 4567" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="idNumber">ID Number</Label>
+                                    <Input id="idNumber" value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="Enter 13-digit ID" />
+                                </div>
+                            </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="phone">Phone Number</Label>
-                                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="082 123 4567" />
+                                <Label htmlFor="email">Email Address</Label>
+                                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. hello@example.com" />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="location">Default Location</Label>
                                 <Input id="location" value={defaultAddress} onChange={(e) => setDefaultAddress(e.target.value)} placeholder="Soweto, Zone 6" />
                             </div>
                         </CardContent>
-                        <CardFooter className="flex justify-end gap-2">
+                        <CardFooter className="flex justify-end gap-2 mt-auto pt-6">
                             <Button variant="outline">Cancel</Button>
-                            <Button onClick={handleSave} disabled={isSaving}>
-                                {isSaving ? "Saving..." : "Save Changes"}
+                            <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
+                                {isSaving ? "Saving..." : "Save Profile"}
                             </Button>
                         </CardFooter>
                     </Card>
 
-                    {/* Address Book Placeholder */}
-                    <Card>
-                        <CardHeader>
-                            <div className="flex justify-between items-center">
-                                <CardTitle>Address Book</CardTitle>
-                                <Button size="sm" variant="outline">Add New</Button>
-                            </div>
-                            <CardDescription>Manage your delivery locations.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {defaultAddress && (
-                                <div className="p-3 border rounded-md flex justify-between items-center bg-slate-50">
-                                    <div>
-                                        <p className="font-medium text-sm">Default Address</p>
-                                        <p className="text-xs text-muted-foreground">{defaultAddress}</p>
+                    <div className="space-y-6">
+                        {/* Address Book Placeholder */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex justify-between items-center">
+                                    <CardTitle>Address Book</CardTitle>
+                                    <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50">Add New</Button>
+                                </div>
+                                <CardDescription>Manage your delivery locations.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {defaultAddress && (
+                                    <div className="p-3 border rounded-md flex justify-between items-center bg-slate-50">
+                                        <div>
+                                            <p className="font-medium text-sm">Default Address</p>
+                                            <p className="text-xs text-muted-foreground">{defaultAddress}</p>
+                                        </div>
+                                        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none">Default</Badge>
                                     </div>
-                                    <Badge>Default</Badge>
+                                )}
+                                <div className="p-3 border rounded-md flex justify-between items-center">
+                                    <div>
+                                        <p className="font-medium text-sm">Home</p>
+                                        <p className="text-xs text-muted-foreground">45 Diepkloof Ext, Soweto</p>
+                                    </div>
+                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">...</Button>
                                 </div>
-                            )}
-                            <div className="p-3 border rounded-md flex justify-between items-center">
-                                <div>
-                                    <p className="font-medium text-sm">Home</p>
-                                    <p className="text-xs text-muted-foreground">45 Diepkloof Ext, Soweto</p>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Security</CardTitle>
+                                <CardDescription>Change your password to keep your account secure.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="currentPassword">Current Password</Label>
+                                    <Input id="currentPassword" type="password" />
                                 </div>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">...</Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="newPassword">New Password</Label>
+                                    <Input id="newPassword" type="password" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                                    <Input id="confirmPassword" type="password" />
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button onClick={() => toast.success("Password updated successfully!")} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                                    Change Password
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </DashboardLayout>

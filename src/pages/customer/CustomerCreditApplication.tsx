@@ -10,16 +10,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShieldCheck, Banknote, Percent, CheckCircle, Info } from "lucide-react";
 import { useCredit } from "@/context/CreditContext";
 import GamificationStatus from "@/components/credit/GamificationStatus";
 
 const CustomerCreditApplication = () => {
-    const { profile } = useCredit();
+    const { profile, lenderOffers } = useCredit();
+    const navigate = useNavigate();
     const [selectedLender, setSelectedLender] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showDisclaimer, setShowDisclaimer] = useState(false);
+    const [viewLender, setViewLender] = useState<any>(null);
 
     // Form State
     const [amount, setAmount] = useState("");
@@ -27,12 +29,12 @@ const CustomerCreditApplication = () => {
     const [reason, setReason] = useState("");
     const [paymentDate, setPaymentDate] = useState("");
 
-    // Mock Lender Offers
-    const lenderOffers = [
-        { id: "lender-1", name: "Swift Capital", rate: "12%", term: "30 Days", maxAmount: 5000, minScore: 650, features: ["Instant Approval", "No hidden fees"] },
-        { id: "lender-2", name: "Growth Fund", rate: "10.5%", term: "14 Days", maxAmount: 3000, minScore: 700, features: ["Low Rates", "Flexible Repayment"] },
-        { id: "lender-3", name: "EasyAccess Loans", rate: "15%", term: "60 Days", maxAmount: 10000, minScore: 600, features: ["High Limits", "Longer Terms"] },
-    ];
+    // Banking Details
+    const [bankName, setBankName] = useState("");
+    const [accountNumber, setAccountNumber] = useState("");
+    const [branchCode, setBranchCode] = useState("");
+
+
 
     const handleApply = () => {
         if (!selectedLender) {
@@ -83,13 +85,13 @@ const CustomerCreditApplication = () => {
                     </CardContent>
                 </Card>
 
-                {/* Lender Offers Grid */}
-                <div className="grid gap-6 md:grid-cols-3">
+                {/* Lender Offers List */}
+                <div className="flex gap-6 overflow-x-auto pb-4 snap-x">
                     {lenderOffers.map((offer) => (
                         <Card
                             key={offer.id}
-                            className={`cursor-pointer transition-all border-2 relative ${selectedLender === offer.id ? "border-emerald-500 shadow-md bg-emerald-50/50" : "border-transparent hover:border-slate-200"}`}
-                            onClick={() => setSelectedLender(offer.id)}
+                            className={`min-w-[300px] md:min-w-[320px] shrink-0 snap-start cursor-pointer transition-all border-2 relative ${selectedLender === offer.id ? "border-emerald-500 shadow-md bg-emerald-950/20" : "border-transparent hover:border-slate-700"}`}
+                            onClick={() => setViewLender(offer)}
                         >
                             {selectedLender === offer.id && (
                                 <div className="absolute top-2 right-2 text-emerald-600">
@@ -128,9 +130,9 @@ const CustomerCreditApplication = () => {
 
                 {/* Application Action */}
                 <div className="flex flex-col gap-6 bg-slate-900 p-6 rounded-lg border border-slate-800 text-slate-100 shadow-xl">
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-lg">Loan Details</h3>
+                    <div className="space-y-6">
+                        <h3 className="font-semibold text-lg">Loan Details</h3>
+                        <div className="grid md:grid-cols-2 gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="amount">Loan Amount (R)</Label>
                                 <Input
@@ -141,6 +143,7 @@ const CustomerCreditApplication = () => {
                                     onChange={(e) => setAmount(e.target.value)}
                                 />
                             </div>
+
                             <div className="grid gap-2">
                                 <Label htmlFor="lender">Select Lender</Label>
                                 <Select onValueChange={setSelectedLender} value={selectedLender || ""}>
@@ -156,6 +159,7 @@ const CustomerCreditApplication = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
+
                             <div className="grid gap-2">
                                 <Label htmlFor="paymentDate">Proposed Payment Date</Label>
                                 <Input
@@ -165,6 +169,7 @@ const CustomerCreditApplication = () => {
                                     onChange={(e) => setPaymentDate(e.target.value)}
                                 />
                             </div>
+
                             <div className="grid gap-2">
                                 <Label htmlFor="term">Repayment Term</Label>
                                 <Select onValueChange={setTerm} value={term}>
@@ -179,17 +184,59 @@ const CustomerCreditApplication = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
-                        </div>
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-lg">Reason for Loan</h3>
-                            <div className="grid gap-2 h-full">
-                                <Label htmlFor="reason">Purpose</Label>
+
+                            <div className="grid gap-2 md:col-span-2">
+                                <Label htmlFor="reason">Reason for Loan (Purpose)</Label>
                                 <Textarea
                                     id="reason"
                                     placeholder="e.g. Stock replenishment for weekend trade..."
-                                    className="h-full min-h-[100px]"
+                                    className="min-h-[100px] resize-none"
                                     value={reason}
                                     onChange={(e) => setReason(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6 pt-6 border-t border-slate-800">
+                        <h3 className="font-semibold text-lg">Banking Details</h3>
+                        <p className="text-sm text-slate-400">Where should the approved funds be deposited?</p>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="grid gap-2">
+                                <Label htmlFor="bankName">Bank Name</Label>
+                                <Select onValueChange={setBankName} value={bankName}>
+                                    <SelectTrigger id="bankName">
+                                        <SelectValue placeholder="Select bank" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="fnb">First National Bank (FNB)</SelectItem>
+                                        <SelectItem value="standard">Standard Bank</SelectItem>
+                                        <SelectItem value="absa">ABSA</SelectItem>
+                                        <SelectItem value="nedbank">Nedbank</SelectItem>
+                                        <SelectItem value="capitec">Capitec</SelectItem>
+                                        <SelectItem value="tymebank">TymeBank</SelectItem>
+                                        <SelectItem value="other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="accountNumber">Account Number</Label>
+                                <Input
+                                    id="accountNumber"
+                                    type="text"
+                                    placeholder="e.g. 62123456789"
+                                    value={accountNumber}
+                                    onChange={(e) => setAccountNumber(e.target.value)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="branchCode">Branch Code</Label>
+                                <Input
+                                    id="branchCode"
+                                    type="text"
+                                    placeholder="e.g. 250655"
+                                    value={branchCode}
+                                    onChange={(e) => setBranchCode(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -233,6 +280,56 @@ const CustomerCreditApplication = () => {
                                 <Button variant="outline" onClick={() => setShowDisclaimer(false)}>Cancel</Button>
                                 <Button onClick={confirmApplication} className="bg-emerald-600 hover:bg-emerald-700">
                                     I Agree & Submit Application
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={!!viewLender} onOpenChange={(open) => !open && setViewLender(null)}>
+                        <DialogContent className="sm:max-w-[450px]">
+                            <DialogHeader>
+                                <DialogTitle className="text-2xl">{viewLender?.name}</DialogTitle>
+                                <DialogDescription>Lender Information & Terms</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <p className="text-sm text-slate-300">{viewLender?.description}</p>
+                                <div className="grid grid-cols-2 gap-4 mt-4">
+                                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-md">
+                                        <div className="text-xs text-slate-400">Interest Rate</div>
+                                        <div className="font-semibold text-lg text-emerald-400">{viewLender?.rate}</div>
+                                    </div>
+                                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-md">
+                                        <div className="text-xs text-slate-400">Max Term</div>
+                                        <div className="font-semibold text-lg">{viewLender?.term}</div>
+                                    </div>
+                                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-md">
+                                        <div className="text-xs text-slate-400">Max Amount</div>
+                                        <div className="font-semibold text-lg">R {viewLender?.maxAmount}</div>
+                                    </div>
+                                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-md">
+                                        <div className="text-xs text-slate-400">Min. BIR Score</div>
+                                        <div className="font-semibold text-lg">{viewLender?.minScore}</div>
+                                    </div>
+                                </div>
+                                <div className="mt-4">
+                                    <div className="text-sm font-medium mb-2 text-slate-300">Features</div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {viewLender?.features.map((f: string, i: number) => (
+                                            <Badge key={i} variant="secondary" className="bg-slate-800">{f}</Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="ghost" onClick={() => setViewLender(null)}>Close</Button>
+                                <Button
+                                    className="bg-emerald-600 hover:bg-emerald-700"
+                                    onClick={() => {
+                                        setSelectedLender(viewLender.id);
+                                        setViewLender(null);
+                                    }}
+                                >
+                                    {selectedLender === viewLender?.id ? "Selected" : "Select this Lender"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>

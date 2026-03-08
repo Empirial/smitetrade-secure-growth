@@ -5,6 +5,7 @@ export interface User {
     uid: string;
     name: string;
     email: string;
+    phone?: string;
     role: UserRole;
     storeName?: string; // For Owners
     storeDetails?: {
@@ -16,6 +17,7 @@ export interface User {
         currency: string;
     };
     profileDetails?: {
+        IDNumber: string;
         firstName: string;
         lastName: string;
         phone: string;
@@ -129,6 +131,7 @@ export interface StaffMember {
     status: 'Active' | 'Inactive' | 'On Leave';
     joined: string;
     username?: string;
+    password?: string;
     pin?: string;
 }
 
@@ -153,4 +156,23 @@ export interface Issue {
     notes: string;
     timestamp: string;
     status: 'Open' | 'Resolved';
+}
+
+export interface Customer {
+    id: string;
+    name: string;
+    phone: string;
+    totalSpend: number;
+    tabBalance: number;
+    lastVisit: string;
+}
+
+export interface Expense {
+    id: string;
+    date: string;
+    category: string;
+    amount: number;
+    description: string;
+    loggedBy: string;
+    storeId?: string;
 }

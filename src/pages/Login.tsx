@@ -47,7 +47,7 @@ const Login = () => {
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
-                                <div className="h-12 w-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
+                                <div className="h-12 w-12 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4">
                                     <Store size={24} />
                                 </div>
                                 <h3 className="font-semibold text-lg mb-1">Store Owner</h3>
@@ -66,7 +66,7 @@ const Login = () => {
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
-                                <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 mb-4">
+                                <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4">
                                     <CreditCard size={24} />
                                 </div>
                                 <h3 className="font-semibold text-lg mb-1">Cashier</h3>
@@ -85,7 +85,7 @@ const Login = () => {
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
-                                <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 mb-4">
+                                <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400 mb-4">
                                     <ShoppingBag size={24} />
                                 </div>
                                 <h3 className="font-semibold text-lg mb-1">Customer</h3>
@@ -104,7 +104,7 @@ const Login = () => {
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
-                                <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 mb-4">
+                                <div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4">
                                     <Truck size={24} />
                                 </div>
                                 <h3 className="font-semibold text-lg mb-1">Delivery Driver</h3>
@@ -123,7 +123,7 @@ const Login = () => {
                             className="w-full text-left h-full"
                         >
                             <div className="p-6 rounded-xl border bg-card hover:border-primary/50 hover:shadow-lg transition-all h-full flex flex-col">
-                                <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-800 mb-4">
+                                <div className="h-12 w-12 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-400 mb-4">
                                     <ShieldCheck size={24} />
                                 </div>
                                 <h3 className="font-semibold text-lg mb-1">Admin</h3>

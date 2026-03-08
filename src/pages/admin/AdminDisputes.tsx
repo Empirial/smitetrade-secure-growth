@@ -77,8 +77,8 @@ const AdminDisputes = () => {
                                         </TableCell>
                                         <TableCell>{item.desc}</TableCell>
                                         <TableCell>
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${item.priority === 'High' ? 'bg-red-100 text-red-800' :
-                                                item.priority === 'Medium' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${item.priority === 'High' ? 'bg-red-500/10 text-red-400' :
+                                                item.priority === 'Medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-muted text-muted-foreground'
                                                 }`}>
                                                 {item.priority}
                                             </span>

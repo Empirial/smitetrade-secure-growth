@@ -170,7 +170,7 @@ const OwnerSuppliers = () => {
                                         <TableCell>{supplier.contact}</TableCell>
                                         <TableCell>{supplier.products}</TableCell>
                                         <TableCell>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${supplier.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${supplier.status === 'Active' ? 'bg-green-500/10 text-green-400' : 'bg-muted text-muted-foreground'
                                                 }`}>
                                                 {supplier.status}
                                             </span>

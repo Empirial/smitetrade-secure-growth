@@ -115,16 +115,16 @@ const OwnerStaff = () => {
 
     const getShiftStatusColor = (status: string) => {
         switch (status) {
-            case "Resolved": return "bg-green-100 text-green-800 border-green-200";
-            case "Pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-            case "Flagged": return "bg-red-100 text-red-800 border-red-200";
-            default: return "bg-gray-100 text-gray-800";
+            case "Resolved": return "bg-green-500/10 text-green-400 border-green-500/20";
+            case "Pending": return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+            case "Flagged": return "bg-red-500/10 text-red-400 border-red-500/20";
+            default: return "bg-muted text-muted-foreground";
         }
     };
 
     const getShiftVarianceColor = (variance: number) => {
         if (variance < 0) return "text-red-500 font-medium";
-        if (variance > 0) return "text-green-500 font-medium";
+        if (variance > 0) return "text-green-400 font-medium";
         return "text-muted-foreground";
     };
 
@@ -370,7 +370,7 @@ const OwnerStaff = () => {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="h-8 border-green-200 hover:bg-green-50 hover:text-green-700"
+                                                                className="h-8 border-green-500/20 hover:bg-green-500/10 hover:text-green-400"
                                                                 onClick={() => handleShiftAction(shift.id, 'Resolved')}
                                                             >
                                                                 <Check className="h-4 w-4 mr-1" /> Accept
@@ -378,7 +378,7 @@ const OwnerStaff = () => {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="h-8 border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700"
+                                                                className="h-8 border-red-500/20 hover:bg-red-500/10 text-red-400 hover:text-red-300"
                                                                 onClick={() => handleShiftAction(shift.id, 'Flagged')}
                                                             >
                                                                 <Flag className="h-4 w-4 mr-1" /> Flag

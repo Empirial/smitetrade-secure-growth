@@ -25,7 +25,7 @@ const CustomerPayment = () => {
         return (
             <DashboardLayout role="customer">
                 <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in zoom-in duration-500">
-                    <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                    <div className="h-24 w-24 bg-green-500/10 rounded-full flex items-center justify-center text-green-400">
                         <CheckCircle2 className="h-12 w-12" />
                     </div>
                     <h1 className="text-3xl font-bold">Payment Successful!</h1>

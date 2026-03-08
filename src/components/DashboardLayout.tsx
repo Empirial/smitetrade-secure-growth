@@ -290,6 +290,9 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
                     </ErrorBoundary>
                 </div>
             </main>
+
+            {/* Floating Cart Bubble for Customer Portal */}
+            {role === "customer" && <FloatingCartBubble />}
         </div>
     );
 };

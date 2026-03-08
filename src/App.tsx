@@ -36,7 +36,7 @@ import OwnerExpenses from "./pages/owner/OwnerExpenses";
 import OwnerCustomers from "./pages/owner/OwnerCustomers";
 import OwnerCreditReview from "./pages/owner/OwnerCreditReview";
 import OwnerStockAdjustment from "./pages/owner/OwnerStockAdjustment";
-
+import OwnerSupport from "./pages/owner/OwnerSupport";
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
 import CashierRegister from "./pages/cashier/CashierRegister";

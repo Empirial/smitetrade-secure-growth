@@ -78,6 +78,7 @@ import DriverRoute from "./pages/driver/DriverRoute";
 import DriverIssues from "./pages/driver/DriverIssues";
 import DriverWallet from "./pages/driver/DriverWallet";
 import DriverProfile from "./pages/driver/DriverProfile";
+import DriverSupport from "./pages/driver/DriverSupport";
 
 // Admin
 import AdminLogin from "./pages/admin/AdminLogin";

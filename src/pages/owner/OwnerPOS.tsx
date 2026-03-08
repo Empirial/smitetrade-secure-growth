@@ -10,8 +10,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Webcam from "react-webcam";
 import { BrowserMultiFormatReader } from "@zxing/library";
-
 import { useStore } from "@/context/StoreContext";
+import { usePaystack } from "@/hooks/usePaystack";
 
 interface POSProduct {
     id: string;

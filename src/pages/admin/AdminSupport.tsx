@@ -1,14 +1,14 @@
-
 import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MessageSquare, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { MessageSquare, Clock, CheckCircle, AlertCircle, User, Store } from "lucide-react";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Ticket {
     id: string;
@@ -17,37 +17,61 @@ interface Ticket {
     message: string;
     date: string;
     status: "open" | "in-progress" | "resolved";
+    type: "bug" | "update" | "suggestion" | "other";
+    role: "customer" | "owner" | "cashier" | "driver" | "lender";
+    storeName?: string;
     replies: { from: string; message: string; date: string }[];
 }
+
+const typeLabels: Record<string, string> = {
+    bug: "Bug / Issue",
+    update: "Update Request",
+    suggestion: "Suggestion",
+    other: "Other",
+};
+
+const roleColors: Record<string, string> = {
+    customer: "bg-blue-100 text-blue-700",
+    owner: "bg-emerald-100 text-emerald-700",
+    cashier: "bg-amber-100 text-amber-700",
+    driver: "bg-purple-100 text-purple-700",
+    lender: "bg-rose-100 text-rose-700",
+};
 
 const AdminSupport = () => {
     const [tickets, setTickets] = useState<Ticket[]>([
         {
             id: "TKT-001", customer: "Thandi M.", subject: "Order not delivered", date: "2026-03-08",
             message: "I placed an order 3 days ago and it still hasn't arrived. Order #1035.",
-            status: "open", replies: []
+            status: "open", type: "bug", role: "customer", replies: []
         },
         {
             id: "TKT-002", customer: "Sipho K.", subject: "Wrong item received", date: "2026-03-07",
             message: "I ordered 2kg rice but received 1kg flour instead.",
-            status: "in-progress", replies: [{ from: "Admin", message: "We're looking into this. Please keep the item, we'll send the correct one.", date: "2026-03-07" }]
+            status: "in-progress", type: "bug", role: "customer",
+            replies: [{ from: "Admin", message: "We're looking into this. Please keep the item, we'll send the correct one.", date: "2026-03-07" }]
         },
         {
             id: "TKT-003", customer: "Nomsa B.", subject: "Payment charged twice", date: "2026-03-06",
             message: "My card was charged R450 twice for order #1029. Please refund.",
-            status: "open", replies: []
+            status: "open", type: "bug", role: "owner", storeName: "Nomsa's Spaza", replies: []
         },
         {
-            id: "TKT-004", customer: "Bongani T.", subject: "Cannot login to account", date: "2026-03-05",
-            message: "I've been locked out after entering wrong password. Reset link not working.",
-            status: "resolved", replies: [
-                { from: "Admin", message: "Password reset link has been re-sent to your email.", date: "2026-03-05" },
-                { from: "Bongani T.", message: "Got it, thanks! Working now.", date: "2026-03-05" }
+            id: "TKT-004", customer: "Bongani T.", subject: "Add dark mode to POS", date: "2026-03-05",
+            message: "It would be great if the POS system had a dark mode for night shifts.",
+            status: "resolved", type: "suggestion", role: "cashier", storeName: "Kasi Corner Store",
+            replies: [
+                { from: "Admin", message: "Great suggestion! We've added it to our roadmap.", date: "2026-03-05" },
+                { from: "Bongani T.", message: "Awesome, thanks!", date: "2026-03-05" }
             ]
+        },
+        {
+            id: "TKT-005", customer: "Themba D.", subject: "Route map not loading", date: "2026-03-07",
+            message: "The delivery route map shows a blank screen on my phone.",
+            status: "open", type: "bug", role: "driver", storeName: "Fresh Foods Spaza", replies: []
         },
     ]);
 
-    const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
     const [replyText, setReplyText] = useState("");
 
     const updateStatus = (ticketId: string, status: Ticket["status"]) => {
@@ -80,7 +104,7 @@ const AdminSupport = () => {
             <div className="space-y-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Support Tickets</h1>
-                    <p className="text-muted-foreground">Manage customer support requests and issues.</p>
+                    <p className="text-muted-foreground">Manage support requests from all portal users.</p>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
@@ -116,7 +140,9 @@ const AdminSupport = () => {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>ID</TableHead>
-                                    <TableHead>Customer</TableHead>
+                                    <TableHead>User</TableHead>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Type</TableHead>
                                     <TableHead>Subject</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead className="text-center">Status</TableHead>
@@ -127,9 +153,22 @@ const AdminSupport = () => {
                                 {tickets.map(ticket => (
                                     <TableRow key={ticket.id}>
                                         <TableCell className="font-mono text-xs">{ticket.id}</TableCell>
-                                        <TableCell>{ticket.customer}</TableCell>
-                                        <TableCell>{ticket.subject}</TableCell>
-                                        <TableCell className="text-muted-foreground">{ticket.date}</TableCell>
+                                        <TableCell>
+                                            <div>{ticket.customer}</div>
+                                            {ticket.storeName && (
+                                                <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                                    <Store className="h-3 w-3" />{ticket.storeName}
+                                                </span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${roleColors[ticket.role]}`}>
+                                                {ticket.role}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-xs text-muted-foreground">{typeLabels[ticket.type]}</TableCell>
+                                        <TableCell className="max-w-[200px] truncate">{ticket.subject}</TableCell>
+                                        <TableCell className="text-muted-foreground text-xs">{ticket.date}</TableCell>
                                         <TableCell className="text-center">
                                             <Badge variant={
                                                 ticket.status === "open" ? "secondary" :
@@ -139,43 +178,78 @@ const AdminSupport = () => {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right space-x-1">
-                                            <Dialog>
+                                            <Dialog onOpenChange={(open) => { if (!open) setReplyText(""); }}>
                                                 <DialogTrigger asChild>
-                                                    <Button size="sm" variant="ghost" onClick={() => setSelectedTicket(ticket)}>
+                                                    <Button size="sm" variant="ghost">
                                                         <MessageSquare className="h-4 w-4" />
                                                     </Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="max-w-lg">
+                                                <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
                                                     <DialogHeader>
-                                                        <DialogTitle>{ticket.subject}</DialogTitle>
-                                                    </DialogHeader>
-                                                    <div className="space-y-4">
-                                                        <div className="p-3 rounded-lg bg-muted">
-                                                            <p className="text-sm font-medium">{ticket.customer}</p>
-                                                            <p className="text-sm text-muted-foreground mt-1">{ticket.message}</p>
-                                                            <p className="text-xs text-muted-foreground mt-2">{ticket.date}</p>
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <DialogTitle>{ticket.subject}</DialogTitle>
+                                                            <Badge variant="outline" className="text-xs font-mono">{ticket.id}</Badge>
                                                         </div>
-                                                        {ticket.replies.map((reply, i) => (
-                                                            <div key={i} className={`p-3 rounded-lg ${reply.from === 'Admin' ? 'bg-primary/10 ml-4' : 'bg-muted mr-4'}`}>
-                                                                <p className="text-sm font-medium">{reply.from}</p>
-                                                                <p className="text-sm text-muted-foreground mt-1">{reply.message}</p>
-                                                                <p className="text-xs text-muted-foreground mt-2">{reply.date}</p>
+                                                        <DialogDescription className="flex items-center gap-2 flex-wrap pt-1">
+                                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${roleColors[ticket.role]}`}>
+                                                                {ticket.role}
+                                                            </span>
+                                                            <span className="text-xs">•</span>
+                                                            <span className="text-xs">{typeLabels[ticket.type]}</span>
+                                                            {ticket.storeName && (
+                                                                <>
+                                                                    <span className="text-xs">•</span>
+                                                                    <span className="text-xs flex items-center gap-1"><Store className="h-3 w-3" />{ticket.storeName}</span>
+                                                                </>
+                                                            )}
+                                                            <span className="text-xs">•</span>
+                                                            <Badge variant={
+                                                                ticket.status === "open" ? "secondary" :
+                                                                ticket.status === "in-progress" ? "default" : "outline"
+                                                            } className="text-xs">
+                                                                {ticket.status}
+                                                            </Badge>
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+
+                                                    <ScrollArea className="flex-1 max-h-[400px] pr-4">
+                                                        <div className="space-y-3">
+                                                            <div className="p-3 rounded-lg bg-muted">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <User className="h-3.5 w-3.5" />
+                                                                    <p className="text-sm font-medium">{ticket.customer}</p>
+                                                                </div>
+                                                                <p className="text-sm text-muted-foreground">{ticket.message}</p>
+                                                                <p className="text-xs text-muted-foreground mt-2">{ticket.date}</p>
                                                             </div>
-                                                        ))}
-                                                        <div className="space-y-2">
-                                                            <Textarea
-                                                                placeholder="Type your reply..."
-                                                                value={replyText}
-                                                                onChange={(e) => setReplyText(e.target.value)}
-                                                            />
-                                                            <div className="flex gap-2">
-                                                                <Button size="sm" onClick={() => sendReply(ticket.id)}>Send Reply</Button>
-                                                                {ticket.status !== "resolved" && (
-                                                                    <Button size="sm" variant="outline" onClick={() => updateStatus(ticket.id, "resolved")}>
-                                                                        Mark Resolved
-                                                                    </Button>
-                                                                )}
-                                                            </div>
+                                                            {ticket.replies.map((reply, i) => (
+                                                                <div key={i} className={`p-3 rounded-lg ${reply.from === 'Admin' ? 'bg-primary/10 ml-4' : 'bg-muted mr-4'}`}>
+                                                                    <div className="flex items-center gap-2 mb-1">
+                                                                        <User className="h-3.5 w-3.5" />
+                                                                        <p className="text-sm font-medium">{reply.from}</p>
+                                                                    </div>
+                                                                    <p className="text-sm text-muted-foreground">{reply.message}</p>
+                                                                    <p className="text-xs text-muted-foreground mt-2">{reply.date}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </ScrollArea>
+
+                                                    <div className="space-y-2 pt-2 border-t">
+                                                        <Textarea
+                                                            placeholder="Type your reply..."
+                                                            value={replyText}
+                                                            onChange={(e) => setReplyText(e.target.value)}
+                                                        />
+                                                        <div className="flex gap-2">
+                                                            <Button size="sm" onClick={() => sendReply(ticket.id)} disabled={!replyText.trim()}>
+                                                                Send Reply
+                                                            </Button>
+                                                            {ticket.status !== "resolved" && (
+                                                                <Button size="sm" variant="outline" onClick={() => updateStatus(ticket.id, "resolved")}>
+                                                                    Mark Resolved
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </DialogContent>

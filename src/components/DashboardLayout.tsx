@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package, Banknote, FileText, Bell, AlertTriangle, Search, Heart, Wallet, Receipt, Tag, ClipboardList, Briefcase, ChevronDown } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package, Banknote, FileText, Bell, AlertTriangle, Search, Heart, Wallet, Receipt, Tag, ClipboardList, Briefcase, ChevronDown, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -45,6 +45,7 @@ const getLinks = (role: string) => {
             { href: "/owner/reports", label: "Reports", icon: BarChart3 },
             { href: "/owner/pricing", label: "Pricing & Promos", icon: Tag },
             { href: "/owner/credit-review", label: "Credit Review", icon: ShieldCheck },
+            { href: "/owner/support", label: "Support", icon: LifeBuoy },
         ]
     };
 
@@ -56,6 +57,7 @@ const getLinks = (role: string) => {
         { href: "/cashier/shift", label: "Shift Mgmt", icon: User },
         { href: "/cashier/receipts", label: "Receipts", icon: Box },
         { href: "/cashier/credit-review", label: "Credit Review", icon: CreditCard },
+        { href: "/cashier/support", label: "Support", icon: LifeBuoy },
     ];
 
     // Placeholder links for new roles - will populate as I implement them
@@ -67,6 +69,7 @@ const getLinks = (role: string) => {
         { href: "/customer/apply-credit", label: "Get a Loan", icon: Banknote },
         { href: "/customer/credit-review", label: "Credit Score", icon: ShieldCheck },
         { href: "/customer/alerts", label: "Alerts", icon: Bell },
+        { href: "/customer/support", label: "Support", icon: LifeBuoy },
         { href: "/customer/profile", label: "Profile", icon: User },
     ];
 
@@ -75,6 +78,7 @@ const getLinks = (role: string) => {
         { href: "/driver/out-to-deliver", label: "Active Deliveries", icon: Truck },
         { href: "/driver/wallet", label: "Wallet & Earnings", icon: Wallet },
         { href: "/driver/issues", label: "Report Issue", icon: ShieldCheck },
+        { href: "/driver/support", label: "Support", icon: LifeBuoy },
         { href: "/driver/profile", label: "Profile", icon: User },
     ];
 
@@ -99,6 +103,7 @@ const getLinks = (role: string) => {
         { href: "/lender/applications", label: "Applications", icon: FileText },
         { href: "/lender/collections", label: "Collections", icon: AlertTriangle }, // Changed icon
         { href: "/lender/credit-check", label: "Credit Check", icon: Search },
+        { href: "/lender/support", label: "Support", icon: LifeBuoy },
         { href: "/lender/profile", label: "Profile", icon: User },
     ];
 

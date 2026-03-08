@@ -103,6 +103,7 @@ const getLinks = (role: string) => {
         { href: "/lender/applications", label: "Applications", icon: FileText },
         { href: "/lender/collections", label: "Collections", icon: AlertTriangle }, // Changed icon
         { href: "/lender/credit-check", label: "Credit Check", icon: Search },
+        { href: "/lender/support", label: "Support", icon: LifeBuoy },
         { href: "/lender/profile", label: "Profile", icon: User },
     ];
 

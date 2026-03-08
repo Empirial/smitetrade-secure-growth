@@ -272,7 +272,7 @@ const CustomerCreditApplication = () => {
                                     <li>Failure to repay on time may negatively impact your SpazaScore and future borrowing ability.</li>
                                     <li>Your personal and business information will be shared with the lender for assessment purposes.</li>
                                 </ul>
-                                <div className="bg-yellow-50 p-3 rounded border border-yellow-200 text-yellow-800 text-xs">
+                                <div className="bg-yellow-500/10 p-3 rounded border border-yellow-500/20 text-yellow-400 text-xs">
                                     <strong>Important:</strong> Ensure you have sufficient funds or cash flow to meet the repayment obligation on the due date.
                                 </div>
                             </div>

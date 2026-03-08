@@ -155,7 +155,7 @@ const AdminUsers = () => {
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
-                                                            className="text-green-500 hover:text-green-600 hover:bg-green-50"
+                                                            className="text-green-400 hover:text-green-300 hover:bg-green-500/10"
                                                             onClick={() => handleStatusChange(user.uid || user.id, 'active')}
                                                             title="Activate User"
                                                         >

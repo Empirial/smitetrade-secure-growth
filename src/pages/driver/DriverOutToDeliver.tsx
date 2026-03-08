@@ -91,7 +91,7 @@ const DriverOutToDeliver = () => {
                             <Progress value={progress} className="h-2" />
                         </div>
 
-                        <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100 flex gap-3 text-sm text-yellow-800">
+                        <div className="bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/20 flex gap-3 text-sm text-yellow-400">
                             <ShieldCheck className="h-5 w-5 shrink-0" />
                             <p>Verify customer ID/PIN code "1029" upon delivery.</p>
                         </div>

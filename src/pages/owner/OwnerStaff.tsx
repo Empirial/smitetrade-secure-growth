@@ -378,7 +378,7 @@ const OwnerStaff = () => {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="h-8 border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700"
+                                                                className="h-8 border-red-500/20 hover:bg-red-500/10 text-red-400 hover:text-red-300"
                                                                 onClick={() => handleShiftAction(shift.id, 'Flagged')}
                                                             >
                                                                 <Flag className="h-4 w-4 mr-1" /> Flag

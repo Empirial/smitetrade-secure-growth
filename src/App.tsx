@@ -224,6 +224,7 @@ const App = () => (
               <Route path="/lender/credit-check" element={<AuthGuard role="lender"><LenderCreditCheck /></AuthGuard>} />
               <Route path="/lender/quote" element={<AuthGuard role="lender"><LoanQuote /></AuthGuard>} />
               <Route path="/lender/support" element={<AuthGuard role="lender"><LenderSupport /></AuthGuard>} />
+              <Route path="/lender/alerts" element={<AuthGuard role="lender"><LenderAlerts /></AuthGuard>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

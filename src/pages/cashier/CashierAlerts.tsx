@@ -80,8 +80,10 @@ const CashierAlerts = () => {
                             </CardContent>
                             <CardFooter className="p-4 pt-2 pl-[3.25rem]">
                                 {alert.action && (
-                                    <Button variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
-                                        {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
+                                    <Button asChild variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
+                                        <Link to={alert.action.route}>
+                                            {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
+                                        </Link>
                                     </Button>
                                 )}
                             </CardFooter>

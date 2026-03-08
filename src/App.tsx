@@ -146,6 +146,7 @@ const App = () => (
               <Route path="/owner/customers" element={<AuthGuard role="owner"><OwnerCustomers /></AuthGuard>} />
               <Route path="/owner/credit-review" element={<AuthGuard role="owner"><OwnerCreditReview /></AuthGuard>} />
               <Route path="/owner/stock-adjustment" element={<AuthGuard role="owner"><OwnerStockAdjustment /></AuthGuard>} />
+              <Route path="/owner/support" element={<AuthGuard role="owner"><OwnerSupport /></AuthGuard>} />
 
               {/* Cashier Portal */}
               <Route path="/cashier/login" element={<CashierLogin />} />

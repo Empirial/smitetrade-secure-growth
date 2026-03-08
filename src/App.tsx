@@ -105,6 +105,7 @@ import LenderApplications from "./pages/lender/LenderApplications";
 import LenderProfile from "./pages/lender/LenderProfile";
 import LenderCreditCheck from "./pages/lender/LenderCreditCheck";
 import LoanQuote from "./pages/lender/LoanQuote";
+import LenderSupport from "./pages/lender/LenderSupport";
 
 const queryClient = new QueryClient();
 

@@ -189,6 +189,7 @@ const App = () => (
               <Route path="/driver/issues" element={<AuthGuard role="driver"><DriverIssues /></AuthGuard>} />
               <Route path="/driver/wallet" element={<AuthGuard role="driver"><DriverWallet /></AuthGuard>} />
               <Route path="/driver/profile" element={<AuthGuard role="driver"><DriverProfile /></AuthGuard>} />
+              <Route path="/driver/support" element={<AuthGuard role="driver"><DriverSupport /></AuthGuard>} />
 
               {/* Admin Portal */}
               <Route path="/admin/login" element={<AdminLogin />} />

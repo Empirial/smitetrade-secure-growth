@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,8 +87,10 @@ const SystemNotifications = ({ notifications, isRead, onMarkAsRead, onDismiss, o
                         </CardContent>
                         <CardFooter className="p-4 pt-2 pl-[3.25rem] flex items-center justify-between">
                             {notif.action && (
-                                <Button variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
-                                    {notif.action.label} <Navigation className="ml-1 h-3 w-3" />
+                                <Button asChild variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
+                                    <Link to={notif.action.route}>
+                                        {notif.action.label} <Navigation className="ml-1 h-3 w-3" />
+                                    </Link>
                                 </Button>
                             )}
                             <div className="flex gap-2 ml-auto">

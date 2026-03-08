@@ -33,10 +33,24 @@ const OwnerInventory = () => {
     const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
 
     const handleBarcodeDetected = useCallback((barcode: string) => {
-        setFormData(prev => ({ ...prev, barcode }));
-        setIsScannerOpen(false);
-        toast({ title: "Barcode Scanned", description: `Detected: ${barcode}` });
-    }, [toast]);
+        // Look up existing product by barcode
+        const found = products.find(p => p.barcode === barcode);
+        if (found) {
+            setFormData({
+                name: found.name,
+                category: found.category,
+                price: found.price.toString(),
+                stock: found.stock.toString(),
+                barcode: found.barcode || barcode
+            });
+            setIsScannerOpen(false);
+            toast({ title: "Product Found", description: `Auto-filled details for "${found.name}"` });
+        } else {
+            setFormData(prev => ({ ...prev, barcode }));
+            setIsScannerOpen(false);
+            toast({ title: "Barcode Scanned", description: `No matching product found. Barcode: ${barcode}` });
+        }
+    }, [toast, products]);
 
     const scanForBarcode = useCallback(() => {
         if (!isScannerOpen) return;

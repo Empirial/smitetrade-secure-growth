@@ -80,6 +80,7 @@ import DriverIssues from "./pages/driver/DriverIssues";
 import DriverWallet from "./pages/driver/DriverWallet";
 import DriverProfile from "./pages/driver/DriverProfile";
 import DriverSupport from "./pages/driver/DriverSupport";
+import DriverAlerts from "./pages/driver/DriverAlerts";
 
 // Admin
 import AdminLogin from "./pages/admin/AdminLogin";

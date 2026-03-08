@@ -44,8 +44,8 @@ const LenderCreditCheck = () => {
                 phone: "082 123 4567",
                 email: "mphelalufuno1.0@gmail.com",
                 businessName: "Mphela General Trading",
-                creditScore: 780,
-                rating: "Good", // Use Good/Bad/Risk terminology
+                score: 3.2,
+                rating: "Good",
                 status: "Active",
                 totalDebt: 0,
                 totalPaid: 15,

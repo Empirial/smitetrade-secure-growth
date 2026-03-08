@@ -7,8 +7,8 @@ import { Search, User, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { useStore } from "@/context/StoreContext";
+import { toast } from "sonner";
 
 const OwnerCustomers = () => {
     const { customers, addCustomer, settleCustomerTab } = useStore();
@@ -30,7 +30,7 @@ const OwnerCustomers = () => {
 
     const handleAddCustomer = async () => {
         if (!newCustomer.name || !newCustomer.phone) {
-            toast({ title: "Error", description: "Name and phone are required", variant: "destructive" });
+            toast.error("Name and phone are required");
             return;
         }
         await addCustomer({
@@ -44,7 +44,7 @@ const OwnerCustomers = () => {
     const handleSettle = async () => {
         const amount = parseFloat(settleAmount);
         if (isNaN(amount) || amount <= 0) {
-            toast({ title: "Error", description: "Please enter a valid amount.", variant: "destructive" });
+            toast.error("Please enter a valid amount.");
             return;
         }
 

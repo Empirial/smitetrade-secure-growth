@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,7 +12,6 @@ import { FileText, Plus, Receipt, TrendingDown, Calendar, User, Tag, ArrowRight 
 import { useStore } from "@/context/StoreContext";
 
 const OwnerExpenses = () => {
-    const { toast } = useToast();
     const { expenses, addExpense } = useStore();
 
     // Form State
@@ -29,11 +29,7 @@ const OwnerExpenses = () => {
 
     const handleAddExpense = async () => {
         if (!amount || !description) {
-            toast({
-                title: "Error",
-                description: "Please fill in all required fields.",
-                variant: "destructive"
-            });
+            toast.error("Please fill in all required fields.");
             return;
         }
 
@@ -47,10 +43,7 @@ const OwnerExpenses = () => {
         setDescription("");
         setCategory("Operational");
 
-        toast({
-            title: "Expense Logged",
-            description: "Petty cash expense successfully recorded."
-        });
+        toast.success("Petty cash expense successfully recorded.");
     };
 
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);

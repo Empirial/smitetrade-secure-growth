@@ -13,7 +13,7 @@ import { useStore } from "@/context/StoreContext";
 
 const OwnerInventory = () => {
     // Access Global State
-    const { products, addProduct, deleteProduct } = useStore();
+    const { products, addProduct, deleteProduct, updateProduct } = useStore();
 
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCategory, setFilterCategory] = useState("All");

@@ -281,7 +281,7 @@ const OwnerPOS = () => {
                             {filteredProducts.map(product => (
                                 <button
                                     key={product.id}
-                                    onClick={() => addToCart(product)}
+                                    onClick={() => addToCart(product as any)}
                                     className={`group flex flex-col items-center justify-center p-4 rounded-xl border border-slate-800/80 hover:border-emerald-500 shadow-sm transition-all h-28 bg-[#0b1120]`}
                                 >
                                     <span className="font-semibold text-center text-sm line-clamp-2 mt-2 px-2 text-slate-200">{product.name.split(' ')[0] /* Simulate shorter names from screenshot */}</span>

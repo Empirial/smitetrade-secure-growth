@@ -65,7 +65,6 @@ interface StoreContextType {
     }) => Promise<void>;
     updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
     assignDriver: (orderId: string, driverId: string) => Promise<void>;
-    assignDriver: (orderId: string, driverId: string) => Promise<void>;
     isLoading: boolean;
 
     // Suppliers

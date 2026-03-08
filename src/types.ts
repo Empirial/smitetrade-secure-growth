@@ -145,7 +145,7 @@ export interface Shift {
     closingCash?: number;
     totalSales: number;
     discrepancy?: number;
-    status: 'Open' | 'Closed';
+    status: 'Open' | 'Closed' | 'Pending' | 'Flagged';
 }
 
 export interface Issue {

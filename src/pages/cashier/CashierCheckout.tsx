@@ -95,6 +95,24 @@ const CashierCheckout = () => {
     const splitTotalPaid = parseFloat(splitAmounts.cash || "0") + parseFloat(splitAmounts.card || "0") + parseFloat(splitAmounts.ssid || "0");
     const splitBalance = total - splitTotalPaid;
 
+    if (success) {
+        return (
+            <DashboardLayout role="cashier">
+                <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
+                    <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in">
+                        <CheckCircle2 className="h-12 w-12 text-green-600" />
+                    </div>
+                    <h1 className="text-3xl font-bold">Payment Successful!</h1>
+                    <p className="text-muted-foreground">Receipt #TX-882992 sent to system.</p>
+                    <div className="flex gap-4 mt-8">
+                        <Button variant="outline" onClick={() => window.print()}>Print Receipt</Button>
+                        <Button className="bg-emerald-600" onClick={() => navigate("/cashier/pos")}>New Sale</Button>
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     return (
         <DashboardLayout role="cashier">
             <div className="max-w-3xl mx-auto grid md:grid-cols-2 gap-8">

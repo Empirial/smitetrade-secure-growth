@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import SystemNotifications from "@/components/SystemNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
 

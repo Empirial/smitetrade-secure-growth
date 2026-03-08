@@ -21,14 +21,12 @@ const categories = ["All", "Staples", "Pantry", "Beverages", "Dairy", "Bakery", 
 const popularSearches = ["Bread", "Milk", "Maize Meal", "Sugar", "Cooking Oil", "Airtime"];
 
 const CustomerProducts = () => {
-    const { allProducts, addToCart, cart, isLoading, stores } = useStore();
+    const { allProducts, addToCart, isLoading, stores } = useStore();
 
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState("All");
     const [sortOrder, setSortOrder] = useState("default");
     const [selectedStore, setSelectedStore] = useState("all");
-
-    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
     const filteredProducts = allProducts.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());

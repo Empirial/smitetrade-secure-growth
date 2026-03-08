@@ -23,7 +23,8 @@ const CustomerCheckout = () => {
 
     const [step, setStep] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState("card");
-    const [selectedStore, setSelectedStore] = useState("store_001");
+    const cartStoreId = cart.length > 0 ? cart[0].storeId : undefined;
+    const [selectedStore, setSelectedStore] = useState(cartStoreId || (activeStores.length > 0 ? activeStores[0].id : ""));
     const [allowSubstitutions, setAllowSubstitutions] = useState(false);
 
     // Mock Wallet Balance

@@ -252,6 +252,31 @@ const NavContent = ({ role, location, navigate, isOpen, setIsOpen, logout }: any
     );
 };
 
+const FloatingCartBubble = () => {
+    const { cart } = useStore();
+    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Don't show on the cart page itself
+    if (location.pathname === "/customer/cart") return null;
+
+    return (
+        <button
+            onClick={() => navigate("/customer/cart")}
+            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex items-center justify-center"
+            aria-label="Open cart"
+        >
+            <ShoppingCart className="h-6 w-6" />
+            {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold flex items-center justify-center border-2 border-background">
+                    {cartCount}
+                </span>
+            )}
+        </button>
+    );
+};
+
 const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const location = useLocation();
     const navigate = useNavigate();

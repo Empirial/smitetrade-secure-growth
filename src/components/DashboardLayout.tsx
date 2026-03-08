@@ -57,6 +57,7 @@ const getLinks = (role: string) => {
         { href: "/cashier/shift", label: "Shift Mgmt", icon: User },
         { href: "/cashier/receipts", label: "Receipts", icon: Box },
         { href: "/cashier/credit-review", label: "Credit Review", icon: CreditCard },
+        { href: "/cashier/support", label: "Support", icon: LifeBuoy },
     ];
 
     // Placeholder links for new roles - will populate as I implement them

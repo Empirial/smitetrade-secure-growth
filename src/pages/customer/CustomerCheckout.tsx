@@ -57,37 +57,45 @@ const CustomerCheckout = () => {
         setStep(step - 1);
     };
 
-    const handleCheckout = async () => {
-        const total = cartTotal + 20; // + Fees
-
-        if (paymentMethod === 'credit') {
-            const success = await purchaseOnCredit(total);
-            if (!success) return; // Toast handled in context
-        } else if (paymentMethod === 'wallet') {
-            if (total > walletBalance) {
-                toast.error("Insufficient Spaza Wallet balance.");
-                return;
-            }
-            // Simulate wallet deduction
-            toast.success(`R ${total.toFixed(2)} deducted from Spaza Wallet.`);
-        } else {
-            // Simulate Card Payment
-            await simulatePayment(total, new Date());
-        }
-
-        // Use global action to placeOrder
+    const completeOrder = useCallback(async () => {
         await placeOrder({
             name: "Current User",
             address: `${address.street}, ${address.city}`,
             paymentMethod,
             storeId: selectedStore,
-            // Include substitutions preference
-            // @ts-ignore - store context signature might need updating eventually
+            // @ts-ignore
             allowSubstitutions: allowSubstitutions
         });
-
-        navigate("/customer/payment"); // Or success page
+        navigate("/customer/payment");
         toast.success("Order Placed Successfully!");
+    }, [placeOrder, address, paymentMethod, selectedStore, allowSubstitutions, navigate]);
+
+    const { pay: payWithPaystack, processing: paystackProcessing } = usePaystack({
+        amount: cartTotal + 20,
+        email: 'customer@smitetrade.co.za',
+        onSuccess: () => {
+            completeOrder();
+        },
+    });
+
+    const handleCheckout = async () => {
+        const total = cartTotal + 20;
+
+        if (paymentMethod === 'credit') {
+            const success = await purchaseOnCredit(total);
+            if (!success) return;
+            await completeOrder();
+        } else if (paymentMethod === 'wallet') {
+            if (total > walletBalance) {
+                toast.error("Insufficient Spaza Wallet balance.");
+                return;
+            }
+            toast.success(`R ${total.toFixed(2)} deducted from Spaza Wallet.`);
+            await completeOrder();
+        } else {
+            // Card — use PayStack
+            payWithPaystack();
+        }
     };
 
     return (

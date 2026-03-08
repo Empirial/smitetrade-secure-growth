@@ -370,7 +370,7 @@ const OwnerStaff = () => {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="h-8 border-green-200 hover:bg-green-50 hover:text-green-700"
+                                                                className="h-8 border-green-500/20 hover:bg-green-500/10 hover:text-green-400"
                                                                 onClick={() => handleShiftAction(shift.id, 'Resolved')}
                                                             >
                                                                 <Check className="h-4 w-4 mr-1" /> Accept

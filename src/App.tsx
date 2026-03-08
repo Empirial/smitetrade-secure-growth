@@ -95,6 +95,7 @@ import AdminStores from "./pages/admin/AdminStores";
 import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminCreditOverview from "./pages/admin/AdminCreditOverview";
 import AdminSupport from "./pages/admin/AdminSupport";
+import AdminAlerts from "./pages/admin/AdminAlerts";
 
 // Lender
 import LenderLogin from "./pages/lender/LenderLogin";

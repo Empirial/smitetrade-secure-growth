@@ -210,6 +210,7 @@ const App = () => (
               <Route path="/admin/revenue" element={<AuthGuard role="admin"><AdminRevenue /></AuthGuard>} />
               <Route path="/admin/credit-overview" element={<AuthGuard role="admin"><AdminCreditOverview /></AuthGuard>} />
               <Route path="/admin/support" element={<AuthGuard role="admin"><AdminSupport /></AuthGuard>} />
+              <Route path="/admin/alerts" element={<AuthGuard role="admin"><AdminAlerts /></AuthGuard>} />
 
               {/* Lender Portal */}
               <Route path="/lender/login" element={<LenderLogin />} />

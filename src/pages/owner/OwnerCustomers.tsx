@@ -30,7 +30,7 @@ const OwnerCustomers = () => {
 
     const handleAddCustomer = async () => {
         if (!newCustomer.name || !newCustomer.phone) {
-            toast({ title: "Error", description: "Name and phone are required", variant: "destructive" });
+            toast.error("Name and phone are required");
             return;
         }
         await addCustomer({

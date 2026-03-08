@@ -80,7 +80,7 @@ const SystemNotifications = ({ notifications, isRead, onMarkAsRead, onDismiss, o
                     <Info className="h-5 w-5 text-blue-500" />
                     System Notifications
                 </h2>
-                <Button variant="outline" size="sm" onClick={onMarkAllAsRead}>Mark All as Read</Button>
+                <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>Mark All as Read</Button>
             </div>
             {notifications.map((notif) => {
                 const read = isRead(notif.id);

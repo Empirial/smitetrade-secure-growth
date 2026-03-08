@@ -2,33 +2,31 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle, Monitor } from "lucide-react";
+import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle } from "lucide-react";
+import SystemNotifications from "@/components/SystemNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const CashierAlerts = () => {
-    const alerts = [
+    const { notifications, isRead, markAsRead, dismiss, markAllAsRead, loading } = useNotifications();
+
+    const localAlerts = [
         {
             id: 1, type: "warning", title: "Shift Discrepancy Detected",
-            message: "Your closing float for yesterday's shift was R120 short. Please review your transactions and report any issues to the store owner.",
+            message: "Your closing float for yesterday's shift was R120 short. Please review your transactions.",
             date: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), read: false,
             action: { label: "View Shift Details", route: "/cashier/shift" }
         },
         {
             id: 2, type: "error", title: "POS Connection Error",
-            message: "The barcode scanner lost connection during your last session. Please reconnect the device before your next shift.",
+            message: "The barcode scanner lost connection during your last session. Please reconnect before your next shift.",
             date: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), read: false,
             action: { label: "Go to POS", route: "/cashier/pos" }
         },
         {
             id: 3, type: "success", title: "Inventory Restock Complete",
-            message: "The bulk restock for 45 items has been processed and inventory counts updated. Please verify shelf quantities.",
+            message: "The bulk restock for 45 items has been processed. Please verify shelf quantities.",
             date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), read: true,
             action: { label: "View Inventory", route: "/cashier/inventory" }
-        },
-        {
-            id: 4, type: "info", title: "System Maintenance Notice",
-            message: "Scheduled maintenance on March 12 from 2:00 AM – 4:00 AM. POS and scanner services may be temporarily unavailable.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), read: true,
-            action: null
         },
     ];
 
@@ -54,46 +52,50 @@ const CashierAlerts = () => {
     return (
         <DashboardLayout role="cashier">
             <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Alerts & Notifications</h1>
-                        <p className="text-muted-foreground">Shift updates, POS alerts, and system notifications.</p>
-                    </div>
-                    <Button variant="outline" size="sm">Mark All as Read</Button>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Alerts & Notifications</h1>
+                    <p className="text-muted-foreground">Shift updates, POS alerts, and system notifications.</p>
                 </div>
+
                 <div className="space-y-4">
-                    {alerts.map((alert) => (
+                    {localAlerts.map((alert) => (
                         <Card key={alert.id} className={`transition-all border-l-4 overflow-hidden ${getBorderColor(alert.type, alert.read)}`}>
                             <CardHeader className="p-4 pb-2">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-muted rounded-full shrink-0">{getIcon(alert.type)}</div>
-                                        <div>
-                                            <CardTitle className="text-base flex items-center gap-2">
-                                                {alert.title}
-                                                {!alert.read && <Badge variant="default" className="bg-emerald-600 text-[10px] h-4 px-1">New</Badge>}
-                                            </CardTitle>
-                                            <CardDescription className="text-xs">
-                                                {new Date(alert.date).toLocaleDateString()} at {new Date(alert.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </CardDescription>
-                                        </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-muted rounded-full shrink-0">{getIcon(alert.type)}</div>
+                                    <div>
+                                        <CardTitle className="text-base flex items-center gap-2">
+                                            {alert.title}
+                                            {!alert.read && <Badge variant="default" className="bg-emerald-600 text-[10px] h-4 px-1">New</Badge>}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs">
+                                            {new Date(alert.date).toLocaleDateString()} at {new Date(alert.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </CardDescription>
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 pt-2 pb-2 pl-[3.25rem]">
                                 <p className="text-sm text-muted-foreground">{alert.message}</p>
                             </CardContent>
-                            <CardFooter className="p-4 pt-2 pl-[3.25rem] flex items-center justify-between">
+                            <CardFooter className="p-4 pt-2 pl-[3.25rem]">
                                 {alert.action && (
                                     <Button variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
                                         {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
                                     </Button>
                                 )}
-                                {!alert.read && <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground">Dismiss</Button>}
                             </CardFooter>
                         </Card>
                     ))}
                 </div>
+
+                <SystemNotifications
+                    notifications={notifications}
+                    isRead={isRead}
+                    onMarkAsRead={markAsRead}
+                    onDismiss={dismiss}
+                    onMarkAllAsRead={markAllAsRead}
+                    loading={loading}
+                />
             </div>
         </DashboardLayout>
     );

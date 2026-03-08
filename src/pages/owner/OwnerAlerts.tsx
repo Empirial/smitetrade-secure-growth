@@ -1,24 +1,19 @@
-
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useStore } from "@/context/StoreContext";
-import { AlertTriangle, AlertCircle, ArrowDownCircle, Info, Banknote, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { AlertTriangle, AlertCircle, ArrowDownCircle, Info } from "lucide-react";
+import SystemNotifications from "@/components/SystemNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const OwnerAlerts = () => {
     const { products } = useStore();
+    const { notifications, isRead, markAsRead, dismiss, markAllAsRead, loading } = useNotifications();
 
-    // Mock Alerts Logic
     const lowStockItems = products.filter(p => p.status === 'Low Stock' || p.status === 'Critical');
     const criticalAlerts = [
-        { id: 1, title: "High Refund Rate", description: "Cashier terminal #2 has processed an unusual number of refunds today.", severity: "critical", link: null },
-        { id: 2, title: "Cash Discrepancy", description: "Closing balance for shift #405 short by R50.00.", severity: "warning", link: null },
-    ];
-
-    const loanAlerts = [
-        { id: 101, title: "New Loan Application", description: "Thabo Mbeki requests R500.00 for 14 days.", severity: "info", link: "/owner/lending" },
-        { id: 102, title: "Overdue Repayment", description: "Simon's loan of R200.00 is 3 days overdue.", severity: "warning", link: "/owner/lending" },
+        { id: 1, title: "High Refund Rate", description: "Cashier terminal #2 has processed an unusual number of refunds today.", severity: "critical" },
+        { id: 2, title: "Cash Discrepancy", description: "Closing balance for shift #405 short by R50.00.", severity: "warning" },
     ];
 
     return (
@@ -30,7 +25,6 @@ const OwnerAlerts = () => {
                 </div>
 
                 <div className="space-y-4">
-                    {/* Critical Business Alerts */}
                     <Card className="border-l-4 border-l-red-500">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-red-600">
@@ -43,15 +37,12 @@ const OwnerAlerts = () => {
                                 <Alert key={alert.id} variant={alert.severity === "critical" ? "destructive" : "default"}>
                                     <AlertCircle className="h-4 w-4" />
                                     <AlertTitle>{alert.title}</AlertTitle>
-                                    <AlertDescription>
-                                        {alert.description}
-                                    </AlertDescription>
+                                    <AlertDescription>{alert.description}</AlertDescription>
                                 </Alert>
                             ))}
                         </CardContent>
                     </Card>
 
-                    {/* Stock Alerts */}
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -79,33 +70,14 @@ const OwnerAlerts = () => {
                         </CardContent>
                     </Card>
 
-                    {/* System Notifications */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Info className="h-5 w-5 text-blue-500" />
-                                System Notifications
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted transition-colors">
-                                <div className="h-2 w-2 mt-2 rounded-full bg-blue-500" />
-                                <div>
-                                    <p className="font-medium text-sm">System Update Scheduled</p>
-                                    <p className="text-xs text-muted-foreground">Maintenance scheduled for Sunday at 02:00 AM.</p>
-                                </div>
-                                <span className="ml-auto text-xs text-muted-foreground">2h ago</span>
-                            </div>
-                            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted transition-colors">
-                                <div className="h-2 w-2 mt-2 rounded-full bg-gray-300" />
-                                <div>
-                                    <p className="font-medium text-sm">Backup Completed</p>
-                                    <p className="text-xs text-muted-foreground">Daily database backup completed successfully.</p>
-                                </div>
-                                <span className="ml-auto text-xs text-muted-foreground">5h ago</span>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <SystemNotifications
+                        notifications={notifications}
+                        isRead={isRead}
+                        onMarkAsRead={markAsRead}
+                        onDismiss={dismiss}
+                        onMarkAllAsRead={markAllAsRead}
+                        loading={loading}
+                    />
                 </div>
             </div>
         </DashboardLayout>

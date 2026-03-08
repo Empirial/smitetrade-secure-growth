@@ -3,38 +3,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle } from "lucide-react";
+import SystemNotifications from "@/components/SystemNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const DriverAlerts = () => {
-    const alerts = [
+    const { notifications, isRead, markAsRead, dismiss, markAllAsRead, loading } = useNotifications();
+
+    const localAlerts = [
         {
             id: 1, type: "success", title: "New Delivery Assigned",
-            message: "You have been assigned order #ORD-4521 for delivery to 42 Mandela Ave, Soweto. Pickup at Kasi Fresh by 11:00 AM.",
+            message: "You have been assigned order #ORD-4521 for delivery to 42 Mandela Ave, Soweto. Pickup by 11:00 AM.",
             date: new Date(Date.now() - 1000 * 60 * 30).toISOString(), read: false,
             action: { label: "View Order", route: "/driver/orders" }
         },
         {
             id: 2, type: "warning", title: "Route Change Advisory",
-            message: "Road construction on N1 between Buccleuch and Midrand. Expected delays of 20-30 minutes. Consider alternative via R55.",
+            message: "Road construction on N1 between Buccleuch and Midrand. Expected delays of 20-30 minutes.",
             date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), read: false,
             action: { label: "View Active Deliveries", route: "/driver/out-to-deliver" }
         },
         {
             id: 3, type: "info", title: "Earnings Deposited",
-            message: "Your weekly earnings of R1,850 have been deposited to your wallet. View breakdown for trip-by-trip details.",
+            message: "Your weekly earnings of R1,850 have been deposited to your wallet.",
             date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), read: true,
             action: { label: "View Wallet", route: "/driver/wallet" }
-        },
-        {
-            id: 4, type: "error", title: "Delivery Complaint Filed",
-            message: "Customer reported a missing item for order #ORD-3892. Please respond within 24 hours to avoid account impact.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), read: true,
-            action: { label: "Report Issue", route: "/driver/issues" }
-        },
-        {
-            id: 5, type: "info", title: "System Update — New App Features",
-            message: "Route optimization and real-time traffic integration are now available. Update your app to access these features.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), read: true,
-            action: null
         },
     ];
 
@@ -60,46 +52,50 @@ const DriverAlerts = () => {
     return (
         <DashboardLayout role="driver">
             <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Alerts & Notifications</h1>
-                        <p className="text-muted-foreground">Delivery assignments, route updates, and system notices.</p>
-                    </div>
-                    <Button variant="outline" size="sm">Mark All as Read</Button>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Alerts & Notifications</h1>
+                    <p className="text-muted-foreground">Delivery assignments, route updates, and system notices.</p>
                 </div>
+
                 <div className="space-y-4">
-                    {alerts.map((alert) => (
+                    {localAlerts.map((alert) => (
                         <Card key={alert.id} className={`transition-all border-l-4 overflow-hidden ${getBorderColor(alert.type, alert.read)}`}>
                             <CardHeader className="p-4 pb-2">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-muted rounded-full shrink-0">{getIcon(alert.type)}</div>
-                                        <div>
-                                            <CardTitle className="text-base flex items-center gap-2">
-                                                {alert.title}
-                                                {!alert.read && <Badge variant="default" className="bg-emerald-600 text-[10px] h-4 px-1">New</Badge>}
-                                            </CardTitle>
-                                            <CardDescription className="text-xs">
-                                                {new Date(alert.date).toLocaleDateString()} at {new Date(alert.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </CardDescription>
-                                        </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-muted rounded-full shrink-0">{getIcon(alert.type)}</div>
+                                    <div>
+                                        <CardTitle className="text-base flex items-center gap-2">
+                                            {alert.title}
+                                            {!alert.read && <Badge variant="default" className="bg-emerald-600 text-[10px] h-4 px-1">New</Badge>}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs">
+                                            {new Date(alert.date).toLocaleDateString()} at {new Date(alert.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </CardDescription>
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 pt-2 pb-2 pl-[3.25rem]">
                                 <p className="text-sm text-muted-foreground">{alert.message}</p>
                             </CardContent>
-                            <CardFooter className="p-4 pt-2 pl-[3.25rem] flex items-center justify-between">
+                            <CardFooter className="p-4 pt-2 pl-[3.25rem]">
                                 {alert.action && (
                                     <Button variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
                                         {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
                                     </Button>
                                 )}
-                                {!alert.read && <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground">Dismiss</Button>}
                             </CardFooter>
                         </Card>
                     ))}
                 </div>
+
+                <SystemNotifications
+                    notifications={notifications}
+                    isRead={isRead}
+                    onMarkAsRead={markAsRead}
+                    onDismiss={dismiss}
+                    onMarkAllAsRead={markAllAsRead}
+                    loading={loading}
+                />
             </div>
         </DashboardLayout>
     );

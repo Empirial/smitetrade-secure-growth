@@ -1,48 +1,74 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle } from "lucide-react";
+import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle, Plus, Send } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import SystemNotifications from "@/components/SystemNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
+import { toast } from "sonner";
 
 const AdminAlerts = () => {
-    const alerts = [
+    const { notifications, isRead, markAsRead, dismiss, markAllAsRead, createNotification, loading } = useNotifications();
+    const [open, setOpen] = useState(false);
+    const [newTitle, setNewTitle] = useState("");
+    const [newMessage, setNewMessage] = useState("");
+    const [newType, setNewType] = useState<string>("info");
+    const [newTarget, setNewTarget] = useState<string>("all");
+    const [sending, setSending] = useState(false);
+
+    const localAlerts = [
         {
             id: 1, type: "error", title: "Security Alert — Suspicious Login",
-            message: "Multiple failed login attempts detected for user account owner@kasifresh.co.za from an unrecognized IP address. Account temporarily locked.",
+            message: "Multiple failed login attempts detected for owner@kasifresh.co.za. Account temporarily locked.",
             date: new Date(Date.now() - 1000 * 60 * 45).toISOString(), read: false,
             action: { label: "View Users", route: "/admin/users" }
         },
         {
             id: 2, type: "warning", title: "High Default Rate — Lending Module",
-            message: "The platform-wide loan default rate has exceeded 8% this month (threshold: 5%). 14 accounts are flagged for review.",
+            message: "Platform-wide loan default rate has exceeded 8% this month (threshold: 5%).",
             date: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), read: false,
             action: { label: "Credit Overview", route: "/admin/credit-overview" }
         },
         {
-            id: 3, type: "success", title: "New Store Onboarded",
-            message: "Mama's Corner Shop (Tembisa) has completed registration and verification. Store is now live on the platform.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), read: false,
-            action: { label: "View Stores", route: "/admin/stores" }
-        },
-        {
-            id: 4, type: "info", title: "Monthly Revenue Report Ready",
-            message: "February 2026 revenue report is available. Platform GMV: R2.4M (+12% MoM). Transaction fees collected: R48,000.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), read: true,
-            action: { label: "View Revenue", route: "/admin/revenue" }
-        },
-        {
-            id: 5, type: "warning", title: "Support Ticket Backlog",
-            message: "There are 23 unresolved support tickets older than 48 hours. SLA compliance is at 67% (target: 90%).",
+            id: 3, type: "warning", title: "Support Ticket Backlog",
+            message: "23 unresolved support tickets older than 48 hours. SLA compliance at 67%.",
             date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), read: true,
             action: { label: "View Tickets", route: "/admin/support" }
         },
-        {
-            id: 6, type: "info", title: "System Maintenance Completed",
-            message: "Database migration and index optimization completed successfully. Query performance improved by ~30%.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(), read: true,
-            action: null
-        },
     ];
+
+    const handleBroadcast = async () => {
+        if (!newTitle.trim() || !newMessage.trim()) {
+            toast.error("Title and message are required");
+            return;
+        }
+        setSending(true);
+        try {
+            const targetRoles = newTarget === 'all' ? ['all'] : [newTarget];
+            await createNotification({
+                title: newTitle,
+                message: newMessage,
+                type: newType as any,
+                targetRoles,
+                action: null,
+            });
+            toast.success("Notification broadcast successfully!");
+            setNewTitle("");
+            setNewMessage("");
+            setNewType("info");
+            setNewTarget("all");
+            setOpen(false);
+        } catch (e) {
+            toast.error("Failed to broadcast notification");
+        }
+        setSending(false);
+    };
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -71,41 +97,103 @@ const AdminAlerts = () => {
                         <h1 className="text-3xl font-bold tracking-tight">Alerts & Notifications</h1>
                         <p className="text-muted-foreground">Platform security, metrics, and system notifications.</p>
                     </div>
-                    <Button variant="outline" size="sm">Mark All as Read</Button>
+                    <Dialog open={open} onOpenChange={setOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="gap-2">
+                                <Plus className="h-4 w-4" /> Broadcast Notification
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Broadcast System Notification</DialogTitle>
+                                <DialogDescription>Send a notification to all users or specific portal roles.</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label>Title</Label>
+                                    <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. Scheduled Maintenance" />
+                                </div>
+                                <div>
+                                    <Label>Message</Label>
+                                    <Textarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Describe the notification..." rows={3} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>Type</Label>
+                                        <Select value={newType} onValueChange={setNewType}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="info">Info</SelectItem>
+                                                <SelectItem value="warning">Warning</SelectItem>
+                                                <SelectItem value="error">Critical</SelectItem>
+                                                <SelectItem value="success">Success</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label>Target</Label>
+                                        <Select value={newTarget} onValueChange={setNewTarget}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Portals</SelectItem>
+                                                <SelectItem value="owner">Owners</SelectItem>
+                                                <SelectItem value="cashier">Cashiers</SelectItem>
+                                                <SelectItem value="customer">Customers</SelectItem>
+                                                <SelectItem value="driver">Drivers</SelectItem>
+                                                <SelectItem value="lender">Lenders</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button onClick={handleBroadcast} disabled={sending} className="gap-2">
+                                    <Send className="h-4 w-4" /> {sending ? "Sending..." : "Broadcast"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
+
                 <div className="space-y-4">
-                    {alerts.map((alert) => (
+                    {localAlerts.map((alert) => (
                         <Card key={alert.id} className={`transition-all border-l-4 overflow-hidden ${getBorderColor(alert.type, alert.read)}`}>
                             <CardHeader className="p-4 pb-2">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-muted rounded-full shrink-0">{getIcon(alert.type)}</div>
-                                        <div>
-                                            <CardTitle className="text-base flex items-center gap-2">
-                                                {alert.title}
-                                                {!alert.read && <Badge variant="default" className="bg-emerald-600 text-[10px] h-4 px-1">New</Badge>}
-                                            </CardTitle>
-                                            <CardDescription className="text-xs">
-                                                {new Date(alert.date).toLocaleDateString()} at {new Date(alert.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </CardDescription>
-                                        </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-muted rounded-full shrink-0">{getIcon(alert.type)}</div>
+                                    <div>
+                                        <CardTitle className="text-base flex items-center gap-2">
+                                            {alert.title}
+                                            {!alert.read && <Badge variant="default" className="bg-emerald-600 text-[10px] h-4 px-1">New</Badge>}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs">
+                                            {new Date(alert.date).toLocaleDateString()} at {new Date(alert.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </CardDescription>
                                     </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 pt-2 pb-2 pl-[3.25rem]">
                                 <p className="text-sm text-muted-foreground">{alert.message}</p>
                             </CardContent>
-                            <CardFooter className="p-4 pt-2 pl-[3.25rem] flex items-center justify-between">
+                            <CardFooter className="p-4 pt-2 pl-[3.25rem]">
                                 {alert.action && (
                                     <Button variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
                                         {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
                                     </Button>
                                 )}
-                                {!alert.read && <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground">Dismiss</Button>}
                             </CardFooter>
                         </Card>
                     ))}
                 </div>
+
+                <SystemNotifications
+                    notifications={notifications}
+                    isRead={isRead}
+                    onMarkAsRead={markAsRead}
+                    onDismiss={dismiss}
+                    onMarkAllAsRead={markAllAsRead}
+                    loading={loading}
+                />
             </div>
         </DashboardLayout>
     );

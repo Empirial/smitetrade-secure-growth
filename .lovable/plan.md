@@ -1,86 +1,74 @@
+# Admin Support Popup Enhancement + Support Pages for All Portals
+
+## Summary
+
+Two changes needed:
+
+1. **Admin Support popup** -- already has a Dialog with reply functionality (lines 142-182 in AdminSupport.tsx). It works but could be improved with better ticket detail info (ticket ID, type/category badge, role of submitter, store association).
+2. **Support pages for all remaining portals** -- Customer already has one. Need to create support pages for Owner, Cashier, Driver, and Lender. Key distinction:
+  - **Cashier & Driver**: Their support goes to their **store owner** (employer), not platform admin. They are linked to a specific store.
+  - **Owner, Customer, Lender**: Their support goes to **platform admin** (SmiteTrade). -- lets add the Cashier and Driver meaning this two portals have two support pages One directed to employer Two directed to us "this helps if there are issues in the casher/drivers portal pages"
+    &nbsp;
+
+## Changes
+
+### 1. Enhance Admin Support Popup (`AdminSupport.tsx`)
+
+- Add more ticket metadata: ticket type/category (issue/update/suggestion), submitter role, associated store name
+- Add a `DialogDescription` for accessibility
+- Add a scrollable message thread area for long conversations
+- Show ticket ID and status badge in the dialog header
+
+### 2. Create Shared Support Form Component (`src/components/SupportForm.tsx`)
+
+- Reusable form component accepting `role` and `target` ("admin" | "owner") props
+- Issue types: Bug/Issue, Update Request, Suggestion, Other
+- Fields: subject, issue type, description, optional order/reference number
+- Used by all portal support pages
+
+### 3. New Support Pages
 
 
-# SMITETRADE Improvements Plan
+| File                                   | Role    | Messages go to         |
+| -------------------------------------- | ------- | ---------------------- |
+| `src/pages/owner/OwnerSupport.tsx`     | Owner   | Platform Admin         |
+| `src/pages/cashier/CashierSupport.tsx` | Cashier | Store Owner (employer) |
+| `src/pages/driver/DriverSupport.tsx`   | Driver  | Store Owner (employer) |
+| `src/pages/lender/LenderSupport.tsx`   | Lender  | Platform Admin         |
 
-## Overview
-This plan covers 7 changes plus fixing 5 existing build errors that are blocking the app.
 
----
+- Cashier/Driver pages will show "Contact Your Store Owner" messaging instead of "Contact SmiteTrade Support"
+- Refactor existing `CustomerSupport.tsx` to use the shared `SupportForm`
 
-## Part A: Fix Build Errors (Must Do First)
+### 4. Update Navigation (`DashboardLayout.tsx`)
 
-### 1. StoreContext.tsx - Duplicate properties (lines 479-484)
-The mock order object has `id`, `customerName`, and `customerAddress` listed twice. Remove the duplicate lines (482-484).
+- Add `{ href: "/owner/support", label: "Support", icon: LifeBuoy }` to ownerLinks Management section
+- Add `{ href: "/cashier/support", label: "Support", icon: LifeBuoy }` to cashierLinks
+- Add `{ href: "/driver/support", label: "Support", icon: LifeBuoy }` to driverLinks (replace or keep alongside "Report Issue")
+- Add `{ href: "/lender/support", label: "Support", icon: LifeBuoy }` to lenderLinks
+- Customer already has support via CustomerSupport but no nav link -- add `{ href: "/customer/support", label: "Support", icon: LifeBuoy }` to customerLinks
 
-### 2. CashierCheckout.tsx - Missing `address` property (line 39)
-The `placeOrder` call is missing the required `address` field. Add `address: "In-Store"` to the object.
+### 5. Register Routes (`App.tsx`)
 
-### 3. OwnerLending.tsx - Invalid icon import (line 8)
-`UserByOrder` does not exist in lucide-react. Replace with `UserCheck` or `Users`.
+- Add routes for `/owner/support`, `/cashier/support`, `/driver/support`, `/lender/support` with appropriate AuthGuard roles
 
----
+### 6. Update Ticket Interface in AdminSupport
 
-## Part B: Requested Changes
+- Add `type` field: "issue" | "update" | "suggestion"
+- Add `role` field to show which portal the ticket came from
+- Add `storeName` field for store-linked users
 
-### 1. Background Color Improvements
-Update `src/index.css` to restore the branded SMITETRADE color palette instead of the current grayscale overrides. The custom CSS variables (lines 40-49) currently map emerald, electric-blue, and gold to grays. These will be restored to the actual brand colors:
-- `--emerald`: Deep Emerald (#1B4D3E)
-- `--electric-blue`: Electric Blue (#00BFFF)
-- `--gold`: Radiant Gold (#FFD700)
+## Files to Create/Modify
 
-Also update the dashboard background to use a subtle gradient rather than plain white.
 
-### 2. Supplier Contact Details
-In `src/pages/owner/OwnerSuppliers.tsx`, change the supplier contact numbers to SMITETRADE's intermediary contact details. All suppliers will show a single SMITETRADE contact number/email as the point of contact, reinforcing SMITETRADE's role as the middleman.
-
-### 3. Customer Credit Scoring Alignment
-The Customer portal (`CustomerCreditReview.tsx`) currently uses a 0-850 point scale (showing "750 / EXCELLENT"). The Lending portal uses the BRI percentage system (lower is better, with tiers: Platinum/Gold/Silver/Bronze).
-
-Changes:
-- Update `CustomerCreditReview.tsx` to use the BRI percentage system with the same tier badges (Platinum/Gold/Silver/Bronze) used in `BehavioralReliabilityIndex.tsx`
-- Replace the "750 / 850" display with the BRI score (e.g., "3.2%") and tier badge
-- Use the CreditContext data instead of hardcoded values
-
-### 4. Auto-Generated SS-ID Format
-In `src/context/CreditContext.tsx`, change the `addBorrower` function so the SS-ID is system-generated in the format `SS-ID0001`, `SS-ID0002`, etc., using an auto-incrementing counter rather than the SA ID number. The SA ID number will be stored separately as a private field.
-
-Files affected:
-- `CreditContext.tsx` - Add counter, generate SS-ID in `addBorrower`
-- `OwnerLending.tsx` - Show SS-ID (auto-generated) separate from ID Number input
-- `LenderClients.tsx` - Display SS-ID format instead of raw ID
-
-### 5. ID Number Privacy Masking
-Wherever SA ID numbers are displayed (borrower cards, credit check results), mask the middle digits showing only the first 6 and last 2 characters. For example: `9001015009087` becomes `900101*****87`.
-
-Files affected:
-- `LenderClients.tsx` - Mask ID in borrower cards
-- `LenderCreditCheck.tsx` - Mask ID in search results
-- `OwnerLending.tsx` - Mask ID display
-- Add a utility function `maskIdNumber()` in `src/lib/utils.ts`
-
-### 6. Order Tracking Estimated Time
-In `CustomerTracking.tsx`, replace specific minute estimates ("Est. 10 mins", "Est. 20 mins") with a time window format like "Between 8am - 6pm" for delivery, making it more realistic for the South African spaza context.
-
-### 7. Safe Compliance Disclaimer on Lender Portal
-Add a compliance statement to the Lender Dashboard (`LenderDashboard.tsx`) and Lender Loans page. The disclaimer will be similar to the one already on `BehavioralReliabilityIndex.tsx` (lines 168-173), stating that SMITETRADE provides scoring insights only and does not act as a credit provider.
-
----
-
-## Technical Summary
-
-| File | Changes |
-|------|---------|
-| `src/context/StoreContext.tsx` | Remove duplicate object properties (lines 482-484) |
-| `src/pages/cashier/CashierCheckout.tsx` | Add missing `address` field |
-| `src/pages/owner/OwnerLending.tsx` | Fix icon import, mask ID display |
-| `src/index.css` | Restore brand colors from grayscale |
-| `src/pages/owner/OwnerSuppliers.tsx` | Update supplier contacts to SMITETRADE intermediary |
-| `src/pages/customer/CustomerCreditReview.tsx` | Switch to BRI percentage system with tiers |
-| `src/context/CreditContext.tsx` | Auto-generate SS-ID format (SS-ID0001) |
-| `src/pages/lender/LenderClients.tsx` | Display SS-ID format, mask ID numbers |
-| `src/pages/lender/LenderCreditCheck.tsx` | Mask ID numbers in results |
-| `src/pages/customer/CustomerTracking.tsx` | Use "Between 8am - 6pm" time windows |
-| `src/pages/lender/LenderDashboard.tsx` | Add compliance disclaimer |
-| `src/pages/lender/LenderLoans.tsx` | Add compliance disclaimer |
-| `src/lib/utils.ts` | Add `maskIdNumber()` helper function |
-
+| File                                     | Action                                         |
+| ---------------------------------------- | ---------------------------------------------- |
+| `src/components/SupportForm.tsx`         | **Create** -- shared support form              |
+| `src/pages/admin/AdminSupport.tsx`       | **Modify** -- enhance popup with more detail   |
+| `src/pages/owner/OwnerSupport.tsx`       | **Create** -- owner support (to admin)         |
+| `src/pages/cashier/CashierSupport.tsx`   | **Create** -- cashier support (to store owner) |
+| `src/pages/driver/DriverSupport.tsx`     | **Create** -- driver support (to store owner)  |
+| `src/pages/lender/LenderSupport.tsx`     | **Create** -- lender support (to admin)        |
+| `src/pages/customer/CustomerSupport.tsx` | **Modify** -- refactor to use SupportForm      |
+| `src/components/DashboardLayout.tsx`     | **Modify** -- add support nav links            |
+| `src/App.tsx`                            | **Modify** -- add new routes                   |

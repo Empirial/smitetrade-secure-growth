@@ -8,6 +8,7 @@ export interface User {
     phone?: string;
     role: UserRole;
     storeName?: string; // For Owners
+    storeId?: string; // Links user to their store
     storeDetails?: {
         address: string;
         suburb: string;
@@ -35,6 +36,23 @@ export interface User {
     wishlist?: string[]; // Array of Product IDs
 }
 
+// Multi-tenant Store
+export interface Store {
+    id: string;
+    ownerId: string;
+    name: string;
+    address: string;
+    suburb: string;
+    city: string;
+    province: string;
+    postalCode?: string;
+    phone?: string;
+    email?: string;
+    logo?: string;
+    status: 'Active' | 'Inactive' | 'Pending';
+    createdAt: string;
+}
+
 export interface Product {
     id: string;
     name: string;
@@ -44,6 +62,8 @@ export interface Product {
     status: 'In Stock' | 'Low Stock' | 'Critical' | 'Out of Stock';
     image?: string;
     barcode?: string;
+    storeId?: string;
+    storeName?: string;
 }
 
 export interface CartItem extends Product {
@@ -68,6 +88,8 @@ export interface Order {
     driverId?: string;
     userId?: string; // Link to customer
     type?: 'instore' | 'online' | 'delivery';
+    storeId?: string;
+    storeName?: string;
 }
 
 // Credit / Lending Types
@@ -95,6 +117,7 @@ export interface Borrower {
     photoUrl: string;
     limit?: number;
     balance?: number;
+    lenderId?: string;
 }
 
 export interface Loan {
@@ -105,6 +128,7 @@ export interface Loan {
     dueDate: string;
     status: string;
     paidDate?: string;
+    lenderId?: string;
 }
 
 export interface Notification {
@@ -121,6 +145,7 @@ export interface Supplier {
     contact: string;
     products: string;
     status: 'Active' | 'Inactive';
+    storeId?: string;
 }
 
 export interface StaffMember {
@@ -133,6 +158,7 @@ export interface StaffMember {
     username?: string;
     password?: string;
     pin?: string;
+    storeId?: string;
 }
 
 export interface Shift {
@@ -146,6 +172,7 @@ export interface Shift {
     totalSales: number;
     discrepancy?: number;
     status: 'Open' | 'Closed' | 'Pending' | 'Flagged';
+    storeId?: string;
 }
 
 export interface Issue {
@@ -165,6 +192,7 @@ export interface Customer {
     totalSpend: number;
     tabBalance: number;
     lastVisit: string;
+    storeId?: string;
 }
 
 export interface Expense {

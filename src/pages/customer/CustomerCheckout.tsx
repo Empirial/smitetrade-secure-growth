@@ -4,24 +4,25 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, MapPin, Store as StoreIcon, CreditCard, Banknote, Wallet } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
 import { useCredit } from "@/context/CreditContext";
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CreditCard, Banknote, Store, Wallet } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 const CustomerCheckout = () => {
     const navigate = useNavigate();
-    const { placeOrder, cartTotal, cart } = useStore();
+    const { placeOrder, cartTotal, cart, stores } = useStore();
+    const activeStores = stores.filter(s => s.status === 'Active');
     const { profile, purchaseOnCredit, simulatePayment } = useCredit();
 
     const [step, setStep] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState("card");
-    const [selectedStore, setSelectedStore] = useState("store_001");
+    const cartStoreId = cart.length > 0 ? cart[0].storeId : undefined;
+    const [selectedStore, setSelectedStore] = useState(cartStoreId || (activeStores.length > 0 ? activeStores[0].id : ""));
     const [allowSubstitutions, setAllowSubstitutions] = useState(false);
 
     // Mock Wallet Balance
@@ -167,14 +168,17 @@ const CustomerCheckout = () => {
                                             />
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label>Select Store</Label>
+                                            <Label>Fulfilling Store</Label>
                                             <Select value={selectedStore} onValueChange={setSelectedStore}>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a store" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="store_001">Soweto Central (Nearest - 2km)</SelectItem>
-                                                    <SelectItem value="store_002">Diepkloof Branch (5km)</SelectItem>
+                                                    {activeStores.map(store => (
+                                                        <SelectItem key={store.id} value={store.id}>
+                                                            {store.name} — {store.suburb || store.city || 'Local'}
+                                                        </SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -200,8 +204,8 @@ const CustomerCheckout = () => {
                                     <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                                         <h4 className="font-semibold text-sm">Fulfilling Store:</h4>
                                         <div className="flex items-center gap-2 text-sm">
-                                            <Store className="h-4 w-4" />
-                                            <span>{selectedStore === 'store_001' ? 'Soweto Central (Nearest - 2km)' : 'Diepkloof Branch (5km)'}</span>
+                                            <StoreIcon className="h-4 w-4" />
+                                            <span>{activeStores.find(s => s.id === selectedStore)?.name || 'Unknown Store'}</span>
                                         </div>
                                     </div>
 

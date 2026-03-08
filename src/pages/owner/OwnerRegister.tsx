@@ -14,6 +14,10 @@ const OwnerRegister = () => {
         firstName: "",
         lastName: "",
         storeName: "",
+        storeAddress: "",
+        storeSuburb: "",
+        storeCity: "",
+        storeProvince: "Gauteng",
         email: "",
         password: ""
     });
@@ -38,12 +42,12 @@ const OwnerRegister = () => {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
             <Card className="w-full max-w-md shadow-lg">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold tracking-tight text-center">Register Shop</CardTitle>
                     <CardDescription className="text-center">
-                        Create an owner account to start trading
+                        Create an owner account to start trading on SMITETRADE
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleRegister}>
@@ -77,6 +81,35 @@ const OwnerRegister = () => {
                                 value={formData.storeName}
                                 onChange={(e) => setFormData({...formData, storeName: e.target.value})}
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="store-address">Store Address</Label>
+                            <Input 
+                                id="store-address" 
+                                placeholder="12 Vilakazi Street" 
+                                value={formData.storeAddress}
+                                onChange={(e) => setFormData({...formData, storeAddress: e.target.value})}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="store-suburb">Suburb</Label>
+                                <Input 
+                                    id="store-suburb" 
+                                    placeholder="Orlando West" 
+                                    value={formData.storeSuburb}
+                                    onChange={(e) => setFormData({...formData, storeSuburb: e.target.value})}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="store-city">City</Label>
+                                <Input 
+                                    id="store-city" 
+                                    placeholder="Soweto" 
+                                    value={formData.storeCity}
+                                    onChange={(e) => setFormData({...formData, storeCity: e.target.value})}
+                                />
+                            </div>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email</Label>

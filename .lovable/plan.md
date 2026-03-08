@@ -1,136 +1,86 @@
 
 
-# Cross-Portal Data Interconnection Plan
+# SMITETRADE Improvements Plan
 
-## Current State: Critical Issues
+## Overview
+This plan covers 7 changes plus fixing 5 existing build errors that are blocking the app.
 
-The app has **72 pages** but they are essentially **isolated silos** with no real cross-portal data flow. Here's why:
+---
 
-1. **Mock Data Mode is ON** (`USE_MOCK_DATA = true` in `constants.ts`) — all data is hardcoded, nothing persists to Firebase
-2. **No multi-store/tenant model** — `Product`, `Order`, `Supplier`, `Staff` types have no `storeId` field, so there's no way to link data to a specific store owner
-3. **Single flat context** — `StoreContext` serves all roles from one global state, meaning every user sees the same products/orders regardless of which store they belong to
-4. **No Firestore collections** for customers, expenses, suppliers, staff, shifts, or issues (rules only cover `users`, `products`, `orders`)
+## Part A: Fix Build Errors (Must Do First)
 
-## Architecture Diagram
+### 1. StoreContext.tsx - Duplicate properties (lines 479-484)
+The mock order object has `id`, `customerName`, and `customerAddress` listed twice. Remove the duplicate lines (482-484).
 
-```text
-CURRENT (Broken):
-  Owner A  ──┐
-  Owner B  ──┤──> Single StoreContext ──> Same Mock Products/Orders
-  Customer ──┘
+### 2. CashierCheckout.tsx - Missing `address` property (line 39)
+The `placeOrder` call is missing the required `address` field. Add `address: "In-Store"` to the object.
 
-TARGET (Connected):
-  Owner A ──> Firestore: stores/storeA/products/*
-  Owner B ──> Firestore: stores/storeB/products/*
-                    │
-  Customer ──> Reads ALL stores' products (e-commerce aggregation)
-  Driver   ──> Reads orders assigned to them
-  Cashier  ──> Reads products/orders for their linked store
-  Lender   ──> Reads borrowers/loans linked to their lender ID
-  Admin    ──> Reads everything (super-admin)
-```
+### 3. OwnerLending.tsx - Invalid icon import (line 8)
+`UserByOrder` does not exist in lucide-react. Replace with `UserCheck` or `Users`.
 
-## Implementation Plan
+---
 
-### Phase 1: Data Model — Add Multi-Store Support
+## Part B: Requested Changes
 
-**1. Update `types.ts`** — Add `storeId` and `storeName` to:
-- `Product` (which store sells it)
-- `Order` (which store it was ordered from)
-- `Supplier`, `StaffMember`, `Shift`, `Customer`, `Expense` (all store-scoped)
+### 1. Background Color Improvements
+Update `src/index.css` to restore the branded SMITETRADE color palette instead of the current grayscale overrides. The custom CSS variables (lines 40-49) currently map emerald, electric-blue, and gold to grays. These will be restored to the actual brand colors:
+- `--emerald`: Deep Emerald (#1B4D3E)
+- `--electric-blue`: Electric Blue (#00BFFF)
+- `--gold`: Radiant Gold (#FFD700)
 
-**2. Add a `Store` type**:
-```typescript
-interface Store {
-  id: string;
-  ownerId: string;
-  name: string;
-  address: string;
-  suburb: string;
-  city: string;
-  province: string;
-}
-```
+Also update the dashboard background to use a subtle gradient rather than plain white.
 
-### Phase 2: Firebase Backend — Firestore Collections & Rules
+### 2. Supplier Contact Details
+In `src/pages/owner/OwnerSuppliers.tsx`, change the supplier contact numbers to SMITETRADE's intermediary contact details. All suppliers will show a single SMITETRADE contact number/email as the point of contact, reinforcing SMITETRADE's role as the middleman.
 
-**3. Update `firestore.rules`** to add collections and enforce store-scoped access:
-- `stores/{storeId}` — owner can CRUD their own store
-- `products` — filtered by `storeId`; customers can read all, owners can write their own
-- `orders` — customers read their own, owners read orders for their store
-- `suppliers`, `staff`, `shifts`, `expenses`, `customers` — all scoped to `storeId`
-- Move roles to a separate `user_roles` collection (security fix)
+### 3. Customer Credit Scoring Alignment
+The Customer portal (`CustomerCreditReview.tsx`) currently uses a 0-850 point scale (showing "750 / EXCELLENT"). The Lending portal uses the BRI percentage system (lower is better, with tiers: Platinum/Gold/Silver/Bronze).
 
-**4. Add missing Firestore rules** for: `suppliers`, `staff`, `shifts`, `issues`, `customers`, `expenses`, `borrowers`, `loans`
+Changes:
+- Update `CustomerCreditReview.tsx` to use the BRI percentage system with the same tier badges (Platinum/Gold/Silver/Bronze) used in `BehavioralReliabilityIndex.tsx`
+- Replace the "750 / 850" display with the BRI score (e.g., "3.2%") and tier badge
+- Use the CreditContext data instead of hardcoded values
 
-### Phase 3: Context Refactor — Connect to Live Firebase
+### 4. Auto-Generated SS-ID Format
+In `src/context/CreditContext.tsx`, change the `addBorrower` function so the SS-ID is system-generated in the format `SS-ID0001`, `SS-ID0002`, etc., using an auto-incrementing counter rather than the SA ID number. The SA ID number will be stored separately as a private field.
 
-**5. Set `USE_MOCK_DATA = false`** and update `StoreContext`:
-- On login, fetch the user's `storeId` (for owner/cashier) or show all stores (for customer)
-- Products listener: owners see `where('storeId', '==', myStoreId)`, customers see all
-- Orders listener: scoped by role (customer sees theirs, owner sees their store's, driver sees assigned)
+Files affected:
+- `CreditContext.tsx` - Add counter, generate SS-ID in `addBorrower`
+- `OwnerLending.tsx` - Show SS-ID (auto-generated) separate from ID Number input
+- `LenderClients.tsx` - Display SS-ID format instead of raw ID
 
-**6. Add a `stores` collection listener** so the Customer Products page can:
-- Show products grouped by store
-- Let customers pick a store to browse
-- Display store name on each product card
+### 5. ID Number Privacy Masking
+Wherever SA ID numbers are displayed (borrower cards, credit check results), mask the middle digits showing only the first 6 and last 2 characters. For example: `9001015009087` becomes `900101*****87`.
 
-### Phase 4: Cross-Portal Data Flows
+Files affected:
+- `LenderClients.tsx` - Mask ID in borrower cards
+- `LenderCreditCheck.tsx` - Mask ID in search results
+- `OwnerLending.tsx` - Mask ID display
+- Add a utility function `maskIdNumber()` in `src/lib/utils.ts`
 
-**7. Wire up the 6 key cross-portal flows:**
+### 6. Order Tracking Estimated Time
+In `CustomerTracking.tsx`, replace specific minute estimates ("Est. 10 mins", "Est. 20 mins") with a time window format like "Between 8am - 6pm" for delivery, making it more realistic for the South African spaza context.
 
-| Flow | From | To | Data |
-|---|---|---|---|
-| Store Registration | Owner Register | `stores` collection | Creates store record |
-| Product Catalog | Owner Inventory | Customer Products | Products with `storeId` appear in shop |
-| Order Placement | Customer Checkout | Owner Orders + Driver Orders | Order with `storeId` routes to correct owner |
-| Driver Assignment | Owner/Admin | Driver portal | `driverId` on order |
-| Credit Application | Customer Apply | Lender Applications | Borrower record with `customerId` |
-| Staff Linking | Owner Staff | Cashier Login | Cashier's `storeId` links to owner's store |
+### 7. Safe Compliance Disclaimer on Lender Portal
+Add a compliance statement to the Lender Dashboard (`LenderDashboard.tsx`) and Lender Loans page. The disclaimer will be similar to the one already on `BehavioralReliabilityIndex.tsx` (lines 168-173), stating that SMITETRADE provides scoring insights only and does not act as a credit provider.
 
-**8. Update Customer Products page** to:
-- Fetch products from ALL stores (or let user select a store/area)
-- Show store name on each product card
-- Filter by store, category, and search
-- Cart tracks which store each item is from (enforce single-store cart or multi-store with split orders)
+---
 
-### Phase 5: Page Interconnection Map
+## Technical Summary
 
-The 72 pages connect through these Firestore collections:
-
-```text
-Firestore Collections:
-  users ─────────── All portals (auth)
-  stores ────────── Owner creates, Customer browses
-  products ──────── Owner manages, Customer/Cashier reads
-  orders ────────── Customer creates, Owner/Cashier/Driver reads
-  staff ─────────── Owner manages, Cashier linked via storeId
-  suppliers ─────── Owner manages
-  shifts ─────────── Cashier creates, Owner reads
-  expenses ──────── Owner manages
-  customers ─────── Owner's tab customers
-  borrowers ─────── Lender manages
-  loans ─────────── Lender manages, Customer reads their own
-  issues ─────────── Driver creates, Owner/Admin reads
-  audit_logs ────── Admin reads
-  disputes ──────── Admin manages
-```
-
-### Summary of File Changes
-
-| File | Change |
-|---|---|
-| `src/types.ts` | Add `Store` type, add `storeId`/`storeName` to Product, Order, etc. |
-| `src/lib/constants.ts` | Set `USE_MOCK_DATA = false`, update mock data with `storeId` fields |
-| `src/context/StoreContext.tsx` | Add store-scoped queries, multi-store product fetching for customers, store registration flow |
-| `firestore.rules` | Add rules for all collections, move roles to `user_roles`, scope by `storeId` |
-| `src/pages/owner/OwnerRegister.tsx` | Create `stores` doc on registration |
-| `src/pages/customer/CustomerProducts.tsx` | Fetch from all stores, show store name, store filter |
-| `src/pages/customer/CustomerCheckout.tsx` | Include `storeId` in order |
-| `src/pages/owner/OwnerDashboard.tsx` | Filter data by user's `storeId` |
-| `src/pages/driver/DriverOrders.tsx` | Filter by `driverId` |
-| `src/pages/cashier/*` | Link to owner's `storeId` |
-| `src/pages/lender/*` | Scope borrowers/loans to `lenderId` |
-
-This is a significant architectural change spanning ~25-30 files. It transforms the app from isolated mock portals into a connected multi-tenant marketplace.
+| File | Changes |
+|------|---------|
+| `src/context/StoreContext.tsx` | Remove duplicate object properties (lines 482-484) |
+| `src/pages/cashier/CashierCheckout.tsx` | Add missing `address` field |
+| `src/pages/owner/OwnerLending.tsx` | Fix icon import, mask ID display |
+| `src/index.css` | Restore brand colors from grayscale |
+| `src/pages/owner/OwnerSuppliers.tsx` | Update supplier contacts to SMITETRADE intermediary |
+| `src/pages/customer/CustomerCreditReview.tsx` | Switch to BRI percentage system with tiers |
+| `src/context/CreditContext.tsx` | Auto-generate SS-ID format (SS-ID0001) |
+| `src/pages/lender/LenderClients.tsx` | Display SS-ID format, mask ID numbers |
+| `src/pages/lender/LenderCreditCheck.tsx` | Mask ID numbers in results |
+| `src/pages/customer/CustomerTracking.tsx` | Use "Between 8am - 6pm" time windows |
+| `src/pages/lender/LenderDashboard.tsx` | Add compliance disclaimer |
+| `src/pages/lender/LenderLoans.tsx` | Add compliance disclaimer |
+| `src/lib/utils.ts` | Add `maskIdNumber()` helper function |
 

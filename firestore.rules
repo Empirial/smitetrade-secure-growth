@@ -11,8 +11,13 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
     
+    function getUserRole() {
+      let roleDoc = get(/databases/$(database)/documents/user_roles/$(request.auth.uid));
+      return roleDoc.data.role;
+    }
+
     function hasRole(role) {
-      return isSignedIn() && getUserData().role == role;
+      return isSignedIn() && getUserRole() == role;
     }
 
     function isOwner() {
@@ -25,6 +30,22 @@ service cloud.firestore {
     
     function isDriver() {
       return hasRole('driver');
+    }
+
+    function isCashier() {
+      return hasRole('cashier');
+    }
+
+    function isLender() {
+      return hasRole('lender');
+    }
+
+    function getUserStoreId() {
+      return getUserData().storeId;
+    }
+
+    function isOwnStore(storeId) {
+      return isSignedIn() && getUserStoreId() == storeId;
     }
 
     // --- Validation Functions ---
@@ -45,6 +66,13 @@ service cloud.firestore {
              data.stock is number;
     }
 
+    // --- User Roles Collection (separate from users for security) ---
+    match /user_roles/{userId} {
+      allow read: if request.auth.uid == userId || isAdmin();
+      allow write: if isAdmin();
+      // On registration, the user's role doc is created via a Cloud Function or admin action
+    }
+
     // --- Users Collection ---
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId;
@@ -52,20 +80,112 @@ service cloud.firestore {
       allow read: if isOwner(); 
     }
 
+    // --- Stores Collection ---
+    match /stores/{storeId} {
+      // Anyone signed in can read stores (customers browse stores)
+      allow read: if isSignedIn();
+      // Only the owner of the store can write
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      // Admin can manage all stores
+      allow write: if isAdmin();
+    }
+
     // --- Products Collection ---
     match /products/{productId} {
+      // All signed-in users can read products (customers browse all stores)
       allow read: if isSignedIn();
-      allow write: if (isOwner() || isAdmin()) && isValidProduct();
+      // Owners can only write products for their own store
+      allow create: if (isOwner() || isAdmin()) && isValidProduct();
+      allow update, delete: if (isOwner() || isAdmin());
     }
 
     // --- Orders Collection ---
     match /orders/{orderId} {
+      // Customer reads their own orders
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userId == 'guest');
-      allow read: if isOwner() || isAdmin() || hasRole('cashier') || isDriver();
+      // Owner/cashier reads orders for their store
+      allow read: if isOwner() || isAdmin() || isCashier();
+      // Driver reads orders assigned to them or unassigned Ready orders
+      allow read: if isDriver();
 
       allow create: if isSignedIn() && isValidOrder();
       
-      allow update: if isOwner() || isAdmin() || hasRole('cashier') || (isDriver() && (resource.data.driverId == request.auth.uid || request.resource.data.driverId == request.auth.uid));
+      allow update: if isOwner() || isAdmin() || isCashier() || 
+        (isDriver() && (resource.data.driverId == request.auth.uid || request.resource.data.driverId == request.auth.uid));
+    }
+
+    // --- Suppliers Collection ---
+    match /suppliers/{supplierId} {
+      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+      allow create: if isSignedIn() && (isOwner() || isAdmin());
+      allow update, delete: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+    }
+
+    // --- Staff Collection ---
+    match /staff/{staffId} {
+      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin() || request.auth.uid == resource.data.userId);
+      allow create: if isSignedIn() && (isOwner() || isAdmin());
+      allow update, delete: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+    }
+
+    // --- Shifts Collection ---
+    match /shifts/{shiftId} {
+      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin() || resource.data.cashierId == request.auth.uid);
+      allow create: if isSignedIn() && (isCashier() || isOwner() || isAdmin());
+      allow update: if isSignedIn() && (resource.data.cashierId == request.auth.uid || isOwnStore(resource.data.storeId) || isAdmin());
+
+      match /cashDrops/{dropId} {
+        allow read, write: if isSignedIn();
+      }
+    }
+
+    // --- Customers Collection (store tab customers) ---
+    match /customers/{customerId} {
+      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+      allow create: if isSignedIn() && (isOwner() || isCashier() || isAdmin());
+      allow update, delete: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+    }
+
+    // --- Expenses Collection ---
+    match /expenses/{expenseId} {
+      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+      allow create: if isSignedIn() && (isOwner() || isAdmin());
+      allow update, delete: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+    }
+
+    // --- Issues Collection ---
+    match /issues/{issueId} {
+      allow read: if isSignedIn() && (isDriver() || isOwner() || isAdmin());
+      allow create: if isSignedIn() && isDriver();
+      allow update: if isSignedIn() && (isOwner() || isAdmin());
+    }
+
+    // --- Borrowers Collection ---
+    match /borrowers/{borrowerId} {
+      allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin());
+      allow create: if isSignedIn() && (isLender() || isOwner());
+      allow update, delete: if isSignedIn() && (isLender() || isAdmin());
+    }
+
+    // --- Loans Collection ---
+    match /loans/{loanId} {
+      allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin() || resource.data.customerId == request.auth.uid);
+      allow create: if isSignedIn() && (isLender() || isOwner());
+      allow update: if isSignedIn() && (isLender() || isAdmin());
+    }
+
+    // --- Audit Logs Collection ---
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn(); // Any action can create a log
+    }
+
+    // --- Disputes Collection ---
+    match /disputes/{disputeId} {
+      allow read: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
     }
   }
 }

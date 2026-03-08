@@ -20,13 +20,14 @@ import {
     orderBy,
     setDoc,
     getDoc,
-    runTransaction
+    runTransaction,
+    where
 } from 'firebase/firestore';
 import { OrderSchema } from '@/lib/schemas';
 
-import { MOCK_USER, MOCK_LENDER, MOCK_PRODUCTS, MOCK_ORDERS, USE_MOCK_DATA } from '@/lib/constants';
+import { MOCK_USER, MOCK_LENDER, MOCK_PRODUCTS, MOCK_ORDERS, USE_MOCK_DATA, MOCK_STORES, MOCK_STORE_ID } from '@/lib/constants';
 
-import { User, Product, Order, CartItem, UserRole, Supplier, StaffMember, Shift, Issue, Customer, Expense } from "@/types";
+import { User, Product, Order, CartItem, UserRole, Supplier, StaffMember, Shift, Issue, Customer, Expense, Store } from "@/types";
 
 interface FirebaseError extends Error {
     code: string;
@@ -40,8 +41,13 @@ interface StoreContextType {
     logout: () => Promise<void>;
     updateUser: (updates: Partial<User>) => Promise<void>;
 
+    // Stores (multi-tenant)
+    stores: Store[];
+    currentStore: Store | null;
+
     // Inventory
     products: Product[];
+    allProducts: Product[]; // All products across all stores (for customer e-commerce)
     addProduct: (product: Omit<Product, 'id' | 'status'>) => Promise<void>;
     updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
     deleteProduct: (id: string) => Promise<void>;
@@ -107,7 +113,10 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [stores, setStores] = useState<Store[]>([]);
+    const [currentStore, setCurrentStore] = useState<Store | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [cart, setCart] = useState<CartItem[]>(() => {
         const saved = localStorage.getItem('smite_cart');
@@ -145,120 +154,198 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         if (USE_MOCK_DATA) {
             console.log("StoreContext: Using Mock Data Mode");
-            // Simulate persistent login if previously "logged in" (simplified: just auto-login as owner for testing)
-            // Or just start as null and let them click login.
-            // Let's auto-login for convenience if requested, but standard is start null.
-            // Actually, for "disable login", maybe we just want to BE logged in?
-            // The user said "disable login... so I can test it out". 
-            // Let's auto-login as Owner to make it easy.
             setUser(MOCK_USER);
+            setStores(MOCK_STORES as Store[]);
+            setCurrentStore(MOCK_STORES[0] as Store);
             setIsLoading(false);
             return;
         }
 
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                // Fetch user profile from Firestore
                 const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
                 if (userDoc.exists()) {
-                    setUser({ ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User);
+                    const userData = { ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User;
+                    setUser(userData);
+
+                    // If user has a storeId, fetch that store
+                    if (userData.storeId) {
+                        const storeDoc = await getDoc(doc(db, "stores", userData.storeId));
+                        if (storeDoc.exists()) {
+                            setCurrentStore({ id: storeDoc.id, ...storeDoc.data() } as Store);
+                        }
+                    }
                 } else {
-                    // Fallback or handle missing profile
                     console.error("User profile not found");
                 }
             } else {
                 setUser(null);
+                setCurrentStore(null);
             }
             setIsLoading(false);
         });
         return () => unsubscribe();
     }, []);
 
-    // --- Real-time Data Listeners ---
+    // --- Stores Listener (for customers browsing all stores) ---
     useEffect(() => {
         if (USE_MOCK_DATA) {
-            setProducts(MOCK_PRODUCTS);
+            setStores(MOCK_STORES as Store[]);
             return;
         }
 
-        const q = query(collection(db, "products"), orderBy("name"));
+        const q = query(collection(db, "stores"), orderBy("name"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const productsData = snapshot.docs.map(doc => ({
+            const storesData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
-            })) as Product[];
-            setProducts(productsData);
+            })) as Store[];
+            setStores(storesData);
         });
         return () => unsubscribe();
     }, []);
 
+    // --- Products Listener (store-scoped for owners, all for customers) ---
     useEffect(() => {
         if (USE_MOCK_DATA) {
-            setOrders(MOCK_ORDERS);
+            // For owners: show only their store's products
+            if (user?.role === 'owner' || user?.role === 'cashier') {
+                setProducts(MOCK_PRODUCTS.filter(p => p.storeId === user.storeId));
+            } else {
+                setProducts(MOCK_PRODUCTS);
+            }
+            // All products always available for e-commerce
+            setAllProducts(MOCK_PRODUCTS.filter(p => p.stock > 0));
             return;
         }
 
-        // In a real app, query based on role (Owner sees all, Customer sees theirs)
-        // For simple MVP, Fetch all orders sorted by date
-        const q = query(collection(db, "orders"), orderBy("date", "desc"));
+        if (!user) return;
+
+        // Owner/Cashier: fetch only their store's products
+        if ((user.role === 'owner' || user.role === 'cashier') && user.storeId) {
+            const q = query(
+                collection(db, "products"),
+                where("storeId", "==", user.storeId),
+                orderBy("name")
+            );
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[]);
+            });
+
+            // Also fetch all products for e-commerce view
+            const allQ = query(collection(db, "products"), orderBy("name"));
+            const unsubAll = onSnapshot(allQ, (snapshot) => {
+                setAllProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[]);
+            });
+
+            return () => { unsubscribe(); unsubAll(); };
+        }
+
+        // Customer/Driver/Admin: fetch all products
+        const q = query(collection(db, "products"), orderBy("name"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const ordersData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as Order[];
+            const productsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
+            setProducts(productsData);
+            setAllProducts(productsData);
+        });
+        return () => unsubscribe();
+    }, [user]);
+
+    // --- Orders Listener (role-scoped) ---
+    useEffect(() => {
+        if (USE_MOCK_DATA) {
+            if (user?.role === 'owner' || user?.role === 'cashier') {
+                setOrders(MOCK_ORDERS.filter(o => o.storeId === user.storeId));
+            } else if (user?.role === 'driver') {
+                setOrders(MOCK_ORDERS.filter(o => o.status === 'Ready' || o.driverId === user.id));
+            } else if (user?.role === 'customer') {
+                setOrders(MOCK_ORDERS.filter(o => o.userId === user.id));
+            } else {
+                setOrders(MOCK_ORDERS); // admin sees all
+            }
+            return;
+        }
+
+        if (!user) return;
+
+        let q;
+        if (user.role === 'owner' && user.storeId) {
+            q = query(collection(db, "orders"), where("storeId", "==", user.storeId), orderBy("date", "desc"));
+        } else if (user.role === 'customer') {
+            q = query(collection(db, "orders"), where("userId", "==", user.uid), orderBy("date", "desc"));
+        } else if (user.role === 'driver') {
+            // Drivers see Ready orders + their assigned orders
+            q = query(collection(db, "orders"), orderBy("date", "desc"));
+        } else {
+            q = query(collection(db, "orders"), orderBy("date", "desc"));
+        }
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            let ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Order[];
+            // Client-side filter for drivers
+            if (user.role === 'driver') {
+                ordersData = ordersData.filter(o => o.status === 'Ready' || o.driverId === user.id);
+            }
             setOrders(ordersData);
         });
         return () => unsubscribe();
-    }, []);
+    }, [user]);
 
+    // --- Other collections listener ---
     useEffect(() => {
-        if (!user) return; // Only fetch if logged in
+        if (!user) return;
         if (USE_MOCK_DATA) return;
 
-        // Fetch Customers
-        const customersQ = query(collection(db, "customers"), orderBy("name"));
-        const unsubCustomers = onSnapshot(customersQ, (snapshot) => {
-            setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Customer[]);
-        });
+        const storeId = user.storeId;
+        const unsubs: (() => void)[] = [];
 
-        // Fetch Expenses
-        const expensesQ = query(collection(db, "expenses"), orderBy("date", "desc"));
-        const unsubExpenses = onSnapshot(expensesQ, (snapshot) => {
-            setExpenses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[]);
-        });
+        // Store-scoped collections
+        if (storeId && (user.role === 'owner' || user.role === 'cashier' || user.role === 'admin')) {
+            const customersQ = storeId && user.role !== 'admin'
+                ? query(collection(db, "customers"), where("storeId", "==", storeId), orderBy("name"))
+                : query(collection(db, "customers"), orderBy("name"));
+            unsubs.push(onSnapshot(customersQ, (snapshot) => {
+                setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Customer[]);
+            }));
 
-        // Fetch Suppliers
-        const suppliersQ = query(collection(db, "suppliers"), orderBy("name"));
-        const unsubSuppliers = onSnapshot(suppliersQ, (snapshot) => {
-            setSuppliers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Supplier[]);
-        });
+            const expensesQ = storeId && user.role !== 'admin'
+                ? query(collection(db, "expenses"), where("storeId", "==", storeId), orderBy("date", "desc"))
+                : query(collection(db, "expenses"), orderBy("date", "desc"));
+            unsubs.push(onSnapshot(expensesQ, (snapshot) => {
+                setExpenses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[]);
+            }));
 
-        // Fetch Staff
-        const staffQ = query(collection(db, "staff"), orderBy("name"));
-        const unsubStaff = onSnapshot(staffQ, (snapshot) => {
-            setStaff(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StaffMember[]);
-        });
+            const suppliersQ = storeId && user.role !== 'admin'
+                ? query(collection(db, "suppliers"), where("storeId", "==", storeId), orderBy("name"))
+                : query(collection(db, "suppliers"), orderBy("name"));
+            unsubs.push(onSnapshot(suppliersQ, (snapshot) => {
+                setSuppliers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Supplier[]);
+            }));
 
-        // Fetch Shifts
-        const shiftsQ = query(collection(db, "shifts"), orderBy("startTime", "desc"));
-        const unsubShifts = onSnapshot(shiftsQ, (snapshot) => {
-            setShifts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Shift[]);
-        });
+            const staffQ = storeId && user.role !== 'admin'
+                ? query(collection(db, "staff"), where("storeId", "==", storeId), orderBy("name"))
+                : query(collection(db, "staff"), orderBy("name"));
+            unsubs.push(onSnapshot(staffQ, (snapshot) => {
+                setStaff(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StaffMember[]);
+            }));
 
-        // Fetch Issues
-        const issuesQ = query(collection(db, "issues"), orderBy("timestamp", "desc"));
-        const unsubIssues = onSnapshot(issuesQ, (snapshot) => {
-            setIssues(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Issue[]);
-        });
+            const shiftsQ = storeId && user.role !== 'admin'
+                ? query(collection(db, "shifts"), where("storeId", "==", storeId), orderBy("startTime", "desc"))
+                : query(collection(db, "shifts"), orderBy("startTime", "desc"));
+            unsubs.push(onSnapshot(shiftsQ, (snapshot) => {
+                setShifts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Shift[]);
+            }));
+        }
 
-        return () => {
-            unsubCustomers();
-            unsubExpenses();
-            unsubSuppliers();
-            unsubStaff();
-            unsubShifts();
-            unsubIssues();
-        };
+        // Issues (driver or owner/admin)
+        if (user.role === 'driver' || user.role === 'owner' || user.role === 'admin') {
+            const issuesQ = query(collection(db, "issues"), orderBy("timestamp", "desc"));
+            unsubs.push(onSnapshot(issuesQ, (snapshot) => {
+                setIssues(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Issue[]);
+            }));
+        }
+
+        return () => unsubs.forEach(u => u());
     }, [user]);
 
     // --- Local Storage (Cart Only) ---
@@ -274,21 +361,24 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     // --- Auth Actions ---
     const login = async (email: string, password: string, roleFallback?: UserRole) => {
         if (USE_MOCK_DATA) {
-            // Simulate network delay
             await new Promise(resolve => setTimeout(resolve, 500));
-            // Mock Login Success
             const mockUser: User = {
                 id: "mock-user-123",
                 uid: "mock-user-123",
                 name: "Mock User",
                 email: email,
                 role: roleFallback || 'owner',
-                storeName: roleFallback === 'owner' ? "Mock Store" : undefined
+                storeName: roleFallback === 'owner' ? "Soweto Central Spaza" : undefined,
+                storeId: roleFallback === 'owner' || roleFallback === 'cashier' ? MOCK_STORE_ID : undefined
             };
             if (roleFallback === 'lender') {
                 setUser(MOCK_LENDER);
             } else {
                 setUser(mockUser);
+                if (mockUser.storeId) {
+                    const store = MOCK_STORES.find(s => s.id === mockUser.storeId);
+                    if (store) setCurrentStore(store as Store);
+                }
             }
             toast.success("Mock Login Successful!");
             return;
@@ -299,7 +389,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             toast.success("Welcome back!");
         } catch (error) {
             console.error("Login error:", error);
-            // Auto-Register Fallback for "Random Login" testing
             if (roleFallback && error instanceof Error && ((error as FirebaseError).code === 'auth/user-not-found' || (error as FirebaseError).code === 'auth/invalid-credential')) {
                 try {
                     toast.info("Account not found. Creating test account...");
@@ -313,6 +402,27 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     };
 
                     await setDoc(doc(db, "users", firebaseUser.uid), userData);
+
+                    // Create store if owner
+                    if (roleFallback === 'owner') {
+                        const storeRef = doc(collection(db, "stores"));
+                        const storeData = {
+                            ownerId: firebaseUser.uid,
+                            name: "Test Store",
+                            address: "",
+                            suburb: "",
+                            city: "",
+                            province: "",
+                            status: "Active",
+                            createdAt: new Date().toISOString()
+                        };
+                        await setDoc(storeRef, storeData);
+                        await updateDoc(doc(db, "users", firebaseUser.uid), { storeId: storeRef.id });
+                    }
+
+                    // Create user role
+                    await setDoc(doc(db, "user_roles", firebaseUser.uid), { role: roleFallback });
+
                     setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
                     toast.success("Test account created & logged in!");
                     return;
@@ -330,15 +440,34 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     const register = async (email: string, password: string, name: string, role: UserRole, storeName?: string) => {
         if (USE_MOCK_DATA) {
             await new Promise(resolve => setTimeout(resolve, 500));
+            const newStoreId = "mock-store-" + Date.now();
             const mockUser: User = {
                 id: "mock-new-user-" + Date.now(),
                 uid: "mock-new-user-" + Date.now(),
                 name: name,
                 email: email,
                 role: role,
-                storeName: storeName
+                storeName: storeName,
+                storeId: role === 'owner' ? newStoreId : undefined
             };
             setUser(mockUser);
+
+            if (role === 'owner' && storeName) {
+                const newStore: Store = {
+                    id: newStoreId,
+                    ownerId: mockUser.id,
+                    name: storeName,
+                    address: "",
+                    suburb: "",
+                    city: "",
+                    province: "",
+                    status: "Active",
+                    createdAt: new Date().toISOString()
+                };
+                setStores(prev => [...prev, newStore]);
+                setCurrentStore(newStore);
+            }
+
             toast.success("Mock Registration Successful!");
             return;
         }
@@ -346,7 +475,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         try {
             const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
 
-            // Create user profile in Firestore
             const userData: Omit<User, 'id' | 'uid'> = {
                 name,
                 email,
@@ -354,9 +482,30 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 ...(storeName && { storeName })
             };
 
+            // Create store document if owner
+            let storeId: string | undefined;
+            if (role === 'owner' && storeName) {
+                const storeRef = doc(collection(db, "stores"));
+                storeId = storeRef.id;
+                const storeData = {
+                    ownerId: firebaseUser.uid,
+                    name: storeName,
+                    address: "",
+                    suburb: "",
+                    city: "",
+                    province: "",
+                    status: "Active",
+                    createdAt: new Date().toISOString()
+                };
+                await setDoc(storeRef, storeData);
+                (userData as any).storeId = storeId;
+            }
+
             await setDoc(doc(db, "users", firebaseUser.uid), userData);
 
-            // Force set user state immediately for better UX
+            // Create user role entry
+            await setDoc(doc(db, "user_roles", firebaseUser.uid), { role });
+
             setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
             toast.success("Account created successfully!");
         } catch (error) {
@@ -369,6 +518,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     const logout = async () => {
         if (USE_MOCK_DATA) {
             setUser(null);
+            setCurrentStore(null);
             setCart([]);
             toast.info("Mock Logout Successful");
             return;
@@ -376,7 +526,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             await signOut(auth);
-            setCart([]); // Clear cart on logout
+            setCart([]);
+            setCurrentStore(null);
             toast.info("Logged out successfully");
         } catch (error) {
             console.error("Logout error:", error);
@@ -405,16 +556,22 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // --- Inventory Actions ---
+    // --- Inventory Actions (store-scoped) ---
     const addProduct = async (productData: Omit<Product, 'id' | 'status'>) => {
+        const storeId = user?.storeId || MOCK_STORE_ID;
+        const storeName = currentStore?.name || user?.storeName || "Unknown Store";
+
         if (USE_MOCK_DATA) {
             const status = productData.stock > 20 ? 'In Stock' : productData.stock > 0 ? 'Low Stock' : 'Out of Stock';
             const newProduct: Product = {
                 ...productData,
                 id: "mock-prod-" + Date.now(),
-                status
+                status,
+                storeId,
+                storeName
             };
             setProducts(prev => [...prev, newProduct]);
+            setAllProducts(prev => [...prev, newProduct]);
             toast.success("Product added (Mock)");
             return;
         }
@@ -424,6 +581,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             await addDoc(collection(db, "products"), {
                 ...productData,
                 status,
+                storeId,
+                storeName,
                 createdAt: new Date().toISOString()
             });
             toast.success("Product added to inventory");
@@ -435,7 +594,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     const updateProduct = async (id: string, updates: Partial<Product>) => {
         if (USE_MOCK_DATA) {
-            setProducts(prev => prev.map(p => {
+            const updateFn = (prev: Product[]) => prev.map(p => {
                 if (p.id === id) {
                     const merged = { ...p, ...updates };
                     if (updates.stock !== undefined) {
@@ -444,14 +603,15 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     return merged;
                 }
                 return p;
-            }));
+            });
+            setProducts(updateFn);
+            setAllProducts(updateFn);
             toast.success("Product updated (Mock)");
             return;
         }
 
         try {
             const productRef = doc(db, "products", id);
-            // Re-calc status if stock changed
             if (updates.stock !== undefined) {
                 updates.status = updates.stock > 20 ? 'In Stock' : updates.stock > 0 ? 'Low Stock' : 'Out of Stock';
             }
@@ -466,6 +626,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     const deleteProduct = async (id: string) => {
         if (USE_MOCK_DATA) {
             setProducts(prev => prev.filter(p => p.id !== id));
+            setAllProducts(prev => prev.filter(p => p.id !== id));
             toast.success("Product removed (Mock)");
             return;
         }
@@ -484,7 +645,17 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         setCart(prev => {
             const existing = prev.find(item => item.id === product.id);
             if (existing) {
+                // Enforce single-store cart
+                if (existing.storeId !== product.storeId) {
+                    toast.error("You can only order from one store at a time. Clear your cart first.");
+                    return prev;
+                }
                 return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+            }
+            // Check if cart has items from a different store
+            if (prev.length > 0 && prev[0].storeId !== product.storeId) {
+                toast.error("You can only order from one store at a time. Clear your cart first.");
+                return prev;
             }
             return [...prev, { ...product, quantity: 1 }];
         });
@@ -509,7 +680,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // --- Order Actions ---
+    // --- Order Actions (store-scoped) ---
     const placeOrder = async (customerDetails: {
         name: string;
         address: string;
@@ -522,12 +693,16 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             ? customerDetails.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
             : cartTotal;
 
+        // Determine storeId from cart items or explicit param
+        const storeId = customerDetails.storeId || (orderItems.length > 0 ? orderItems[0].storeId : user?.storeId) || MOCK_STORE_ID;
+        const store = stores.find(s => s.id === storeId);
+        const storeName = store?.name || "Unknown Store";
+
         if (orderItems.length === 0) {
             toast.error("Cart is empty");
             return;
         }
         if (USE_MOCK_DATA) {
-            // Mock Order Placement
             const newOrder: Order = {
                 id: "mock-order-" + Date.now(),
                 customerName: customerDetails.name,
@@ -536,10 +711,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 total: orderTotal,
                 status: "Pending",
                 date: new Date().toISOString(),
-                driverId: undefined
+                driverId: undefined,
+                userId: user?.uid,
+                storeId,
+                storeName
             };
 
-            // Update Mock Stock (simple filter/map)
             setProducts(prev => prev.map(p => {
                 const cartItem = orderItems.find(c => c.id === p.id);
                 if (cartItem) {
@@ -551,42 +728,29 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             }));
 
             setOrders(prev => [newOrder, ...prev]);
-            if (!customerDetails.items) clearCart(); // Only clear global cart if that was used
+            if (!customerDetails.items) clearCart();
             toast.success("Mock Order Placed!");
             return;
         }
 
         try {
             await runTransaction(db, async (transaction) => {
-                // 1. Check stock for all items
                 for (const item of orderItems) {
                     const productRef = doc(db, "products", item.id);
                     const productDoc = await transaction.get(productRef);
-
-                    if (!productDoc.exists()) {
-                        throw new Error(`Product ${item.name} not found`);
-                    }
-
+                    if (!productDoc.exists()) throw new Error(`Product ${item.name} not found`);
                     const currentStock = productDoc.data().stock;
-                    if (currentStock < item.quantity) {
-                        throw new Error(`Insufficient stock for ${item.name}. Available: ${currentStock}`);
-                    }
+                    if (currentStock < item.quantity) throw new Error(`Insufficient stock for ${item.name}. Available: ${currentStock}`);
                 }
 
-                // 2. Decrement stock
                 for (const item of orderItems) {
                     const productRef = doc(db, "products", item.id);
-                    const productDoc = await transaction.get(productRef); // cached read
+                    const productDoc = await transaction.get(productRef);
                     const newStock = productDoc.data()!.stock - item.quantity;
                     const newStatus = newStock > 20 ? 'In Stock' : newStock > 0 ? 'Low Stock' : 'Out of Stock';
-
-                    transaction.update(productRef, {
-                        stock: newStock,
-                        status: newStatus
-                    });
+                    transaction.update(productRef, { stock: newStock, status: newStatus });
                 }
 
-                // 3. Create Order
                 const orderData = {
                     customerName: customerDetails.name,
                     customerAddress: customerDetails.address,
@@ -594,10 +758,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     total: orderTotal,
                     status: "Pending",
                     date: new Date().toISOString(),
-                    userId: user?.uid || "guest"
+                    userId: user?.uid || "guest",
+                    storeId,
+                    storeName
                 };
 
-                // Validate with Zod
                 const validation = OrderSchema.safeParse(orderData);
                 if (!validation.success) {
                     throw new Error("Validation Failed: " + validation.error.errors.map(e => e.message).join(", "));
@@ -606,8 +771,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 const newOrderRef = doc(collection(db, "orders"));
                 transaction.set(newOrderRef, orderData);
             });
-
-
 
             if (!customerDetails.items) clearCart();
             toast.success(`Order placed successfully!`);
@@ -642,10 +805,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
-            await updateDoc(doc(db, "orders", orderId), {
-                driverId,
-                status: 'Out for Delivery'
-            });
+            await updateDoc(doc(db, "orders", orderId), { driverId, status: 'Out for Delivery' });
             toast.info(`Order assigned to driver`);
         } catch (error) {
             toast.error("Failed to assign driver");
@@ -653,13 +813,15 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // --- Snag List Actions ---
+    // --- Supplier Actions (store-scoped) ---
     const addSupplier = async (supplierData: Omit<Supplier, 'id' | 'status'>) => {
+        const storeId = user?.storeId;
         if (USE_MOCK_DATA) {
             const newSupplier: Supplier = {
                 ...supplierData,
                 id: `supp-${Date.now()}`,
-                status: 'Active'
+                status: 'Active',
+                storeId
             };
             setSuppliers(prev => [...prev, newSupplier]);
             toast.success("Supplier added successfully (Mock)");
@@ -670,6 +832,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             await addDoc(collection(db, "suppliers"), {
                 ...supplierData,
                 status: 'Active',
+                storeId,
                 createdAt: new Date().toISOString()
             });
             toast.success("Supplier added successfully");
@@ -679,11 +842,14 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    // --- Staff Actions (store-scoped) ---
     const addStaff = async (staffData: Omit<StaffMember, 'id'>) => {
+        const storeId = user?.storeId;
         if (USE_MOCK_DATA) {
             const newStaff: StaffMember = {
                 ...staffData,
-                id: `staff-${Date.now()}`
+                id: `staff-${Date.now()}`,
+                storeId
             };
             setStaff(prev => [...prev, newStaff]);
             toast.success("Staff member added successfully (Mock)");
@@ -693,6 +859,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         try {
             await addDoc(collection(db, "staff"), {
                 ...staffData,
+                storeId,
                 createdAt: new Date().toISOString()
             });
             toast.success("Staff member added successfully");
@@ -734,6 +901,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    // --- Shift Actions ---
     const startShift = async (float: number) => {
         if (currentShift) {
             toast.error("Shift already active");
@@ -746,7 +914,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             startTime: new Date().toISOString(),
             openingFloat: float,
             totalSales: 0,
-            status: 'Open'
+            status: 'Open',
+            storeId: user?.storeId
         };
 
         if (USE_MOCK_DATA) {
@@ -845,15 +1014,17 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         toast.success("Issue reported successfully");
     };
 
-    // --- Customer Actions ---
+    // --- Customer Actions (store-scoped) ---
     const addCustomer = async (customer: Omit<Customer, 'id' | 'totalSpend' | 'tabBalance' | 'lastVisit'>) => {
+        const storeId = user?.storeId;
         if (USE_MOCK_DATA) {
             const newCustomer: Customer = {
                 ...customer,
                 id: `cust-${Date.now()}`,
                 totalSpend: 0,
                 tabBalance: 0,
-                lastVisit: new Date().toISOString()
+                lastVisit: new Date().toISOString(),
+                storeId
             };
             setCustomers(prev => [...prev, newCustomer]);
             toast.success("Customer added successfully (Mock)");
@@ -865,7 +1036,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 ...customer,
                 totalSpend: 0,
                 tabBalance: 0,
-                lastVisit: new Date().toISOString()
+                lastVisit: new Date().toISOString(),
+                storeId
             });
             toast.success("Customer added successfully");
         } catch (error) {
@@ -919,14 +1091,16 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // --- Expense Actions ---
+    // --- Expense Actions (store-scoped) ---
     const addExpense = async (expense: Omit<Expense, 'id' | 'date' | 'loggedBy'>) => {
+        const storeId = user?.storeId;
         if (USE_MOCK_DATA) {
             const newExpense: Expense = {
                 ...expense,
                 id: `exp-${Date.now()}`,
                 date: new Date().toISOString(),
-                loggedBy: user?.name || 'Unknown'
+                loggedBy: user?.name || 'Unknown',
+                storeId
             };
             setExpenses(prev => [...prev, newExpense]);
             toast.success("Expense logged (Mock)");
@@ -938,7 +1112,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 ...expense,
                 date: new Date().toISOString(),
                 loggedBy: user?.name || 'Unknown',
-                userId: user?.uid || 'unknown'
+                userId: user?.uid || 'unknown',
+                storeId
             });
             toast.success("Expense logged");
         } catch (error) {
@@ -966,7 +1141,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     return (
         <StoreContext.Provider value={{
             user, login, register, logout, updateUser,
-            products, addProduct, updateProduct, deleteProduct,
+            stores, currentStore,
+            products, allProducts, addProduct, updateProduct, deleteProduct,
             cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
             orders, placeOrder, updateOrderStatus, assignDriver, isLoading,
             suppliers, addSupplier,

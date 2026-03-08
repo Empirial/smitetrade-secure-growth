@@ -45,6 +45,7 @@ const getLinks = (role: string) => {
             { href: "/owner/reports", label: "Reports", icon: BarChart3 },
             { href: "/owner/pricing", label: "Pricing & Promos", icon: Tag },
             { href: "/owner/credit-review", label: "Credit Review", icon: ShieldCheck },
+            { href: "/owner/support", label: "Support", icon: LifeBuoy },
         ]
     };
 

@@ -85,6 +85,11 @@ import AdminPOSMonitor from "./pages/admin/AdminPOSMonitor";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminDisputes from "./pages/admin/AdminDisputes";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminStores from "./pages/admin/AdminStores";
+import AdminRevenue from "./pages/admin/AdminRevenue";
+import AdminCreditOverview from "./pages/admin/AdminCreditOverview";
+import AdminSupport from "./pages/admin/AdminSupport";
 
 // Lender
 import LenderLogin from "./pages/lender/LenderLogin";

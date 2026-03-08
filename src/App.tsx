@@ -49,6 +49,7 @@ import CashierShift from "./pages/cashier/CashierShift";
 import CashierReceipts from "./pages/cashier/CashierReceipts";
 import CashierInventory from "./pages/cashier/CashierInventory";
 import CashierSupport from "./pages/cashier/CashierSupport";
+import CashierAlerts from "./pages/cashier/CashierAlerts";
 
 // Customer
 import CustomerLogin from "./pages/customer/CustomerLogin";
@@ -79,6 +80,7 @@ import DriverIssues from "./pages/driver/DriverIssues";
 import DriverWallet from "./pages/driver/DriverWallet";
 import DriverProfile from "./pages/driver/DriverProfile";
 import DriverSupport from "./pages/driver/DriverSupport";
+import DriverAlerts from "./pages/driver/DriverAlerts";
 
 // Admin
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -93,6 +95,7 @@ import AdminStores from "./pages/admin/AdminStores";
 import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminCreditOverview from "./pages/admin/AdminCreditOverview";
 import AdminSupport from "./pages/admin/AdminSupport";
+import AdminAlerts from "./pages/admin/AdminAlerts";
 
 // Lender
 import LenderLogin from "./pages/lender/LenderLogin";
@@ -106,6 +109,7 @@ import LenderProfile from "./pages/lender/LenderProfile";
 import LenderCreditCheck from "./pages/lender/LenderCreditCheck";
 import LoanQuote from "./pages/lender/LoanQuote";
 import LenderSupport from "./pages/lender/LenderSupport";
+import LenderAlerts from "./pages/lender/LenderAlerts";
 
 const queryClient = new QueryClient();
 
@@ -160,6 +164,7 @@ const App = () => (
               <Route path="/cashier/receipts" element={<AuthGuard role="cashier"><CashierReceipts /></AuthGuard>} />
               <Route path="/cashier/inventory" element={<AuthGuard role="cashier"><CashierInventory /></AuthGuard>} />
               <Route path="/cashier/support" element={<AuthGuard role="cashier"><CashierSupport /></AuthGuard>} />
+              <Route path="/cashier/alerts" element={<AuthGuard role="cashier"><CashierAlerts /></AuthGuard>} />
 
               {/* Customer Portal */}
               <Route path="/customer/login" element={<CustomerLogin />} />
@@ -190,6 +195,7 @@ const App = () => (
               <Route path="/driver/wallet" element={<AuthGuard role="driver"><DriverWallet /></AuthGuard>} />
               <Route path="/driver/profile" element={<AuthGuard role="driver"><DriverProfile /></AuthGuard>} />
               <Route path="/driver/support" element={<AuthGuard role="driver"><DriverSupport /></AuthGuard>} />
+              <Route path="/driver/alerts" element={<AuthGuard role="driver"><DriverAlerts /></AuthGuard>} />
 
               {/* Admin Portal */}
               <Route path="/admin/login" element={<AdminLogin />} />
@@ -204,6 +210,7 @@ const App = () => (
               <Route path="/admin/revenue" element={<AuthGuard role="admin"><AdminRevenue /></AuthGuard>} />
               <Route path="/admin/credit-overview" element={<AuthGuard role="admin"><AdminCreditOverview /></AuthGuard>} />
               <Route path="/admin/support" element={<AuthGuard role="admin"><AdminSupport /></AuthGuard>} />
+              <Route path="/admin/alerts" element={<AuthGuard role="admin"><AdminAlerts /></AuthGuard>} />
 
               {/* Lender Portal */}
               <Route path="/lender/login" element={<LenderLogin />} />
@@ -217,6 +224,7 @@ const App = () => (
               <Route path="/lender/credit-check" element={<AuthGuard role="lender"><LenderCreditCheck /></AuthGuard>} />
               <Route path="/lender/quote" element={<AuthGuard role="lender"><LoanQuote /></AuthGuard>} />
               <Route path="/lender/support" element={<AuthGuard role="lender"><LenderSupport /></AuthGuard>} />
+              <Route path="/lender/alerts" element={<AuthGuard role="lender"><LenderAlerts /></AuthGuard>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

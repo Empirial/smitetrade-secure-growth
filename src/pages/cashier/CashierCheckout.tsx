@@ -37,23 +37,23 @@ const CashierCheckout = () => {
         }
     }, [amountTendered, total, paymentMethod]);
 
-    if (success) {
-        return (
-            <DashboardLayout role="cashier">
-                <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
-                    <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in">
-                        <CheckCircle2 className="h-12 w-12 text-green-600" />
-                    </div>
-                    <h1 className="text-3xl font-bold">Payment Successful!</h1>
-                    <p className="text-muted-foreground">Receipt #TX-882992 sent to system.</p>
-                    <div className="flex gap-4 mt-8">
-                        <Button variant="outline" onClick={() => window.print()}>Print Receipt</Button>
-                        <Button className="bg-emerald-600" onClick={() => navigate("/cashier/pos")}>New Sale</Button>
-                    </div>
-                </div>
-            </DashboardLayout>
-        )
-    }
+    const completeTransaction = useCallback(async () => {
+        await placeOrder({
+            name: "Walk-in Customer",
+            address: "In-Store",
+            items: cart,
+            paymentMethod: isSplitPayment ? "Split" : paymentMethod,
+        });
+        setSuccess(true);
+    }, [placeOrder, cart, isSplitPayment, paymentMethod]);
+
+    const { pay: payWithCard, processing: cardProcessing } = usePaystack({
+        amount: total,
+        email: 'pos@smitetrade.co.za',
+        onSuccess: () => {
+            completeTransaction();
+        },
+    });
 
     const handlePay = async () => {
         // Validate Cash payment
@@ -68,14 +68,11 @@ const CashierCheckout = () => {
             }
 
             if (!isSplitPayment && paymentMethod === "Cash" && totalPaid < total) {
-                // For simple cash pay, cannot be less than total
                 alert("Amount tendered is less than the total due.");
                 return;
             }
 
             if (isSplitPayment && Math.abs(totalPaid - total) > 0.01) {
-                // For split payments, must match exactly
-                // Provide small tolerance for float issues
                 if (totalPaid < total) {
                     alert(`Split payments are short by R ${(total - totalPaid).toFixed(2)}`);
                     return;
@@ -83,15 +80,12 @@ const CashierCheckout = () => {
             }
         }
 
-        // Place the order in the system
-        await placeOrder({
-            name: "Walk-in Customer",
-            address: "In-Store",
-            items: cart, // CashierPOS local cart synced to this payload
-            paymentMethod: isSplitPayment ? "Split" : paymentMethod,
-        });
+        if (paymentMethod === "Card" && !isSplitPayment) {
+            payWithCard();
+            return;
+        }
 
-        setSuccess(true);
+        await completeTransaction();
     };
 
     const handleSplitAmountChange = (method: 'cash' | 'card' | 'ssid', value: string) => {

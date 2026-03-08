@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle } from "lucide-react";
@@ -34,6 +35,23 @@ const getBorderColor = (type: string, read: boolean) => {
 };
 
 const SystemNotifications = ({ notifications, isRead, onMarkAsRead, onDismiss, onMarkAllAsRead, loading }: SystemNotificationsProps) => {
+    const { toast } = useToast();
+
+    const handleMarkAsRead = (id: string, title: string) => {
+        onMarkAsRead(id);
+        toast({ title: "Marked as read", description: `"${title}" has been marked as read.` });
+    };
+
+    const handleDismiss = (id: string, title: string) => {
+        onDismiss(id);
+        toast({ title: "Dismissed", description: `"${title}" has been dismissed.` });
+    };
+
+    const handleMarkAllAsRead = () => {
+        onMarkAllAsRead();
+        toast({ title: "All marked as read", description: "All notifications have been marked as read." });
+    };
+
     if (loading) {
         return (
             <Card>
@@ -62,7 +80,7 @@ const SystemNotifications = ({ notifications, isRead, onMarkAsRead, onDismiss, o
                     <Info className="h-5 w-5 text-blue-500" />
                     System Notifications
                 </h2>
-                <Button variant="outline" size="sm" onClick={onMarkAllAsRead}>Mark All as Read</Button>
+                <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>Mark All as Read</Button>
             </div>
             {notifications.map((notif) => {
                 const read = isRead(notif.id);
@@ -95,12 +113,12 @@ const SystemNotifications = ({ notifications, isRead, onMarkAsRead, onDismiss, o
                             )}
                             <div className="flex gap-2 ml-auto">
                                 {!read && (
-                                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => onMarkAsRead(notif.id)}>
+                                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => handleMarkAsRead(notif.id, notif.title)}>
                                         Mark Read
                                     </Button>
                                 )}
                                 {!read && (
-                                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => onDismiss(notif.id)}>
+                                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => handleDismiss(notif.id, notif.title)}>
                                         Dismiss
                                     </Button>
                                 )}

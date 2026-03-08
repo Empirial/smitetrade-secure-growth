@@ -52,6 +52,7 @@ const getLinks = (role: string) => {
         { href: "/cashier/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/cashier/pos", label: "POS System", icon: ShoppingCart },
         { href: "/cashier/scanner", label: "Scanner", icon: Scan },
+        { href: "/cashier/inventory", label: "Inventory", icon: Package },
         { href: "/cashier/shift", label: "Shift Mgmt", icon: User },
         { href: "/cashier/receipts", label: "Receipts", icon: Box },
         { href: "/cashier/credit-review", label: "Credit Review", icon: CreditCard },

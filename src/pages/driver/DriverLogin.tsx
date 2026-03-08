@@ -17,7 +17,7 @@ const DriverLogin = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await login(formData.email, formData.password);
+            await login(formData.email, formData.password, "driver");
             navigate("/driver/orders");
         } catch (error) {
             // Error handled in context

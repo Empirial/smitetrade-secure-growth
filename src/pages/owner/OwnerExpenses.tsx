@@ -43,10 +43,7 @@ const OwnerExpenses = () => {
         setDescription("");
         setCategory("Operational");
 
-        toast({
-            title: "Expense Logged",
-            description: "Petty cash expense successfully recorded."
-        });
+        toast.success("Petty cash expense successfully recorded.");
     };
 
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);

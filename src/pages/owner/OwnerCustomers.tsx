@@ -44,7 +44,7 @@ const OwnerCustomers = () => {
     const handleSettle = async () => {
         const amount = parseFloat(settleAmount);
         if (isNaN(amount) || amount <= 0) {
-            toast({ title: "Error", description: "Please enter a valid amount.", variant: "destructive" });
+            toast.error("Please enter a valid amount.");
             return;
         }
 

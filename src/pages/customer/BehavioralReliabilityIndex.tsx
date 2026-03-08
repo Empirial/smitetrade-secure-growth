@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { ArrowRight, AlertCircle, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useCredit } from "@/context/CreditContext";
 import GamificationStatus from "@/components/credit/GamificationStatus";
 import BRIChart from "@/components/credit/BRIChart";

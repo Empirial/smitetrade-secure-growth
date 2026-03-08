@@ -11,7 +11,6 @@ import { FileText, Plus, Receipt, TrendingDown, Calendar, User, Tag, ArrowRight 
 import { useStore } from "@/context/StoreContext";
 
 const OwnerExpenses = () => {
-    const { toast } = useToast();
     const { expenses, addExpense } = useStore();
 
     // Form State

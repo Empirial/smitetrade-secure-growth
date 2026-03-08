@@ -172,6 +172,11 @@ const NavContent = ({ role, location, navigate, isOpen, setIsOpen, logout }: any
                                                 <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${isActive ? "text-primary" : ""
                                                     }`} />
                                                 {link.label}
+                                                {link.label === "Alerts" && unreadCount > 0 && (
+                                                    <span className="ml-auto bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
+                                                        {unreadCount}
+                                                    </span>
+                                                )}
                                             </Link>
                                         );
                                     })}

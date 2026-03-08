@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Filter, X, Store } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { useStore } from "@/context/StoreContext";
 

@@ -10,9 +10,9 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Plus, Filter, X, Store } from "lucide-react";
+import { Search, Plus, Filter, X, Store } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useStore } from "@/context/StoreContext";

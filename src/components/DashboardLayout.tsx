@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package, Banknote, FileText, Bell, AlertTriangle, Search, Heart, Wallet, Receipt, Tag, ClipboardList, Briefcase, ChevronDown, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -123,6 +124,7 @@ const getLinks = (role: string) => {
 
 const NavContent = ({ role, location, navigate, isOpen, setIsOpen, logout }: any) => {
     const { ownerLinks, cashierLinks, customerLinks, driverLinks, adminLinks, lenderLinks, links } = getLinks(role);
+    const { unreadCount } = useNotifications();
     const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
         OVERVIEW: true,
         OPERATIONS: true,
@@ -170,6 +172,11 @@ const NavContent = ({ role, location, navigate, isOpen, setIsOpen, logout }: any
                                                 <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${isActive ? "text-primary" : ""
                                                     }`} />
                                                 {link.label}
+                                                {link.label === "Alerts" && unreadCount > 0 && (
+                                                    <span className="ml-auto bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
+                                                        {unreadCount}
+                                                    </span>
+                                                )}
                                             </Link>
                                         );
                                     })}
@@ -197,6 +204,11 @@ const NavContent = ({ role, location, navigate, isOpen, setIsOpen, logout }: any
                                                 <link.icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${location.pathname === link.href ? "text-primary" : ""
                                                     }`} />
                                                 {link.label}
+                                                {link.label === "Alerts" && unreadCount > 0 && (
+                                                    <span className="ml-auto bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
+                                                        {unreadCount}
+                                                    </span>
+                                                )}
                                             </Link>
                                         ))}
                     </div>

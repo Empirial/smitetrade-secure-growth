@@ -1,16 +1,30 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { ShieldAlert } from "lucide-react";
+import { useStore } from "@/context/StoreContext";
 
 const AdminLogin = () => {
     const navigate = useNavigate();
+    const { login } = useStore();
+    const [id, setId] = useState("");
+    const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        navigate("/admin/applications");
+        setIsLoading(true);
+        try {
+            await login(id.includes("@") ? id : `${id}@admin.smitetrade.co.za`, password, "admin");
+            navigate("/admin/dashboard");
+        } catch {
+            // error handled in login
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -38,6 +52,8 @@ const AdminLogin = () => {
                                         id="id"
                                         placeholder="sysadmin"
                                         required
+                                        value={id}
+                                        onChange={(e) => setId(e.target.value)}
                                         className="bg-background"
                                     />
                                 </div>
@@ -52,18 +68,19 @@ const AdminLogin = () => {
                                         id="password"
                                         type="password"
                                         required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
                                         className="bg-background"
                                     />
                                 </div>
                             </div>
 
-                            <Button type="submit" className="w-full shadow-md">
-                                Authenticate
+                            <Button type="submit" className="w-full shadow-md" disabled={isLoading}>
+                                {isLoading ? "Authenticating..." : "Authenticate"}
                             </Button>
                         </form>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4 pb-8">
-                        {/* Reserved for admin footer items */}
                     </CardFooter>
                 </Card>
 

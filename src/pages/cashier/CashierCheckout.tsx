@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle2, CreditCard, Banknote, Landmark, ArrowLeft } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/context/StoreContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePaystack } from "@/hooks/usePaystack";
 
 const CashierCheckout = () => {
     const location = useLocation();
@@ -36,6 +37,64 @@ const CashierCheckout = () => {
         }
     }, [amountTendered, total, paymentMethod]);
 
+    const completeTransaction = useCallback(async () => {
+        await placeOrder({
+            name: "Walk-in Customer",
+            address: "In-Store",
+            items: cart,
+            paymentMethod: isSplitPayment ? "Split" : paymentMethod,
+        });
+        setSuccess(true);
+    }, [placeOrder, cart, isSplitPayment, paymentMethod]);
+
+    const { pay: payWithCard, processing: cardProcessing } = usePaystack({
+        amount: total,
+        email: 'pos@smitetrade.co.za',
+        onSuccess: () => {
+            completeTransaction();
+        },
+    });
+
+    const handlePay = async () => {
+        // Validate Cash payment
+        if (paymentMethod === "Cash" || isSplitPayment) {
+            let totalPaid = 0;
+            if (isSplitPayment) {
+                totalPaid += parseFloat(splitAmounts.cash || "0");
+                totalPaid += parseFloat(splitAmounts.card || "0");
+                totalPaid += parseFloat(splitAmounts.ssid || "0");
+            } else if (paymentMethod === "Cash") {
+                totalPaid = parseFloat(amountTendered || "0");
+            }
+
+            if (!isSplitPayment && paymentMethod === "Cash" && totalPaid < total) {
+                alert("Amount tendered is less than the total due.");
+                return;
+            }
+
+            if (isSplitPayment && Math.abs(totalPaid - total) > 0.01) {
+                if (totalPaid < total) {
+                    alert(`Split payments are short by R ${(total - totalPaid).toFixed(2)}`);
+                    return;
+                }
+            }
+        }
+
+        if (paymentMethod === "Card" && !isSplitPayment) {
+            payWithCard();
+            return;
+        }
+
+        await completeTransaction();
+    };
+
+    const handleSplitAmountChange = (method: 'cash' | 'card' | 'ssid', value: string) => {
+        setSplitAmounts(prev => ({ ...prev, [method]: value }));
+    };
+
+    const splitTotalPaid = parseFloat(splitAmounts.cash || "0") + parseFloat(splitAmounts.card || "0") + parseFloat(splitAmounts.ssid || "0");
+    const splitBalance = total - splitTotalPaid;
+
     if (success) {
         return (
             <DashboardLayout role="cashier">
@@ -51,54 +110,8 @@ const CashierCheckout = () => {
                     </div>
                 </div>
             </DashboardLayout>
-        )
+        );
     }
-
-    const handlePay = async () => {
-        // Validate Cash payment
-        if (paymentMethod === "Cash" || isSplitPayment) {
-            let totalPaid = 0;
-            if (isSplitPayment) {
-                totalPaid += parseFloat(splitAmounts.cash || "0");
-                totalPaid += parseFloat(splitAmounts.card || "0");
-                totalPaid += parseFloat(splitAmounts.ssid || "0");
-            } else if (paymentMethod === "Cash") {
-                totalPaid = parseFloat(amountTendered || "0");
-            }
-
-            if (!isSplitPayment && paymentMethod === "Cash" && totalPaid < total) {
-                // For simple cash pay, cannot be less than total
-                alert("Amount tendered is less than the total due.");
-                return;
-            }
-
-            if (isSplitPayment && Math.abs(totalPaid - total) > 0.01) {
-                // For split payments, must match exactly
-                // Provide small tolerance for float issues
-                if (totalPaid < total) {
-                    alert(`Split payments are short by R ${(total - totalPaid).toFixed(2)}`);
-                    return;
-                }
-            }
-        }
-
-        // Place the order in the system
-        await placeOrder({
-            name: "Walk-in Customer",
-            address: "In-Store",
-            items: cart, // CashierPOS local cart synced to this payload
-            paymentMethod: isSplitPayment ? "Split" : paymentMethod,
-        });
-
-        setSuccess(true);
-    };
-
-    const handleSplitAmountChange = (method: 'cash' | 'card' | 'ssid', value: string) => {
-        setSplitAmounts(prev => ({ ...prev, [method]: value }));
-    };
-
-    const splitTotalPaid = parseFloat(splitAmounts.cash || "0") + parseFloat(splitAmounts.card || "0") + parseFloat(splitAmounts.ssid || "0");
-    const splitBalance = total - splitTotalPaid;
 
     return (
         <DashboardLayout role="cashier">

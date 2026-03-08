@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { StoreProvider } from "./context/StoreContext";
+import { CreditProvider } from "./context/CreditContext";
+import AuthGuard from "./components/AuthGuard";
 
 // Global
 import ForgotPassword from "./pages/ForgotPassword";
@@ -30,11 +32,10 @@ import OwnerPricing from "./pages/owner/OwnerPricing";
 import OwnerSuppliers from "./pages/owner/OwnerSuppliers";
 import OwnerAlerts from "./pages/owner/OwnerAlerts";
 import OwnerAnalytics from "./pages/owner/OwnerAnalytics";
-
 import OwnerExpenses from "./pages/owner/OwnerExpenses";
-
 import OwnerCustomers from "./pages/owner/OwnerCustomers";
 import OwnerCreditReview from "./pages/owner/OwnerCreditReview";
+import OwnerStockAdjustment from "./pages/owner/OwnerStockAdjustment";
 
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
@@ -99,8 +100,6 @@ import LoanQuote from "./pages/lender/LoanQuote";
 
 const queryClient = new QueryClient();
 
-import { CreditProvider } from "./context/CreditContext";
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -113,93 +112,92 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
 
-              {/* Global */}
+              {/* Global (public) */}
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/session-expired" element={<SessionExpired />} />
               <Route path="/portals" element={<Portals />} />
 
-              {/* Owner Portal */}
+              {/* Owner Portal — Login/Register are public */}
               <Route path="/owner/login" element={<OwnerLogin />} />
               <Route path="/owner/register" element={<OwnerRegister />} />
-              <Route path="/owner/dashboard" element={<OwnerDashboard />} />
-              <Route path="/owner/pos" element={<OwnerPOS />} />
-              <Route path="/owner/profile" element={<OwnerProfile />} />
-              <Route path="/owner/lending" element={<OwnerLending />} />
-              <Route path="/owner/inventory" element={<OwnerInventory />} />
-              <Route path="/owner/staff" element={<OwnerStaff />} />
-              <Route path="/owner/reports" element={<OwnerReports />} />
-              <Route path="/owner/orders" element={<OwnerOrders />} />
-              <Route path="/owner/pricing" element={<OwnerPricing />} />
-              <Route path="/owner/suppliers" element={<OwnerSuppliers />} />
-              <Route path="/owner/alerts" element={<OwnerAlerts />} />
-              <Route path="/owner/analytics" element={<OwnerAnalytics />} />
-
-              <Route path="/owner/expenses" element={<OwnerExpenses />} />
-
-              <Route path="/owner/customers" element={<OwnerCustomers />} />
-              <Route path="/owner/credit-review" element={<OwnerCreditReview />} />
+              <Route path="/owner/dashboard" element={<AuthGuard role="owner"><OwnerDashboard /></AuthGuard>} />
+              <Route path="/owner/pos" element={<AuthGuard role="owner"><OwnerPOS /></AuthGuard>} />
+              <Route path="/owner/profile" element={<AuthGuard role="owner"><OwnerProfile /></AuthGuard>} />
+              <Route path="/owner/lending" element={<AuthGuard role="owner"><OwnerLending /></AuthGuard>} />
+              <Route path="/owner/inventory" element={<AuthGuard role="owner"><OwnerInventory /></AuthGuard>} />
+              <Route path="/owner/staff" element={<AuthGuard role="owner"><OwnerStaff /></AuthGuard>} />
+              <Route path="/owner/reports" element={<AuthGuard role="owner"><OwnerReports /></AuthGuard>} />
+              <Route path="/owner/orders" element={<AuthGuard role="owner"><OwnerOrders /></AuthGuard>} />
+              <Route path="/owner/pricing" element={<AuthGuard role="owner"><OwnerPricing /></AuthGuard>} />
+              <Route path="/owner/suppliers" element={<AuthGuard role="owner"><OwnerSuppliers /></AuthGuard>} />
+              <Route path="/owner/alerts" element={<AuthGuard role="owner"><OwnerAlerts /></AuthGuard>} />
+              <Route path="/owner/analytics" element={<AuthGuard role="owner"><OwnerAnalytics /></AuthGuard>} />
+              <Route path="/owner/expenses" element={<AuthGuard role="owner"><OwnerExpenses /></AuthGuard>} />
+              <Route path="/owner/customers" element={<AuthGuard role="owner"><OwnerCustomers /></AuthGuard>} />
+              <Route path="/owner/credit-review" element={<AuthGuard role="owner"><OwnerCreditReview /></AuthGuard>} />
+              <Route path="/owner/stock-adjustment" element={<AuthGuard role="owner"><OwnerStockAdjustment /></AuthGuard>} />
 
               {/* Cashier Portal */}
               <Route path="/cashier/login" element={<CashierLogin />} />
               <Route path="/cashier/register" element={<CashierRegister />} />
-              <Route path="/cashier/dashboard" element={<CashierDashboard />} />
-              <Route path="/cashier/pos" element={<CashierPOS />} />
-              <Route path="/cashier/scanner" element={<CashierScanner />} />
-              <Route path="/cashier/credit-review" element={<CashierCreditReview />} />
-              <Route path="/cashier/checkout" element={<CashierCheckout />} />
-              <Route path="/cashier/shift" element={<CashierShift />} />
-              <Route path="/cashier/receipts" element={<CashierReceipts />} />
+              <Route path="/cashier/dashboard" element={<AuthGuard role="cashier"><CashierDashboard /></AuthGuard>} />
+              <Route path="/cashier/pos" element={<AuthGuard role="cashier"><CashierPOS /></AuthGuard>} />
+              <Route path="/cashier/scanner" element={<AuthGuard role="cashier"><CashierScanner /></AuthGuard>} />
+              <Route path="/cashier/credit-review" element={<AuthGuard role="cashier"><CashierCreditReview /></AuthGuard>} />
+              <Route path="/cashier/checkout" element={<AuthGuard role="cashier"><CashierCheckout /></AuthGuard>} />
+              <Route path="/cashier/shift" element={<AuthGuard role="cashier"><CashierShift /></AuthGuard>} />
+              <Route path="/cashier/receipts" element={<AuthGuard role="cashier"><CashierReceipts /></AuthGuard>} />
 
               {/* Customer Portal */}
               <Route path="/customer/login" element={<CustomerLogin />} />
               <Route path="/customer/signup" element={<CustomerRegister />} />
-              <Route path="/customer/products" element={<CustomerProducts />} />
-              <Route path="/customer/cart" element={<CustomerCart />} />
-              <Route path="/customer/checkout" element={<CustomerCheckout />} />
-              <Route path="/customer/payment" element={<CustomerPayment />} />
-              <Route path="/customer/tracking" element={<CustomerTracking />} />
-              <Route path="/customer/credit-review" element={<CustomerCreditReview />} />
-              <Route path="/customer/apply-credit" element={<CustomerCreditApplication />} />
-              <Route path="/customer/lender-registration" element={<CustomerLenderRegistration />} />
-              <Route path="/customer/alerts" element={<CustomerAlerts />} />
-              <Route path="/customer/profile" element={<CustomerProfile />} />
-              <Route path="/customer/orders" element={<CustomerOrders />} />
-              <Route path="/customer/orders/:id" element={<CustomerOrderDetails />} />
-              <Route path="/customer/credit-status" element={<BehavioralReliabilityIndex />} />
-              <Route path="/customer/support" element={<CustomerSupport />} />
+              <Route path="/customer/products" element={<AuthGuard role="customer"><CustomerProducts /></AuthGuard>} />
+              <Route path="/customer/cart" element={<AuthGuard role="customer"><CustomerCart /></AuthGuard>} />
+              <Route path="/customer/checkout" element={<AuthGuard role="customer"><CustomerCheckout /></AuthGuard>} />
+              <Route path="/customer/payment" element={<AuthGuard role="customer"><CustomerPayment /></AuthGuard>} />
+              <Route path="/customer/tracking" element={<AuthGuard role="customer"><CustomerTracking /></AuthGuard>} />
+              <Route path="/customer/credit-review" element={<AuthGuard role="customer"><CustomerCreditReview /></AuthGuard>} />
+              <Route path="/customer/apply-credit" element={<AuthGuard role="customer"><CustomerCreditApplication /></AuthGuard>} />
+              <Route path="/customer/lender-registration" element={<AuthGuard role="customer"><CustomerLenderRegistration /></AuthGuard>} />
+              <Route path="/customer/alerts" element={<AuthGuard role="customer"><CustomerAlerts /></AuthGuard>} />
+              <Route path="/customer/profile" element={<AuthGuard role="customer"><CustomerProfile /></AuthGuard>} />
+              <Route path="/customer/orders" element={<AuthGuard role="customer"><CustomerOrders /></AuthGuard>} />
+              <Route path="/customer/orders/:id" element={<AuthGuard role="customer"><CustomerOrderDetails /></AuthGuard>} />
+              <Route path="/customer/credit-status" element={<AuthGuard role="customer"><BehavioralReliabilityIndex /></AuthGuard>} />
+              <Route path="/customer/support" element={<AuthGuard role="customer"><CustomerSupport /></AuthGuard>} />
 
               {/* Driver Portal */}
               <Route path="/driver/login" element={<DriverLogin />} />
               <Route path="/driver/register" element={<DriverRegister />} />
-              <Route path="/driver/orders" element={<DriverOrders />} />
-              <Route path="/driver/out-to-deliver" element={<DriverOutToDeliver />} />
-              <Route path="/driver/delivered" element={<DriverDelivered />} />
-              <Route path="/driver/route/:orderId" element={<DriverRoute />} />
-              <Route path="/driver/issues" element={<DriverIssues />} />
-              <Route path="/driver/wallet" element={<DriverWallet />} />
-              <Route path="/driver/profile" element={<DriverProfile />} />
+              <Route path="/driver/orders" element={<AuthGuard role="driver"><DriverOrders /></AuthGuard>} />
+              <Route path="/driver/out-to-deliver" element={<AuthGuard role="driver"><DriverOutToDeliver /></AuthGuard>} />
+              <Route path="/driver/delivered" element={<AuthGuard role="driver"><DriverDelivered /></AuthGuard>} />
+              <Route path="/driver/route/:orderId" element={<AuthGuard role="driver"><DriverRoute /></AuthGuard>} />
+              <Route path="/driver/issues" element={<AuthGuard role="driver"><DriverIssues /></AuthGuard>} />
+              <Route path="/driver/wallet" element={<AuthGuard role="driver"><DriverWallet /></AuthGuard>} />
+              <Route path="/driver/profile" element={<AuthGuard role="driver"><DriverProfile /></AuthGuard>} />
 
               {/* Admin Portal */}
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/applications" element={<AdminApplications />} />
-              <Route path="/admin/pos-monitor" element={<AdminPOSMonitor />} />
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
-              <Route path="/admin/disputes" element={<AdminDisputes />} />
+              <Route path="/admin/dashboard" element={<AuthGuard role="admin"><AdminDashboard /></AuthGuard>} />
+              <Route path="/admin/applications" element={<AuthGuard role="admin"><AdminApplications /></AuthGuard>} />
+              <Route path="/admin/pos-monitor" element={<AuthGuard role="admin"><AdminPOSMonitor /></AuthGuard>} />
+              <Route path="/admin/users" element={<AuthGuard role="admin"><AdminUsers /></AuthGuard>} />
+              <Route path="/admin/audit-logs" element={<AuthGuard role="admin"><AdminAuditLogs /></AuthGuard>} />
+              <Route path="/admin/disputes" element={<AuthGuard role="admin"><AdminDisputes /></AuthGuard>} />
 
               {/* Lender Portal */}
               <Route path="/lender/login" element={<LenderLogin />} />
               <Route path="/lender/register" element={<LenderRegister />} />
-              <Route path="/lender/dashboard" element={<LenderDashboard />} />
-              <Route path="/lender/clients" element={<LenderClients />} />
-              <Route path="/lender/loans" element={<LenderLoans />} />
-              <Route path="/lender/collections" element={<LenderCollections />} />
-              <Route path="/lender/applications" element={<LenderApplications />} />
-              <Route path="/lender/profile" element={<LenderProfile />} />
-              <Route path="/lender/credit-check" element={<LenderCreditCheck />} />
-              <Route path="/lender/quote" element={<LoanQuote />} />
+              <Route path="/lender/dashboard" element={<AuthGuard role="lender"><LenderDashboard /></AuthGuard>} />
+              <Route path="/lender/clients" element={<AuthGuard role="lender"><LenderClients /></AuthGuard>} />
+              <Route path="/lender/loans" element={<AuthGuard role="lender"><LenderLoans /></AuthGuard>} />
+              <Route path="/lender/collections" element={<AuthGuard role="lender"><LenderCollections /></AuthGuard>} />
+              <Route path="/lender/applications" element={<AuthGuard role="lender"><LenderApplications /></AuthGuard>} />
+              <Route path="/lender/profile" element={<AuthGuard role="lender"><LenderProfile /></AuthGuard>} />
+              <Route path="/lender/credit-check" element={<AuthGuard role="lender"><LenderCreditCheck /></AuthGuard>} />
+              <Route path="/lender/quote" element={<AuthGuard role="lender"><LoanQuote /></AuthGuard>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

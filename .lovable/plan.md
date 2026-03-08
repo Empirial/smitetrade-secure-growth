@@ -1,64 +1,86 @@
 
 
-# MVP Implementation Plan — Route Protection, Stock Deduction, and PayStack Integration
+# SMITETRADE Improvements Plan
 
-## Payment Integration Points Found
-
-After scanning the entire codebase, here are **all areas that involve payments or financial transactions**:
-
-| # | File | What it does | Needs PayStack? |
-|---|---|---|---|
-| 1 | `CustomerPayment.tsx` | Fake `setTimeout` card payment for R220 | **Yes** — primary checkout |
-| 2 | `CustomerCheckout.tsx` | Card/wallet/credit payment selection, calls `simulatePayment` | **Yes** — card path |
-| 3 | `CashierCheckout.tsx` | In-store Cash/Card/SS-ID/Split payment | **Yes** — card path only |
-| 4 | `OwnerPOS.tsx` | Owner's in-store POS checkout | **Yes** — card path |
-| 5 | `CreditContext.tsx` → `simulatePayment()` | Mock payment simulation used by BRI and checkout | **Yes** — replace with real call |
-| 6 | `DriverWallet.tsx` | Driver payout requests (CashSend) | **No** — payout, not collection (future phase) |
-| 7 | `OwnerLending.tsx` → `recordPayment()` | Mark loan as paid | **No** — internal status change |
-| 8 | `LenderCollections.tsx` | Overdue loan management | **No** — collections tracking |
-| 9 | `CustomerCreditApplication.tsx` | Loan application (no money moves) | **No** |
-| 10 | `OwnerExpenses.tsx` | Record expenses (no money moves) | **No** |
-
-**Summary**: 5 areas need PayStack (items 1-5). The rest are internal bookkeeping.
+## Overview
+This plan covers 7 changes plus fixing 5 existing build errors that are blocking the app.
 
 ---
 
-## Plan Overview
+## Part A: Fix Build Errors (Must Do First)
 
-### 1. Route Protection — AuthGuard Component
-- Create `src/components/AuthGuard.tsx` that wraps protected routes
-- Checks Firebase `auth.currentUser` on mount; if not authenticated, redirects to the portal's login page
-- Accept a `role` prop to match against the user's role (stored in Firestore `users` collection or Firebase custom claims)
-- Wrap all portal routes in `App.tsx` with `<AuthGuard role="owner">`, etc.
-- Public routes (landing, login, register, forgot-password) remain unwrapped
+### 1. StoreContext.tsx - Duplicate properties (lines 479-484)
+The mock order object has `id`, `customerName`, and `customerAddress` listed twice. Remove the duplicate lines (482-484).
 
-### 2. Stock Deduction on Checkout
-- In `StoreContext.tsx` → `placeOrder()`, after creating the order, loop through order items and decrement `stock` on matching products
-- Auto-update product `status` field: stock=0 → "Out of Stock", stock≤5 → "Critical", stock≤10 → "Low Stock"
-- Apply to both customer online checkout and cashier/owner POS checkout flows
+### 2. CashierCheckout.tsx - Missing `address` property (line 39)
+The `placeOrder` call is missing the required `address` field. Add `address: "In-Store"` to the object.
 
-### 3. PayStack Integration (Test/Mock Mode)
-- Create a shared `src/lib/paystack.ts` utility that initializes PayStack Popup with the test public key
-- Create a reusable `usePaystack` hook that handles: open popup → on success callback → on close callback
-- **CustomerPayment.tsx**: Replace `setTimeout` mock with PayStack popup for card payments
-- **CustomerCheckout.tsx**: When `paymentMethod === 'card'`, trigger PayStack instead of `simulatePayment`
-- **CashierCheckout.tsx**: When Card is selected, trigger PayStack popup
-- **OwnerPOS.tsx**: When card payment is selected, trigger PayStack popup
-- **CreditContext.tsx**: Replace `simulatePayment` to optionally trigger PayStack for card payments
-- Use PayStack **test keys** so no real money moves — test cards like `4084 0840 8408 4081` will work
+### 3. OwnerLending.tsx - Invalid icon import (line 8)
+`UserByOrder` does not exist in lucide-react. Replace with `UserCheck` or `Users`.
 
-### Files to Change
+---
 
-| File | Change |
-|---|---|
-| `src/components/AuthGuard.tsx` | **New** — auth check + role guard component |
-| `src/App.tsx` | Wrap portal routes with AuthGuard |
-| `src/lib/paystack.ts` | **New** — PayStack utility with test keys |
-| `src/hooks/usePaystack.ts` | **New** — reusable PayStack hook |
-| `src/context/StoreContext.tsx` | Add stock deduction logic in `placeOrder` |
-| `src/pages/customer/CustomerPayment.tsx` | Replace setTimeout with PayStack |
-| `src/pages/customer/CustomerCheckout.tsx` | Use PayStack for card payments |
-| `src/pages/cashier/CashierCheckout.tsx` | Use PayStack for card payments |
-| `src/pages/owner/OwnerPOS.tsx` | Use PayStack for card payments |
-| `src/context/CreditContext.tsx` | Update `simulatePayment` to use PayStack |
+## Part B: Requested Changes
+
+### 1. Background Color Improvements
+Update `src/index.css` to restore the branded SMITETRADE color palette instead of the current grayscale overrides. The custom CSS variables (lines 40-49) currently map emerald, electric-blue, and gold to grays. These will be restored to the actual brand colors:
+- `--emerald`: Deep Emerald (#1B4D3E)
+- `--electric-blue`: Electric Blue (#00BFFF)
+- `--gold`: Radiant Gold (#FFD700)
+
+Also update the dashboard background to use a subtle gradient rather than plain white.
+
+### 2. Supplier Contact Details
+In `src/pages/owner/OwnerSuppliers.tsx`, change the supplier contact numbers to SMITETRADE's intermediary contact details. All suppliers will show a single SMITETRADE contact number/email as the point of contact, reinforcing SMITETRADE's role as the middleman.
+
+### 3. Customer Credit Scoring Alignment
+The Customer portal (`CustomerCreditReview.tsx`) currently uses a 0-850 point scale (showing "750 / EXCELLENT"). The Lending portal uses the BRI percentage system (lower is better, with tiers: Platinum/Gold/Silver/Bronze).
+
+Changes:
+- Update `CustomerCreditReview.tsx` to use the BRI percentage system with the same tier badges (Platinum/Gold/Silver/Bronze) used in `BehavioralReliabilityIndex.tsx`
+- Replace the "750 / 850" display with the BRI score (e.g., "3.2%") and tier badge
+- Use the CreditContext data instead of hardcoded values
+
+### 4. Auto-Generated SS-ID Format
+In `src/context/CreditContext.tsx`, change the `addBorrower` function so the SS-ID is system-generated in the format `SS-ID0001`, `SS-ID0002`, etc., using an auto-incrementing counter rather than the SA ID number. The SA ID number will be stored separately as a private field.
+
+Files affected:
+- `CreditContext.tsx` - Add counter, generate SS-ID in `addBorrower`
+- `OwnerLending.tsx` - Show SS-ID (auto-generated) separate from ID Number input
+- `LenderClients.tsx` - Display SS-ID format instead of raw ID
+
+### 5. ID Number Privacy Masking
+Wherever SA ID numbers are displayed (borrower cards, credit check results), mask the middle digits showing only the first 6 and last 2 characters. For example: `9001015009087` becomes `900101*****87`.
+
+Files affected:
+- `LenderClients.tsx` - Mask ID in borrower cards
+- `LenderCreditCheck.tsx` - Mask ID in search results
+- `OwnerLending.tsx` - Mask ID display
+- Add a utility function `maskIdNumber()` in `src/lib/utils.ts`
+
+### 6. Order Tracking Estimated Time
+In `CustomerTracking.tsx`, replace specific minute estimates ("Est. 10 mins", "Est. 20 mins") with a time window format like "Between 8am - 6pm" for delivery, making it more realistic for the South African spaza context.
+
+### 7. Safe Compliance Disclaimer on Lender Portal
+Add a compliance statement to the Lender Dashboard (`LenderDashboard.tsx`) and Lender Loans page. The disclaimer will be similar to the one already on `BehavioralReliabilityIndex.tsx` (lines 168-173), stating that SMITETRADE provides scoring insights only and does not act as a credit provider.
+
+---
+
+## Technical Summary
+
+| File | Changes |
+|------|---------|
+| `src/context/StoreContext.tsx` | Remove duplicate object properties (lines 482-484) |
+| `src/pages/cashier/CashierCheckout.tsx` | Add missing `address` field |
+| `src/pages/owner/OwnerLending.tsx` | Fix icon import, mask ID display |
+| `src/index.css` | Restore brand colors from grayscale |
+| `src/pages/owner/OwnerSuppliers.tsx` | Update supplier contacts to SMITETRADE intermediary |
+| `src/pages/customer/CustomerCreditReview.tsx` | Switch to BRI percentage system with tiers |
+| `src/context/CreditContext.tsx` | Auto-generate SS-ID format (SS-ID0001) |
+| `src/pages/lender/LenderClients.tsx` | Display SS-ID format, mask ID numbers |
+| `src/pages/lender/LenderCreditCheck.tsx` | Mask ID numbers in results |
+| `src/pages/customer/CustomerTracking.tsx` | Use "Between 8am - 6pm" time windows |
+| `src/pages/lender/LenderDashboard.tsx` | Add compliance disclaimer |
+| `src/pages/lender/LenderLoans.tsx` | Add compliance disclaimer |
+| `src/lib/utils.ts` | Add `maskIdNumber()` helper function |
 

@@ -10,7 +10,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Plus, Filter, X, Heart } from "lucide-react";
+import { Search, ShoppingCart, Plus, Filter, X, Store } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -21,40 +21,41 @@ const categories = ["All", "Staples", "Pantry", "Beverages", "Dairy", "Bakery", 
 const popularSearches = ["Bread", "Milk", "Maize Meal", "Sugar", "Cooking Oil", "Airtime"];
 
 const CustomerProducts = () => {
-    // Access Global State
-    const { products, addToCart, cart, isLoading } = useStore();
+    const { allProducts, addToCart, cart, isLoading, stores } = useStore();
 
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState("All");
     const [sortOrder, setSortOrder] = useState("default");
+    const [selectedStore, setSelectedStore] = useState("all");
 
-    // Derived State: Cart Count
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-    // Filter Logic
-    const filteredProducts = products.filter(product => {
+    const filteredProducts = allProducts.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
         const matchesCategory = activeCategory === "All" || product.category === activeCategory;
-        const inStock = product.status !== "Out of Stock"; // Only show active items
-        return matchesSearch && matchesCategory && inStock;
+        const matchesStore = selectedStore === "all" || product.storeId === selectedStore;
+        const inStock = product.status !== "Out of Stock";
+        return matchesSearch && matchesCategory && matchesStore && inStock;
     });
 
-    // Sort Logic
     const sortedProducts = [...filteredProducts].sort((a, b) => {
         if (sortOrder === "price-asc") return a.price - b.price;
         if (sortOrder === "price-desc") return b.price - a.price;
         if (sortOrder === "name-asc") return a.name.localeCompare(b.name);
-        return 0; // default
+        return 0;
     });
+
+    // Get unique store names from products
+    const availableStores = stores.filter(s => s.status === 'Active');
 
     return (
         <DashboardLayout role="customer">
             <div className="flex flex-col gap-6">
-                {/* Header Section */}
+                {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Shop</h1>
-                        <p className="text-muted-foreground">Order essentials from your local Spaza</p>
+                        <p className="text-muted-foreground">Browse products from local Spaza shops near you</p>
                     </div>
                     <div className="flex gap-2 w-full md:w-auto">
                         <Link to="/customer/cart">
@@ -71,7 +72,7 @@ const CustomerProducts = () => {
                     </div>
                 </div>
 
-                {/* Controls Section */}
+                {/* Controls */}
                 <div className="flex flex-col gap-4 bg-muted/30 p-4 rounded-xl border">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="relative flex-1">
@@ -90,6 +91,21 @@ const CustomerProducts = () => {
                                     <X className="h-4 w-4" />
                                 </button>
                             )}
+                        </div>
+                        <div className="w-full md:w-48">
+                            <Select value={selectedStore} onValueChange={setSelectedStore}>
+                                <SelectTrigger className="bg-background">
+                                    <SelectValue placeholder="All Stores" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Stores</SelectItem>
+                                    {availableStores.map(store => (
+                                        <SelectItem key={store.id} value={store.id}>
+                                            {store.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="w-full md:w-48">
                             <Select value={sortOrder} onValueChange={setSortOrder}>
@@ -113,7 +129,7 @@ const CustomerProducts = () => {
                             <button
                                 key={term}
                                 onClick={() => setSearch(term)}
-                                className="text-xs bg-muted hover:bg-emerald-100 hover:text-emerald-700 px-2.5 py-1 rounded-full border transition-colors"
+                                className="text-xs bg-muted hover:bg-emerald-500/20 hover:text-emerald-400 px-2.5 py-1 rounded-full border transition-colors"
                             >
                                 {term}
                             </button>
@@ -167,7 +183,7 @@ const CustomerProducts = () => {
                             <p className="text-sm">Try adjusting your filters or search terms</p>
                             <Button
                                 variant="link"
-                                onClick={() => { setSearch(""); setActiveCategory("All"); }}
+                                onClick={() => { setSearch(""); setActiveCategory("All"); setSelectedStore("all"); }}
                                 className="mt-2"
                             >
                                 Clear all filters
@@ -196,6 +212,13 @@ const CustomerProducts = () => {
                                         <CardTitle className="text-base font-medium line-clamp-1" title={product.name}>
                                             {product.name}
                                         </CardTitle>
+                                        {/* Store name badge */}
+                                        {product.storeName && (
+                                            <div className="flex items-center gap-1 mt-1">
+                                                <Store className="h-3 w-3 text-muted-foreground" />
+                                                <span className="text-[11px] text-muted-foreground truncate">{product.storeName}</span>
+                                            </div>
+                                        )}
                                     </CardHeader>
                                     <CardContent className="p-4 pt-2 flex-1">
                                         <p className="font-bold text-lg text-primary">R {product.price.toFixed(2)}</p>
@@ -215,7 +238,7 @@ const CustomerProducts = () => {
                     )}
                 </div>
             </div>
-        </DashboardLayout >
+        </DashboardLayout>
     );
 };
 

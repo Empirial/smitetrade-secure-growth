@@ -95,6 +95,8 @@ const AdminSupport = () => {
         toast.success("Reply sent");
     };
 
+    const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+
     const openCount = tickets.filter(t => t.status === "open").length;
     const inProgressCount = tickets.filter(t => t.status === "in-progress").length;
     const resolvedCount = tickets.filter(t => t.status === "resolved").length;
@@ -141,17 +143,19 @@ const AdminSupport = () => {
                                 <TableRow>
                                     <TableHead>ID</TableHead>
                                     <TableHead>User</TableHead>
-                                    <TableHead>Role</TableHead>
-                                    <TableHead>Type</TableHead>
                                     <TableHead>Subject</TableHead>
-                                    <TableHead>Date</TableHead>
+                                    <TableHead className="hidden md:table-cell">Role</TableHead>
+                                    <TableHead className="hidden lg:table-cell">Type</TableHead>
                                     <TableHead className="text-center">Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {tickets.map(ticket => (
-                                    <TableRow key={ticket.id}>
+                                    <TableRow
+                                        key={ticket.id}
+                                        className="cursor-pointer hover:bg-muted/50"
+                                        onClick={() => setSelectedTicket(ticket)}
+                                    >
                                         <TableCell className="font-mono text-xs">{ticket.id}</TableCell>
                                         <TableCell>
                                             <div>{ticket.customer}</div>
@@ -161,14 +165,13 @@ const AdminSupport = () => {
                                                 </span>
                                             )}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="max-w-[200px] truncate">{ticket.subject}</TableCell>
+                                        <TableCell className="hidden md:table-cell">
                                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${roleColors[ticket.role]}`}>
                                                 {ticket.role}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-xs text-muted-foreground">{typeLabels[ticket.type]}</TableCell>
-                                        <TableCell className="max-w-[200px] truncate">{ticket.subject}</TableCell>
-                                        <TableCell className="text-muted-foreground text-xs">{ticket.date}</TableCell>
+                                        <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">{typeLabels[ticket.type]}</TableCell>
                                         <TableCell className="text-center">
                                             <Badge variant={
                                                 ticket.status === "open" ? "secondary" :
@@ -177,89 +180,6 @@ const AdminSupport = () => {
                                                 {ticket.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right space-x-1">
-                                            <Dialog onOpenChange={(open) => { if (!open) setReplyText(""); }}>
-                                                <DialogTrigger asChild>
-                                                    <Button size="sm" variant="ghost">
-                                                        <MessageSquare className="h-4 w-4" />
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
-                                                    <DialogHeader>
-                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                            <DialogTitle>{ticket.subject}</DialogTitle>
-                                                            <Badge variant="outline" className="text-xs font-mono">{ticket.id}</Badge>
-                                                        </div>
-                                                        <DialogDescription className="flex items-center gap-2 flex-wrap pt-1">
-                                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${roleColors[ticket.role]}`}>
-                                                                {ticket.role}
-                                                            </span>
-                                                            <span className="text-xs">•</span>
-                                                            <span className="text-xs">{typeLabels[ticket.type]}</span>
-                                                            {ticket.storeName && (
-                                                                <>
-                                                                    <span className="text-xs">•</span>
-                                                                    <span className="text-xs flex items-center gap-1"><Store className="h-3 w-3" />{ticket.storeName}</span>
-                                                                </>
-                                                            )}
-                                                            <span className="text-xs">•</span>
-                                                            <Badge variant={
-                                                                ticket.status === "open" ? "secondary" :
-                                                                ticket.status === "in-progress" ? "default" : "outline"
-                                                            } className="text-xs">
-                                                                {ticket.status}
-                                                            </Badge>
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-
-                                                    <ScrollArea className="flex-1 max-h-[400px] pr-4">
-                                                        <div className="space-y-3">
-                                                            <div className="p-3 rounded-lg bg-muted">
-                                                                <div className="flex items-center gap-2 mb-1">
-                                                                    <User className="h-3.5 w-3.5" />
-                                                                    <p className="text-sm font-medium">{ticket.customer}</p>
-                                                                </div>
-                                                                <p className="text-sm text-muted-foreground">{ticket.message}</p>
-                                                                <p className="text-xs text-muted-foreground mt-2">{ticket.date}</p>
-                                                            </div>
-                                                            {ticket.replies.map((reply, i) => (
-                                                                <div key={i} className={`p-3 rounded-lg ${reply.from === 'Admin' ? 'bg-primary/10 ml-4' : 'bg-muted mr-4'}`}>
-                                                                    <div className="flex items-center gap-2 mb-1">
-                                                                        <User className="h-3.5 w-3.5" />
-                                                                        <p className="text-sm font-medium">{reply.from}</p>
-                                                                    </div>
-                                                                    <p className="text-sm text-muted-foreground">{reply.message}</p>
-                                                                    <p className="text-xs text-muted-foreground mt-2">{reply.date}</p>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </ScrollArea>
-
-                                                    <div className="space-y-2 pt-2 border-t">
-                                                        <Textarea
-                                                            placeholder="Type your reply..."
-                                                            value={replyText}
-                                                            onChange={(e) => setReplyText(e.target.value)}
-                                                        />
-                                                        <div className="flex gap-2">
-                                                            <Button size="sm" onClick={() => sendReply(ticket.id)} disabled={!replyText.trim()}>
-                                                                Send Reply
-                                                            </Button>
-                                                            {ticket.status !== "resolved" && (
-                                                                <Button size="sm" variant="outline" onClick={() => updateStatus(ticket.id, "resolved")}>
-                                                                    Mark Resolved
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                            {ticket.status === "open" && (
-                                                <Button size="sm" variant="ghost" onClick={() => updateStatus(ticket.id, "in-progress")}>
-                                                    <Clock className="h-4 w-4" />
-                                                </Button>
-                                            )}
-                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -267,6 +187,88 @@ const AdminSupport = () => {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Ticket Detail Dialog */}
+            <Dialog open={!!selectedTicket} onOpenChange={(open) => { if (!open) { setSelectedTicket(null); setReplyText(""); } }}>
+                <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
+                    {selectedTicket && (
+                        <>
+                            <DialogHeader>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <DialogTitle>{selectedTicket.subject}</DialogTitle>
+                                    <Badge variant="outline" className="text-xs font-mono">{selectedTicket.id}</Badge>
+                                </div>
+                                <DialogDescription className="flex items-center gap-2 flex-wrap pt-1">
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${roleColors[selectedTicket.role]}`}>
+                                        {selectedTicket.role}
+                                    </span>
+                                    <span className="text-xs">•</span>
+                                    <span className="text-xs">{typeLabels[selectedTicket.type]}</span>
+                                    {selectedTicket.storeName && (
+                                        <>
+                                            <span className="text-xs">•</span>
+                                            <span className="text-xs flex items-center gap-1"><Store className="h-3 w-3" />{selectedTicket.storeName}</span>
+                                        </>
+                                    )}
+                                    <span className="text-xs">•</span>
+                                    <Badge variant={
+                                        selectedTicket.status === "open" ? "secondary" :
+                                        selectedTicket.status === "in-progress" ? "default" : "outline"
+                                    } className="text-xs">
+                                        {selectedTicket.status}
+                                    </Badge>
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <ScrollArea className="flex-1 max-h-[400px] pr-4">
+                                <div className="space-y-3">
+                                    <div className="p-3 rounded-lg bg-muted">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <User className="h-3.5 w-3.5" />
+                                            <p className="text-sm font-medium">{selectedTicket.customer}</p>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">{selectedTicket.message}</p>
+                                        <p className="text-xs text-muted-foreground mt-2">{selectedTicket.date}</p>
+                                    </div>
+                                    {selectedTicket.replies.map((reply, i) => (
+                                        <div key={i} className={`p-3 rounded-lg ${reply.from === 'Admin' ? 'bg-primary/10 ml-4' : 'bg-muted mr-4'}`}>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <User className="h-3.5 w-3.5" />
+                                                <p className="text-sm font-medium">{reply.from}</p>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">{reply.message}</p>
+                                            <p className="text-xs text-muted-foreground mt-2">{reply.date}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+
+                            <div className="space-y-2 pt-2 border-t">
+                                <Textarea
+                                    placeholder="Type your reply..."
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                />
+                                <div className="flex gap-2">
+                                    <Button size="sm" onClick={() => sendReply(selectedTicket.id)} disabled={!replyText.trim()}>
+                                        Send Reply
+                                    </Button>
+                                    {selectedTicket.status === "open" && (
+                                        <Button size="sm" variant="outline" onClick={() => { updateStatus(selectedTicket.id, "in-progress"); setSelectedTicket(prev => prev ? { ...prev, status: "in-progress" } : null); }}>
+                                            In Progress
+                                        </Button>
+                                    )}
+                                    {selectedTicket.status !== "resolved" && (
+                                        <Button size="sm" variant="outline" onClick={() => { updateStatus(selectedTicket.id, "resolved"); setSelectedTicket(prev => prev ? { ...prev, status: "resolved" } : null); }}>
+                                            Mark Resolved
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
         </DashboardLayout>
     );
 };

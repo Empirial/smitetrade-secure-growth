@@ -29,11 +29,7 @@ const OwnerExpenses = () => {
 
     const handleAddExpense = async () => {
         if (!amount || !description) {
-            toast({
-                title: "Error",
-                description: "Please fill in all required fields.",
-                variant: "destructive"
-            });
+            toast.error("Please fill in all required fields.");
             return;
         }
 

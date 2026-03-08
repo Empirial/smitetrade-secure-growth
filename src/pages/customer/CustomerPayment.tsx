@@ -1,24 +1,39 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { CheckCircle2, CreditCard, Banknote } from "lucide-react";
+import { usePaystack } from "@/hooks/usePaystack";
+import { useStore } from "@/context/StoreContext";
 
 const CustomerPayment = () => {
     const navigate = useNavigate();
-    const [processing, setProcessing] = useState(false);
+    const { user } = useStore();
     const [success, setSuccess] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState("card");
+    const orderTotal = 220.00;
+
+    const { pay, processing } = usePaystack({
+        amount: orderTotal,
+        email: user?.email || 'customer@smitetrade.co.za',
+        onSuccess: () => {
+            setSuccess(true);
+        },
+        onClose: () => {
+            // User cancelled — do nothing
+        },
+    });
 
     const handlePayment = () => {
-        setProcessing(true);
-        setTimeout(() => {
-            setProcessing(false);
+        if (paymentMethod === "card") {
+            pay();
+        } else {
+            // Cash on delivery — no payment processing needed
             setSuccess(true);
-        }, 2000);
+        }
     };
 
     if (success) {
@@ -55,45 +70,36 @@ const CustomerPayment = () => {
                         <CardTitle>Select Payment Option</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <RadioGroup defaultValue="card">
-                            <div className="flex items-center justify-between space-x-2 border p-4 rounded-md peer-data-[state=checked]:border-primary">
+                        <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                            <div className={`flex items-center justify-between space-x-2 border p-4 rounded-md ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : ''}`}>
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="card" id="card" />
-                                    <Label htmlFor="card" className="flex items-center gap-2 font-medium">
+                                    <Label htmlFor="card" className="flex items-center gap-2 font-medium cursor-pointer">
                                         <CreditCard className="h-4 w-4" /> Credit / Debit Card
                                     </Label>
                                 </div>
+                                <span className="text-xs text-muted-foreground">via PayStack</span>
                             </div>
-                            <div className="flex items-center justify-between space-x-2 border p-4 rounded-md">
+                            <div className={`flex items-center justify-between space-x-2 border p-4 rounded-md ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : ''}`}>
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="cod" id="cod" />
-                                    <Label htmlFor="cod" className="flex items-center gap-2 font-medium">
+                                    <Label htmlFor="cod" className="flex items-center gap-2 font-medium cursor-pointer">
                                         <Banknote className="h-4 w-4" /> Cash on Delivery
                                     </Label>
                                 </div>
                             </div>
                         </RadioGroup>
 
-                        <div className="grid gap-4 pt-4 border-t">
-                            <div className="grid gap-2">
-                                <Label>Card Number</Label>
-                                <Input placeholder="0000 0000 0000 0000" />
+                        {paymentMethod === "card" && (
+                            <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                                <p>You'll be redirected to PayStack's secure payment page to complete your card payment.</p>
+                                <p className="mt-1 text-xs">Test card: <code className="bg-muted px-1 rounded">4084 0840 8408 4081</code> (any expiry/CVV)</p>
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="grid gap-2 col-span-2">
-                                    <Label>Expiry Date</Label>
-                                    <Input placeholder="MM/YY" />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>CVC</Label>
-                                    <Input placeholder="123" />
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </CardContent>
                     <CardFooter>
                         <Button className="w-full h-12 text-lg" onClick={handlePayment} disabled={processing}>
-                            {processing ? "Processing..." : "Pay R 220.00"}
+                            {processing ? "Processing..." : `Pay R ${orderTotal.toFixed(2)}`}
                         </Button>
                     </CardFooter>
                 </Card>

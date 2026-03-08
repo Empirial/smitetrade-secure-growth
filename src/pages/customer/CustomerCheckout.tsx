@@ -170,14 +170,17 @@ const CustomerCheckout = () => {
                                             />
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label>Select Store</Label>
+                                            <Label>Fulfilling Store</Label>
                                             <Select value={selectedStore} onValueChange={setSelectedStore}>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a store" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="store_001">Soweto Central (Nearest - 2km)</SelectItem>
-                                                    <SelectItem value="store_002">Diepkloof Branch (5km)</SelectItem>
+                                                    {activeStores.map(store => (
+                                                        <SelectItem key={store.id} value={store.id}>
+                                                            {store.name} — {store.suburb || store.city || 'Local'}
+                                                        </SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>

@@ -10,9 +10,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Plus, Filter, X, Store } from "lucide-react";
+import { Search, Plus, Filter, X, Store } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "react-router-dom";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useStore } from "@/context/StoreContext";
@@ -21,14 +20,12 @@ const categories = ["All", "Staples", "Pantry", "Beverages", "Dairy", "Bakery", 
 const popularSearches = ["Bread", "Milk", "Maize Meal", "Sugar", "Cooking Oil", "Airtime"];
 
 const CustomerProducts = () => {
-    const { allProducts, addToCart, cart, isLoading, stores } = useStore();
+    const { allProducts, addToCart, isLoading, stores } = useStore();
 
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState("All");
     const [sortOrder, setSortOrder] = useState("default");
     const [selectedStore, setSelectedStore] = useState("all");
-
-    const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
     const filteredProducts = allProducts.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
@@ -56,19 +53,6 @@ const CustomerProducts = () => {
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Shop</h1>
                         <p className="text-muted-foreground">Browse products from local Spaza shops near you</p>
-                    </div>
-                    <div className="flex gap-2 w-full md:w-auto">
-                        <Link to="/customer/cart">
-                            <Button variant="default" className="relative">
-                                <ShoppingCart className="h-4 w-4 mr-2" />
-                                Cart
-                                {cartCount > 0 && (
-                                    <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center border-2 border-background">
-                                        {cartCount}
-                                    </span>
-                                )}
-                            </Button>
-                        </Link>
                     </div>
                 </div>
 

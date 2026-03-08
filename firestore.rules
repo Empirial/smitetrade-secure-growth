@@ -190,12 +190,24 @@ service cloud.firestore {
 
     // --- Support Tickets Collection ---
     match /support_tickets/{ticketId} {
-      // Users can read their own tickets; admin can read all
       allow read: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
-      // Any signed-in user can create a ticket
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      // Admin can update tickets (status, replies)
       allow update: if isAdmin();
+    }
+
+    // --- Notifications Collection ---
+    match /notifications/{notificationId} {
+      // All signed-in users can read notifications targeted to their role or "all"
+      allow read: if isSignedIn();
+      // Admin can create/update/delete notifications
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --- User Notification State (read/dismissed tracking) ---
+    match /user_notifications/{docId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
   }
 }

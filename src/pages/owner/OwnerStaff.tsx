@@ -124,7 +124,7 @@ const OwnerStaff = () => {
 
     const getShiftVarianceColor = (variance: number) => {
         if (variance < 0) return "text-red-500 font-medium";
-        if (variance > 0) return "text-green-500 font-medium";
+        if (variance > 0) return "text-green-400 font-medium";
         return "text-muted-foreground";
     };
 

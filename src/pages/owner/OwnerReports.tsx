@@ -150,8 +150,8 @@ const OwnerReports = () => {
                                             <TableCell>{trx.items.length}</TableCell>
                                             <TableCell>
                                                 <span className={cn("inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
-                                                    trx.status === 'Paid' || trx.status === 'Delivered' ? "bg-green-100 text-green-800" :
-                                                        trx.status === 'Pending' ? "bg-yellow-100 text-yellow-800" : "bg-slate-100 text-slate-800"
+                                                    trx.status === 'Paid' || trx.status === 'Delivered' ? "bg-green-500/10 text-green-400" :
+                                                        trx.status === 'Pending' ? "bg-yellow-500/10 text-yellow-400" : "bg-muted text-muted-foreground"
                                                 )}>
                                                     {trx.status}
                                                 </span>

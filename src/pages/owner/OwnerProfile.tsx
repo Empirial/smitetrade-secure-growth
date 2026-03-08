@@ -197,40 +197,40 @@ const OwnerProfile = () => {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3 mb-6">
-                <Card className="bg-emerald-50 border-emerald-100">
+                <Card className="bg-emerald-500/10 border-emerald-500/20">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-emerald-800 flex justify-between">
+                        <CardTitle className="text-sm font-medium text-emerald-400 flex justify-between">
                             Contact Details
-                            <Phone className="h-4 w-4 text-emerald-600" />
+                            <Phone className="h-4 w-4 text-emerald-400" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-sm font-semibold text-emerald-700">{email || "No Email"}</div>
-                        <p className="text-xs text-emerald-600 mt-1">{phone || "No Phone Number"}</p>
+                        <div className="text-sm font-semibold text-emerald-300">{email || "No Email"}</div>
+                        <p className="text-xs text-emerald-400 mt-1">{phone || "No Phone Number"}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-blue-50 border-blue-100">
+                <Card className="bg-sky-500/10 border-sky-500/20">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-blue-800 flex justify-between">
+                        <CardTitle className="text-sm font-medium text-sky-400 flex justify-between">
                             Store Ownership
-                            <Building2 className="h-4 w-4 text-blue-600" />
+                            <Building2 className="h-4 w-4 text-sky-400" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-sm font-semibold text-blue-700">{stores.length} Location(s)</div>
-                        <p className="text-xs text-blue-600 mt-1">Primary: {stores[0]?.name || "None"}</p>
+                        <div className="text-sm font-semibold text-sky-300">{stores.length} Location(s)</div>
+                        <p className="text-xs text-sky-400 mt-1">Primary: {stores[0]?.name || "None"}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-amber-50 border-amber-100">
+                <Card className="bg-amber-500/10 border-amber-500/20">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-amber-800 flex justify-between">
+                        <CardTitle className="text-sm font-medium text-amber-400 flex justify-between">
                             Account Status
-                            <KeyRound className="h-4 w-4 text-amber-600" />
+                            <KeyRound className="h-4 w-4 text-amber-400" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-sm font-semibold text-amber-700">Verified Owner</div>
-                        <p className="text-xs text-amber-600 mt-1">Full access granted</p>
+                        <div className="text-sm font-semibold text-amber-300">Verified Owner</div>
+                        <p className="text-xs text-amber-400 mt-1">Full access granted</p>
                     </CardContent>
                 </Card>
             </div>

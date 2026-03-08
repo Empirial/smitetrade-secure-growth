@@ -7,8 +7,8 @@ import { Search, User, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { useStore } from "@/context/StoreContext";
+import { toast } from "sonner";
 
 const OwnerCustomers = () => {
     const { customers, addCustomer, settleCustomerTab } = useStore();

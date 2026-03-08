@@ -7,30 +7,74 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, Package, ScanLine } from "lucide-react";
-import { useState } from "react";
+import { Search, Plus, Edit, Trash2, Package, ScanLine, Camera, RotateCcw } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useStore } from "@/context/StoreContext";
+import { useToast } from "@/hooks/use-toast";
+import Webcam from "react-webcam";
+import { BrowserMultiFormatReader } from "@zxing/library";
 
 const OwnerInventory = () => {
-    // Access Global State
     const { products, addProduct, deleteProduct, updateProduct } = useStore();
+    const { toast } = useToast();
 
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCategory, setFilterCategory] = useState("All");
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
-
-    // Form state handling
     const [formData, setFormData] = useState({ name: "", category: "", price: "", stock: "", barcode: "" });
-    const [isScanning, setIsScanning] = useState(false);
 
-    const handleScan = () => {
-        setIsScanning(true);
-        // Mock Scan
-        setTimeout(() => {
-            setFormData(prev => ({ ...prev, barcode: "6001234567890" })); // Mock Barcode
-            setIsScanning(false);
-        }, 1000);
+    // Scanner state
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const webcamRef = useRef<Webcam>(null);
+    const codeReader = useRef(new BrowserMultiFormatReader());
+    const lastScannedTime = useRef<number>(0);
+    const [cameraError, setCameraError] = useState<string | null>(null);
+    const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+
+    const handleBarcodeDetected = useCallback((barcode: string) => {
+        setFormData(prev => ({ ...prev, barcode }));
+        setIsScannerOpen(false);
+        toast({ title: "Barcode Scanned", description: `Detected: ${barcode}` });
+    }, [toast]);
+
+    const scanForBarcode = useCallback(() => {
+        if (!isScannerOpen) return;
+        if (webcamRef.current && webcamRef.current.video) {
+            const video = webcamRef.current.video;
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                codeReader.current.decodeFromVideoElement(video).then(result => {
+                    if (result) {
+                        const text = result.getText();
+                        const now = Date.now();
+                        if (now - lastScannedTime.current > 3000) {
+                            lastScannedTime.current = now;
+                            handleBarcodeDetected(text);
+                        }
+                    }
+                }).catch(() => {
+                    // Ignore NotFoundException
+                });
+            }
+        }
+    }, [handleBarcodeDetected, isScannerOpen]);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isScannerOpen) {
+            interval = setInterval(scanForBarcode, 500);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [scanForBarcode, isScannerOpen]);
+
+    const toggleCamera = () => {
+        setFacingMode(prev => (prev === "user" ? "environment" : "user"));
+    };
+
+    const handleCameraError = () => {
+        setCameraError("Unable to access camera. Please check permissions.");
     };
 
     const uniqueCategories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
@@ -168,6 +212,27 @@ const OwnerInventory = () => {
                                             onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                                         />
                                     </div>
+                                    {/* Barcode field with scan button */}
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="barcode" className="text-right">Barcode</Label>
+                                        <div className="col-span-3 flex gap-2">
+                                            <Input
+                                                id="barcode"
+                                                className="flex-1"
+                                                placeholder="Scan or enter barcode"
+                                                value={formData.barcode}
+                                                onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={() => setIsScannerOpen(true)}
+                                            >
+                                                <ScanLine className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <DialogFooter>
                                     <Button onClick={handleAddProduct}>Save Product</Button>
@@ -176,6 +241,52 @@ const OwnerInventory = () => {
                         </Dialog>
                     </div>
                 </div>
+
+                {/* Barcode Scanner Dialog */}
+                <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Scan Barcode</DialogTitle>
+                            <DialogDescription>Point the camera at a barcode to auto-detect it.</DialogDescription>
+                        </DialogHeader>
+                        <div className="aspect-video bg-black rounded-lg relative overflow-hidden flex items-center justify-center">
+                            {cameraError ? (
+                                <div className="flex flex-col items-center p-4 text-center">
+                                    <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                                    <p className="text-white text-sm">{cameraError}</p>
+                                    <Button variant="outline" size="sm" className="mt-2" onClick={() => setCameraError(null)}>Retry</Button>
+                                </div>
+                            ) : (
+                                <>
+                                    <Webcam
+                                        ref={webcamRef}
+                                        audio={false}
+                                        screenshotFormat="image/jpeg"
+                                        videoConstraints={{ width: 640, height: 480, facingMode }}
+                                        onUserMediaError={handleCameraError}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 border-2 border-primary/50 rounded-lg z-10 animate-pulse m-8 pointer-events-none"></div>
+                                    <div className="absolute bottom-2 left-2 text-white text-xs bg-black/60 px-2 py-1 rounded backdrop-blur-sm">Scanning...</div>
+                                    <Button
+                                        variant="secondary"
+                                        size="icon"
+                                        onClick={toggleCamera}
+                                        className="absolute bottom-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
+                                    >
+                                        <RotateCcw className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                        <p className="text-center text-xs text-muted-foreground">
+                            Align barcode within frame to auto-detect. Supports EAN-13, UPC, Code 128, QR codes.
+                        </p>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsScannerOpen(false)}>Cancel</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 <Card>
                     <CardHeader>

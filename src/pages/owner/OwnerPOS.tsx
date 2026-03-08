@@ -334,26 +334,72 @@ const OwnerPOS = () => {
                                 <span className="text-emerald-500">R {total.toFixed(2)}</span>
                             </div>
 
-                            <Button
-                                className="w-full bg-emerald-700/90 hover:bg-emerald-600 text-white"
-                                disabled={cart.length === 0 || isCheckingOut}
-                                onClick={async () => {
-                                    setIsCheckingOut(true);
-                                    try {
-                                        await placeOrder({
-                                            name: "In-Store Walk-in",
-                                            address: "In-Store",
-                                            items: cart as any[],
-                                            paymentMethod: "Cash"
+                            <div className="flex gap-2">
+                                <Button
+                                    className="flex-1 bg-emerald-700/90 hover:bg-emerald-600 text-white"
+                                    disabled={cart.length === 0 || isCheckingOut}
+                                    onClick={async () => {
+                                        setIsCheckingOut(true);
+                                        try {
+                                            await placeOrder({
+                                                name: "In-Store Walk-in",
+                                                address: "In-Store",
+                                                items: cart as any[],
+                                                paymentMethod: "Cash"
+                                            });
+                                            setCart([]);
+                                        } finally {
+                                            setIsCheckingOut(false);
+                                        }
+                                    }}
+                                >
+                                    <Banknote className="h-4 w-4 mr-1" />
+                                    {isCheckingOut ? "Processing..." : "Cash"}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 border-blue-500 text-blue-400 hover:bg-blue-500/10"
+                                    disabled={cart.length === 0 || isCheckingOut}
+                                    onClick={() => {
+                                        // PayStack card payment handled inline
+                                        const PaystackPop = (window as any).PaystackPop;
+                                        if (!PaystackPop) {
+                                            toast({ title: "Payment Error", description: "Card payment service unavailable. Loading...", variant: "destructive" });
+                                            // Load script
+                                            const s = document.createElement('script');
+                                            s.src = 'https://js.paystack.co/v1/inline.js';
+                                            s.async = true;
+                                            document.head.appendChild(s);
+                                            return;
+                                        }
+                                        setIsCheckingOut(true);
+                                        const handler = PaystackPop.setup({
+                                            key: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                                            email: 'pos@smitetrade.co.za',
+                                            amount: Math.round(total * 100),
+                                            currency: 'ZAR',
+                                            ref: `SMITE-POS-${Date.now()}`,
+                                            callback: async () => {
+                                                await placeOrder({
+                                                    name: "In-Store Walk-in",
+                                                    address: "In-Store",
+                                                    items: cart as any[],
+                                                    paymentMethod: "Card"
+                                                });
+                                                setCart([]);
+                                                setIsCheckingOut(false);
+                                            },
+                                            onClose: () => {
+                                                setIsCheckingOut(false);
+                                            }
                                         });
-                                        setCart([]);
-                                    } finally {
-                                        setIsCheckingOut(false);
-                                    }
-                                }}
-                            >
-                                {isCheckingOut ? "Processing..." : "Checkout →"}
-                            </Button>
+                                        handler.openIframe();
+                                    }}
+                                >
+                                    <CreditCard className="h-4 w-4 mr-1" />
+                                    Card
+                                </Button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

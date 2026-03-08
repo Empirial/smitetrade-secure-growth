@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { LifeBuoy, Building2 } from "lucide-react";
+import { auth, db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 interface SupportFormProps {
   role: "owner" | "cashier" | "customer" | "driver" | "lender";
@@ -21,21 +23,48 @@ const SupportForm = ({ role, target, storeName }: SupportFormProps) => {
   const [description, setDescription] = useState("");
   const [reference, setReference] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!issueType) {
       toast.error("Please select an issue type.");
       return;
     }
+
+    const user = auth.currentUser;
+    if (!user) {
+      toast.error("You must be logged in to submit a ticket.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await addDoc(collection(db, "support_tickets"), {
+        userId: user.uid,
+        userName: user.displayName || user.email || "Unknown",
+        userEmail: user.email || "",
+        role,
+        target,
+        storeName: storeName || null,
+        subject,
+        type: issueType,
+        description,
+        reference: reference || null,
+        status: "open",
+        replies: [],
+        createdAt: serverTimestamp(),
+      });
+
       setSubject("");
       setIssueType("");
       setDescription("");
       setReference("");
       toast.success("Support ticket submitted successfully. We'll get back to you shortly.");
-    }, 1500);
+    } catch (error) {
+      console.error("Error submitting ticket:", error);
+      toast.error("Failed to submit ticket. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isEmployerTarget = target === "owner";

@@ -113,12 +113,12 @@ const SystemNotifications = ({ notifications, isRead, onMarkAsRead, onDismiss, o
                             )}
                             <div className="flex gap-2 ml-auto">
                                 {!read && (
-                                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => onMarkAsRead(notif.id)}>
+                                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => handleMarkAsRead(notif.id, notif.title)}>
                                         Mark Read
                                     </Button>
                                 )}
                                 {!read && (
-                                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => onDismiss(notif.id)}>
+                                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => handleDismiss(notif.id, notif.title)}>
                                         Dismiss
                                     </Button>
                                 )}

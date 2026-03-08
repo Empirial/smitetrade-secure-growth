@@ -67,7 +67,6 @@ const getLinks = (role: string) => {
         { href: "/customer/products", label: "Shop", icon: ShoppingCart },
         { href: "/customer/orders", label: "My Orders", icon: Box },
         { href: "/customer/tracking", label: "Tracking", icon: Truck },
-        { href: "/customer/cart", label: "My Cart", icon: ShoppingCart },
         { href: "/customer/apply-credit", label: "Get a Loan", icon: Banknote },
         { href: "/customer/credit-review", label: "Credit Score", icon: ShieldCheck },
         { href: "/customer/alerts", label: "Alerts", icon: Bell },

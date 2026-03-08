@@ -37,12 +37,12 @@
 
     --radius: 0.5rem;
 
-    /* Custom Palette overrides */
-    --emerald: 142.1 76.2% 36.3%;
-    --emerald-deep: 142.1 70.6% 45.3%;
-    --electric-blue: 221.2 83.2% 53.3%;
-    --gold: 47.9 95.8% 53.1%;
-    --gold-glow: 48 96% 89%;
+    /* SMITETRADE Brand Palette */
+    --emerald: 162 48% 20%;         /* Deep Emerald #1B4D3E */
+    --emerald-deep: 162 48% 28%;    /* Lighter variant for hover */
+    --electric-blue: 195 100% 50%;  /* Electric Blue #00BFFF */
+    --gold: 51 100% 50%;            /* Radiant Gold #FFD700 */
+    --gold-glow: 51 100% 85%;       /* Soft gold for glows */
 
     /* Sidebar overrides for dark theme */
     --sidebar-background: 222.2 84% 4.9%;

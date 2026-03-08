@@ -79,6 +79,7 @@ const getLinks = (role: string) => {
         { href: "/driver/out-to-deliver", label: "Active Deliveries", icon: Truck },
         { href: "/driver/wallet", label: "Wallet & Earnings", icon: Wallet },
         { href: "/driver/issues", label: "Report Issue", icon: ShieldCheck },
+        { href: "/driver/alerts", label: "Alerts", icon: Bell },
         { href: "/driver/support", label: "Support", icon: LifeBuoy },
         { href: "/driver/profile", label: "Profile", icon: User },
     ];

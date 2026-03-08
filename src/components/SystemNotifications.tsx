@@ -35,6 +35,23 @@ const getBorderColor = (type: string, read: boolean) => {
 };
 
 const SystemNotifications = ({ notifications, isRead, onMarkAsRead, onDismiss, onMarkAllAsRead, loading }: SystemNotificationsProps) => {
+    const { toast } = useToast();
+
+    const handleMarkAsRead = (id: string, title: string) => {
+        onMarkAsRead(id);
+        toast({ title: "Marked as read", description: `"${title}" has been marked as read.` });
+    };
+
+    const handleDismiss = (id: string, title: string) => {
+        onDismiss(id);
+        toast({ title: "Dismissed", description: `"${title}" has been dismissed.` });
+    };
+
+    const handleMarkAllAsRead = () => {
+        onMarkAllAsRead();
+        toast({ title: "All marked as read", description: "All notifications have been marked as read." });
+    };
+
     if (loading) {
         return (
             <Card>

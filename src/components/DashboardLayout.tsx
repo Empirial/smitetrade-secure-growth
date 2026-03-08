@@ -104,8 +104,9 @@ const getLinks = (role: string) => {
         { href: "/lender/clients", label: "My Clients", icon: Users },
         { href: "/lender/loans", label: "Active Loans", icon: Banknote },
         { href: "/lender/applications", label: "Applications", icon: FileText },
-        { href: "/lender/collections", label: "Collections", icon: AlertTriangle }, // Changed icon
+        { href: "/lender/collections", label: "Collections", icon: AlertTriangle },
         { href: "/lender/credit-check", label: "Credit Check", icon: Search },
+        { href: "/lender/alerts", label: "Alerts", icon: Bell },
         { href: "/lender/support", label: "Support", icon: LifeBuoy },
         { href: "/lender/profile", label: "Profile", icon: User },
     ];

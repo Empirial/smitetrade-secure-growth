@@ -85,6 +85,11 @@ import AdminPOSMonitor from "./pages/admin/AdminPOSMonitor";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminDisputes from "./pages/admin/AdminDisputes";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminStores from "./pages/admin/AdminStores";
+import AdminRevenue from "./pages/admin/AdminRevenue";
+import AdminCreditOverview from "./pages/admin/AdminCreditOverview";
+import AdminSupport from "./pages/admin/AdminSupport";
 
 // Lender
 import LenderLogin from "./pages/lender/LenderLogin";
@@ -186,6 +191,11 @@ const App = () => (
               <Route path="/admin/users" element={<AuthGuard role="admin"><AdminUsers /></AuthGuard>} />
               <Route path="/admin/audit-logs" element={<AuthGuard role="admin"><AdminAuditLogs /></AuthGuard>} />
               <Route path="/admin/disputes" element={<AuthGuard role="admin"><AdminDisputes /></AuthGuard>} />
+              <Route path="/admin/analytics" element={<AuthGuard role="admin"><AdminAnalytics /></AuthGuard>} />
+              <Route path="/admin/stores" element={<AuthGuard role="admin"><AdminStores /></AuthGuard>} />
+              <Route path="/admin/revenue" element={<AuthGuard role="admin"><AdminRevenue /></AuthGuard>} />
+              <Route path="/admin/credit-overview" element={<AuthGuard role="admin"><AdminCreditOverview /></AuthGuard>} />
+              <Route path="/admin/support" element={<AuthGuard role="admin"><AdminSupport /></AuthGuard>} />
 
               {/* Lender Portal */}
               <Route path="/lender/login" element={<LenderLogin />} />

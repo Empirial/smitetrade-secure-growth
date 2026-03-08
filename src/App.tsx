@@ -49,6 +49,7 @@ import CashierShift from "./pages/cashier/CashierShift";
 import CashierReceipts from "./pages/cashier/CashierReceipts";
 import CashierInventory from "./pages/cashier/CashierInventory";
 import CashierSupport from "./pages/cashier/CashierSupport";
+import CashierAlerts from "./pages/cashier/CashierAlerts";
 
 // Customer
 import CustomerLogin from "./pages/customer/CustomerLogin";

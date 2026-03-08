@@ -1,86 +1,80 @@
+# Admin Portal Enhancement Plan
+
+## Current State
+
+The admin portal has 6 pages: Dashboard (KPI cards + mock alerts), Applications, POS Monitor, Users (real Firestore queries), Audit Logs (mock data), and Disputes. All pages use mostly hardcoded/mock data with minimal real functionality.
+
+## What the Admin Portal Should Do
+
+For a spaza shop management platform, the admin needs to be a **super-operator** who can oversee the entire ecosystem:
 
 
-# SMITETRADE Improvements Plan
+| Category       | New Page                  | Purpose                                                                   |
+| -------------- | ------------------------- | ------------------------------------------------------------------------- |
+| **Analytics**  | Platform Analytics        | Revenue trends, user growth, transaction volume charts (using recharts)   |
+| **Finance**    | Revenue & Payments        | PayStack transaction history, payment success/failure rates, total GMV    |
+| **Stores**     | Store Management          | View all registered stores, approve/suspend stores, see per-store metrics |
+| **Credit**     | Credit & Lending Overview | Total loan portfolio, default rates, BRI score distribution across users  |
+| **Operations** | System Settings           | Feature flags, platform fee config, notification templates                |
+| **Support**    | Support Tickets           | View/respond to customer support requests (from CustomerSupport page)     |
 
-## Overview
-This plan covers 7 changes plus fixing 5 existing build errors that are blocking the app.
 
----
+## Plan
 
-## Part A: Fix Build Errors (Must Do First)
+### 1. Enhance Admin Dashboard
 
-### 1. StoreContext.tsx - Duplicate properties (lines 479-484)
-The mock order object has `id`, `customerName`, and `customerAddress` listed twice. Remove the duplicate lines (482-484).
+- Replace hardcoded KPIs with aggregated data from Firestore (user count, store count, order count, total revenue)
+- Add recharts line/bar charts: daily transaction volume, user signups over time, revenue trend
+- Add a "Recent Activity" feed pulling from orders and user registrations
 
-### 2. CashierCheckout.tsx - Missing `address` property (line 39)
-The `placeOrder` call is missing the required `address` field. Add `address: "In-Store"` to the object.
+### 2. New: Platform Analytics Page (`AdminAnalytics.tsx`)
 
-### 3. OwnerLending.tsx - Invalid icon import (line 8)
-`UserByOrder` does not exist in lucide-react. Replace with `UserCheck` or `Users`.
+- User growth chart (signups by day/week)
+- Revenue breakdown by store (bar chart)
+- Order volume and status distribution (pie chart)
+- Active users by role (owner/cashier/customer/driver/lender)
 
----
+### 3. New: Store Management Page (`AdminStores.tsx`)
 
-## Part B: Requested Changes
+- Table of all stores from Firestore `stores` collection
+- Columns: name, owner, location, status, product count, total sales
+- Actions: activate/suspend store, view store details
 
-### 1. Background Color Improvements
-Update `src/index.css` to restore the branded SMITETRADE color palette instead of the current grayscale overrides. The custom CSS variables (lines 40-49) currently map emerald, electric-blue, and gold to grays. These will be restored to the actual brand colors:
-- `--emerald`: Deep Emerald (#1B4D3E)
-- `--electric-blue`: Electric Blue (#00BFFF)
-- `--gold`: Radiant Gold (#FFD700)
+### 4. New: Revenue & Payments Page (`AdminRevenue.tsx`)
 
-Also update the dashboard background to use a subtle gradient rather than plain white.
+- Transaction summary cards (total volume, success rate, average order value)
+- Recent transactions table
+- Payment method breakdown (card vs cash vs credit)
 
-### 2. Supplier Contact Details
-In `src/pages/owner/OwnerSuppliers.tsx`, change the supplier contact numbers to SMITETRADE's intermediary contact details. All suppliers will show a single SMITETRADE contact number/email as the point of contact, reinforcing SMITETRADE's role as the middleman.
+### 5. New: Credit Overview Page (`AdminCreditOverview.tsx`)
 
-### 3. Customer Credit Scoring Alignment
-The Customer portal (`CustomerCreditReview.tsx`) currently uses a 0-850 point scale (showing "750 / EXCELLENT"). The Lending portal uses the BRI percentage system (lower is better, with tiers: Platinum/Gold/Silver/Bronze).
+- Total lending portfolio value
+- Default rate metrics
+- BRI score distribution histogram
+- Top borrowers table
 
-Changes:
-- Update `CustomerCreditReview.tsx` to use the BRI percentage system with the same tier badges (Platinum/Gold/Silver/Bronze) used in `BehavioralReliabilityIndex.tsx`
-- Replace the "750 / 850" display with the BRI score (e.g., "3.2%") and tier badge
-- Use the CreditContext data instead of hardcoded values
+### 6. New: Support Tickets Page (`AdminSupport.tsx`)
 
-### 4. Auto-Generated SS-ID Format
-In `src/context/CreditContext.tsx`, change the `addBorrower` function so the SS-ID is system-generated in the format `SS-ID0001`, `SS-ID0002`, etc., using an auto-incrementing counter rather than the SA ID number. The SA ID number will be stored separately as a private field.
+- List of support tickets submitted by customers
+- Status management (open/in-progress/resolved)
+- Reply functionality
 
-Files affected:
-- `CreditContext.tsx` - Add counter, generate SS-ID in `addBorrower`
-- `OwnerLending.tsx` - Show SS-ID (auto-generated) separate from ID Number input
-- `LenderClients.tsx` - Display SS-ID format instead of raw ID
+### 7. Update Navigation & Routes
 
-### 5. ID Number Privacy Masking
-Wherever SA ID numbers are displayed (borrower cards, credit check results), mask the middle digits showing only the first 6 and last 2 characters. For example: `9001015009087` becomes `900101*****87`.
+- Add new nav links to `DashboardLayout.tsx` admin section
+- Add routes in `App.tsx` with AuthGuard
+  &nbsp;
 
-Files affected:
-- `LenderClients.tsx` - Mask ID in borrower cards
-- `LenderCreditCheck.tsx` - Mask ID in search results
-- `OwnerLending.tsx` - Mask ID display
-- Add a utility function `maskIdNumber()` in `src/lib/utils.ts`
+## Files to Create/Change
 
-### 6. Order Tracking Estimated Time
-In `CustomerTracking.tsx`, replace specific minute estimates ("Est. 10 mins", "Est. 20 mins") with a time window format like "Between 8am - 6pm" for delivery, making it more realistic for the South African spaza context.
 
-### 7. Safe Compliance Disclaimer on Lender Portal
-Add a compliance statement to the Lender Dashboard (`LenderDashboard.tsx`) and Lender Loans page. The disclaimer will be similar to the one already on `BehavioralReliabilityIndex.tsx` (lines 168-173), stating that SMITETRADE provides scoring insights only and does not act as a credit provider.
-
----
-
-## Technical Summary
-
-| File | Changes |
-|------|---------|
-| `src/context/StoreContext.tsx` | Remove duplicate object properties (lines 482-484) |
-| `src/pages/cashier/CashierCheckout.tsx` | Add missing `address` field |
-| `src/pages/owner/OwnerLending.tsx` | Fix icon import, mask ID display |
-| `src/index.css` | Restore brand colors from grayscale |
-| `src/pages/owner/OwnerSuppliers.tsx` | Update supplier contacts to SMITETRADE intermediary |
-| `src/pages/customer/CustomerCreditReview.tsx` | Switch to BRI percentage system with tiers |
-| `src/context/CreditContext.tsx` | Auto-generate SS-ID format (SS-ID0001) |
-| `src/pages/lender/LenderClients.tsx` | Display SS-ID format, mask ID numbers |
-| `src/pages/lender/LenderCreditCheck.tsx` | Mask ID numbers in results |
-| `src/pages/customer/CustomerTracking.tsx` | Use "Between 8am - 6pm" time windows |
-| `src/pages/lender/LenderDashboard.tsx` | Add compliance disclaimer |
-| `src/pages/lender/LenderLoans.tsx` | Add compliance disclaimer |
-| `src/lib/utils.ts` | Add `maskIdNumber()` helper function |
-
+| File                                      | Change                                                 |
+| ----------------------------------------- | ------------------------------------------------------ |
+| `src/pages/admin/AdminDashboard.tsx`      | Replace mock KPIs with Firestore aggregates + recharts |
+| `src/pages/admin/AdminAnalytics.tsx`      | **New** — platform-wide analytics with charts          |
+| `src/pages/admin/AdminStores.tsx`         | **New** — store management table                       |
+| `src/pages/admin/AdminRevenue.tsx`        | **New** — revenue & payment tracking                   |
+| `src/pages/admin/AdminCreditOverview.tsx` | **New** — lending portfolio overview                   |
+| `src/pages/admin/AdminSupport.tsx`        | **New** — support ticket management                    |
+| `src/components/DashboardLayout.tsx`      | Add new admin nav links                                |
+| `src/App.tsx`                             | Add new admin routes                                   |

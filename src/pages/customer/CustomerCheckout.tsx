@@ -206,8 +206,8 @@ const CustomerCheckout = () => {
                                     <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                                         <h4 className="font-semibold text-sm">Fulfilling Store:</h4>
                                         <div className="flex items-center gap-2 text-sm">
-                                            <Store className="h-4 w-4" />
-                                            <span>{selectedStore === 'store_001' ? 'Soweto Central (Nearest - 2km)' : 'Diepkloof Branch (5km)'}</span>
+                                            <StoreIcon className="h-4 w-4" />
+                                            <span>{activeStores.find(s => s.id === selectedStore)?.name || 'Unknown Store'}</span>
                                         </div>
                                     </div>
 

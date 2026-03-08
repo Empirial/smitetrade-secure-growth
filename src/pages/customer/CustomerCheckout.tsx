@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
+import { Store as StoreIcon } from "lucide-react";
 import { useCredit } from "@/context/CreditContext";
 import { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";

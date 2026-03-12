@@ -38,7 +38,7 @@ const OwnerCreditReview = () => {
             <div className="max-w-2xl mx-auto space-y-6">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold">Customer Credit Lookup</h1>
-                    <p className="text-muted-foreground">Verify SS-ID and SpazaScore Tier before authorizing credit.</p>
+                    <p className="text-muted-foreground">Verify SS-ID and Repayment behaviour Tier before authorizing credit.</p>
                 </div>
 
                 <Card className="border-t-4 border-t-amber-500 shadow-lg bg-slate-900 border-slate-800 text-white">
@@ -76,7 +76,6 @@ const OwnerCreditReview = () => {
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     {getTierBadge(result.rating)}
-                                    <span className="text-xs font-mono text-slate-400">BRI: {result.score}%</span>
                                 </div>
                             </div>
                         </CardHeader>
@@ -108,9 +107,6 @@ const OwnerCreditReview = () => {
                             </div>
 
                             <div className="flex gap-3">
-                                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={result.rating === 'Risk'}>
-                                    Authorize New Sale
-                                </Button>
                                 <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => setResult(null)}>Close</Button>
                             </div>
                         </CardContent>
@@ -135,7 +131,7 @@ const OwnerCreditReview = () => {
                                     </div>
                                     <div className="text-right">
                                         <div className={`text-sm font-bold ${b.rating === 'Good' ? 'text-emerald-500' : 'text-amber-500'}`}>{b.rating}</div>
-                                        <div className="text-xs text-slate-400">{b.score}% BRI</div>
+                                        <div className="text-xs text-slate-400">Behavior</div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -149,7 +145,7 @@ const OwnerCreditReview = () => {
                             <AlertCircle />
                             <div>
                                 <p className="font-bold">Customer Not Found</p>
-                                <p className="text-sm text-red-300/80">Ask them to register on the Customer App to build their SpazaScore.</p>
+                                <p className="text-sm text-red-300/80">Ask them to register on the Customer App to build their Repayment behaviour profile.</p>
                             </div>
                         </CardContent>
                     </Card>

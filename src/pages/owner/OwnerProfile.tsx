@@ -12,14 +12,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, Phone, Trash2, KeyRound, TrendingUp, ShoppingBag, Star } from "lucide-react";
+import { Building2, Plus, Phone, Trash2, KeyRound, CheckCircle2, ExternalLink, MapPin, Tag } from "lucide-react";
+import FieldError from "@/components/ui/FieldError";
+import { validateRequired, validateEmail, validatePhone, validatePassword, validatePasswordMatch, hasErrors } from "@/utils/validation";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const OwnerProfile = () => {
-    const { user, updateUser } = useStore();
+    const { user, updateUser, stores: contextStores, currentStore, switchStore } = useStore();
     const { toast } = useToast();
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
+    const [storeSwitcherOpen, setStoreSwitcherOpen] = useState(false);
 
     // Account State
     const [name, setName] = useState(user?.name || "");
@@ -87,6 +92,7 @@ const OwnerProfile = () => {
     }, [user]);
 
     const handleSaveAccount = async () => {
+        if (!validateAccount()) return;
         setIsLoading(true);
         try {
             await updateUser({ name, email, phone });
@@ -163,18 +169,36 @@ const OwnerProfile = () => {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [passwordErrors, setPasswordErrors] = useState({ currentPassword: null as string | null, newPassword: null as string | null, confirmPassword: null as string | null });
+
+    // Account errors
+    const [accountErrors, setAccountErrors] = useState({ name: null as string | null, email: null as string | null, phone: null as string | null });
+
+    const validateAccount = () => {
+        const errs = {
+            name: validateRequired(name, "Name"),
+            email: validateEmail(email),
+            phone: phone ? validatePhone(phone) : null,
+        };
+        setAccountErrors(errs);
+        return !hasErrors(errs);
+    };
 
     const handlePasswordChange = () => {
-        if (newPassword !== confirmPassword) {
-            toast({ title: "Error", description: "Mismatched passwords.", variant: "destructive" });
-            return;
-        }
+        const errs = {
+            currentPassword: validateRequired(currentPassword, "Current password"),
+            newPassword: validatePassword(newPassword),
+            confirmPassword: validatePasswordMatch(newPassword, confirmPassword),
+        };
+        setPasswordErrors(errs);
+        if (hasErrors(errs)) return;
         setIsLoading(true);
         setTimeout(() => {
             setIsLoading(false);
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
+            setPasswordErrors({ currentPassword: null, newPassword: null, confirmPassword: null });
             toast({ title: "Success", description: "Your password has been changed securely." });
         }, 800);
     };
@@ -209,16 +233,29 @@ const OwnerProfile = () => {
                         <p className="text-xs text-emerald-400 mt-1">{phone || "No Phone Number"}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-sky-500/10 border-sky-500/20">
+                {/* Store Ownership Card — clickable to open store switcher */}
+                <Card
+                    className="bg-sky-500/10 border-sky-500/20 cursor-pointer hover:bg-sky-500/20 transition-colors group"
+                    onClick={() => setStoreSwitcherOpen(true)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && setStoreSwitcherOpen(true)}
+                >
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-sky-400 flex justify-between">
+                        <CardTitle className="text-sm font-medium text-sky-400 flex justify-between items-center">
                             Store Ownership
-                            <Building2 className="h-4 w-4 text-sky-400" />
+                            <div className="flex items-center gap-1">
+                                <ExternalLink className="h-3.5 w-3.5 text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <Building2 className="h-4 w-4 text-sky-400" />
+                            </div>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-sm font-semibold text-sky-300">{stores.length} Location(s)</div>
-                        <p className="text-xs text-sky-400 mt-1">Primary: {stores[0]?.name || "None"}</p>
+                        <p className="text-xs text-sky-400 mt-1">
+                            Active: {currentStore?.name || stores[0]?.name || "None"}
+                        </p>
+                        <p className="text-xs text-sky-500/70 mt-2 group-hover:text-sky-400 transition-colors">Click to switch store →</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-amber-500/10 border-amber-500/20">
@@ -253,15 +290,18 @@ const OwnerProfile = () => {
                         <CardContent className="space-y-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Name</Label>
-                                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                                <Input id="name" value={name} className={accountErrors.name ? "border-destructive focus-visible:ring-destructive" : ""} onChange={(e) => { setName(e.target.value); setAccountErrors({ ...accountErrors, name: null }); }} />
+                                <FieldError message={accountErrors.name} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                <Input id="email" type="email" value={email} className={accountErrors.email ? "border-destructive focus-visible:ring-destructive" : ""} onChange={(e) => { setEmail(e.target.value); setAccountErrors({ ...accountErrors, email: null }); }} />
+                                <FieldError message={accountErrors.email} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="phone">Phone Number</Label>
-                                <Input id="phone" placeholder="+27 00 000 0000" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                                <Input id="phone" placeholder="+27 00 000 0000" value={phone} className={accountErrors.phone ? "border-destructive focus-visible:ring-destructive" : ""} onChange={(e) => { setPhone(e.target.value); setAccountErrors({ ...accountErrors, phone: null }); }} />
+                                <FieldError message={accountErrors.phone} />
                             </div>
                         </CardContent>
                         <CardFooter>
@@ -488,15 +528,18 @@ const OwnerProfile = () => {
                         <CardContent className="space-y-4">
                             <div className="grid gap-2 max-w-sm">
                                 <Label>Current Password</Label>
-                                <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} />
+                                <Input type="password" value={currentPassword} className={passwordErrors.currentPassword ? "border-destructive focus-visible:ring-destructive" : ""} onChange={e => { setCurrentPassword(e.target.value); setPasswordErrors({ ...passwordErrors, currentPassword: null }); }} />
+                                <FieldError message={passwordErrors.currentPassword} />
                             </div>
                             <div className="grid gap-2 max-w-sm">
                                 <Label>New Password</Label>
-                                <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+                                <Input type="password" value={newPassword} className={passwordErrors.newPassword ? "border-destructive focus-visible:ring-destructive" : ""} onChange={e => { setNewPassword(e.target.value); setPasswordErrors({ ...passwordErrors, newPassword: null }); }} />
+                                <FieldError message={passwordErrors.newPassword} />
                             </div>
                             <div className="grid gap-2 max-w-sm">
                                 <Label>Confirm New Password</Label>
-                                <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                                <Input type="password" value={confirmPassword} className={passwordErrors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : ""} onChange={e => { setConfirmPassword(e.target.value); setPasswordErrors({ ...passwordErrors, confirmPassword: null }); }} />
+                                <FieldError message={passwordErrors.confirmPassword} />
                             </div>
                         </CardContent>
                         <CardFooter>
@@ -519,6 +562,110 @@ const OwnerProfile = () => {
                 </TabsContent>
 
             </Tabs>
+
+            {/* ── Store Switcher Dialog ── */}
+            <Dialog open={storeSwitcherOpen} onOpenChange={setStoreSwitcherOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Building2 className="h-5 w-5 text-sky-500" />
+                            Switch Store Portal
+                        </DialogTitle>
+                        <DialogDescription>
+                            Select one of your store locations to manage its portal. You will be redirected to that store's dashboard.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex flex-col gap-3 mt-2 max-h-[60vh] overflow-y-auto pr-1">
+                        {stores.length === 0 && (
+                            <p className="text-sm text-muted-foreground text-center py-6">
+                                No stores found. Add stores in the Stores tab above.
+                            </p>
+                        )}
+                        {stores.map((store, idx) => {
+                            const isActive = currentStore
+                                ? currentStore.id === store.id
+                                : idx === 0;
+                            return (
+                                <div
+                                    key={store.id}
+                                    className={`flex items-center justify-between rounded-lg border p-4 transition-colors ${
+                                        isActive
+                                            ? "border-sky-500/50 bg-sky-500/10"
+                                            : "border-border hover:bg-muted/40"
+                                    }`}
+                                >
+                                    <div className="flex flex-col gap-1 min-w-0 mr-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-sm truncate">{store.name || "Unnamed Store"}</span>
+                                            {isActive && (
+                                                <Badge className="bg-sky-500/20 text-sky-400 border-none text-xs shrink-0">
+                                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                                    Active
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        {(store.address || store.city) && (
+                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                <MapPin className="h-3 w-3 shrink-0" />
+                                                <span className="truncate">
+                                                    {[store.address, store.suburb, store.city].filter(Boolean).join(", ")}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium w-fit ${
+                                            store.status === "Active" ? "bg-emerald-500/10 text-emerald-500" :
+                                            store.status === "Inactive" ? "bg-red-500/10 text-red-500" :
+                                            "bg-amber-500/10 text-amber-500"
+                                        }`}>
+                                            {store.status === "Active" ? "🟢" : store.status === "Inactive" ? "🔴" : "🟡"} {store.status || "Active"}
+                                        </span>
+                                    </div>
+
+                                    {isActive ? (
+                                        <Button size="sm" variant="outline" className="border-sky-500/40 text-sky-400 shrink-0" disabled>
+                                            Current
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            className="bg-sky-600 hover:bg-sky-700 text-white shrink-0"
+                                            onClick={() => {
+                                                switchStore({
+                                                    id: store.id,
+                                                    name: store.name,
+                                                    address: store.address,
+                                                    suburb: store.suburb,
+                                                    city: store.city,
+                                                    province: store.province,
+                                                    postalCode: store.postalCode,
+                                                    status: store.status,
+                                                    ownerId: user?.id || "",
+                                                    createdAt: new Date().toISOString(),
+                                                } as any);
+                                                setStoreSwitcherOpen(false);
+                                                navigate("/owner/dashboard");
+                                            }}
+                                        >
+                                            Switch &rarr;
+                                        </Button>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="mt-2 pt-3 border-t flex justify-between items-center">
+                        <p className="text-xs text-muted-foreground">
+                            {stores.length} store{stores.length !== 1 ? "s" : ""} registered
+                        </p>
+                        <Button variant="ghost" size="sm" onClick={() => setStoreSwitcherOpen(false)}>
+                            Close
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
         </DashboardLayout>
     );
 };

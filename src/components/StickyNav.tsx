@@ -15,7 +15,7 @@ import { LogIn, User, Store, Truck, ShoppingBag, ShieldCheck, Briefcase } from "
 
 const navLinks = [
     { name: "Home", href: "#hero" },
-    { name: "SpazaScore", href: "#spazascore" },
+    { name: "Repayment behaviour", href: "#spazascore" },
     { name: "Features", href: "#features" },
     { name: "Network", href: "#network" },
 ];

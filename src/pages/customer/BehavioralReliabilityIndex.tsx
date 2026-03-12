@@ -7,7 +7,6 @@ import { ArrowRight, AlertCircle, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCredit } from "@/context/CreditContext";
 import GamificationStatus from "@/components/credit/GamificationStatus";
-import BRIChart from "@/components/credit/BRIChart";
 import { useState } from "react";
 import { format } from "date-fns";
 import { useStore } from "@/context/StoreContext";
@@ -41,9 +40,9 @@ const BehavioralReliabilityIndex = () => {
                 {/* Header */}
                 <div className="space-y-2">
                     <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-cyan-600">
-                        Financial Passport
+                        Repayment behaviour
                     </h1>
-                    <p className="text-muted-foreground">Your Behavioral Reliability Index (BRI) unlocks future purchasing power.</p>
+                    <p className="text-muted-foreground">Your Repayment behaviour category unlocks future purchasing power.</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
@@ -51,7 +50,7 @@ const BehavioralReliabilityIndex = () => {
                     <Card className="border-t-4 border-t-indigo-500 shadow-xl overflow-hidden relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent pointer-events-none" />
                         <CardHeader>
-                            <CardTitle>SpazaScore Status</CardTitle>
+                            <CardTitle>Repayment Category</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <GamificationStatus tier={profile.tier} score={profile.briScore} />
@@ -128,16 +127,7 @@ const BehavioralReliabilityIndex = () => {
                     </div>
                 </div>
 
-                {/* Historical Chart */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Reliability History</CardTitle>
-                        <CardDescription>Track your BRI improvement over time. Goal: Keep it low (0-3%).</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <BRIChart />
-                    </CardContent>
-                </Card>
+
 
                 {/* Educational Content */}
                 <div className="grid md:grid-cols-3 gap-6">
@@ -204,7 +194,7 @@ const BehavioralReliabilityIndex = () => {
                             />
                         </div>
                         <Button onClick={handlePay} className="self-end" disabled={!payAmount}>
-                            Pay & Update Score
+                            Pay & Update
                         </Button>
                     </CardContent>
                 </Card>

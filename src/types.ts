@@ -34,6 +34,12 @@ export interface User {
         postalCode: string;
     }[];
     wishlist?: string[]; // Array of Product IDs
+    subscription?: {
+        plan: 'basic' | 'pro';
+        status: 'active' | 'cancelled' | 'trial';
+        trialEndsAt?: string;
+        activatedAt?: string;
+    };
 }
 
 // Multi-tenant Store

@@ -138,8 +138,8 @@ const CashierScanner = () => {
                         <Scan className="h-6 w-6 text-emerald-600" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold">Document & Product Scanner</h1>
-                        <p className="text-muted-foreground">Capture documents or products to save as PDF</p>
+                        <h1 className="text-2xl font-bold">Barcode Scanner</h1>
+                        <p className="text-muted-foreground">Scan products to look them up and add them to the POS</p>
                     </div>
                 </div>
 

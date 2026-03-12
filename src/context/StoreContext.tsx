@@ -44,6 +44,7 @@ interface StoreContextType {
     // Stores (multi-tenant)
     stores: Store[];
     currentStore: Store | null;
+    switchStore: (store: Store) => void;
 
     // Inventory
     products: Product[];
@@ -205,12 +206,33 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         return () => unsubscribe();
     }, []);
 
+    // --- Restore / maintain active store selection ---
+    useEffect(() => {
+        if (!user) return;
+        if (USE_MOCK_DATA) return;
+        if (!stores.length) return;
+
+        // Only roles that operate store-scoped views need an active store
+        if (!(user.role === "owner" || user.role === "cashier" || user.role === "admin")) return;
+
+        const savedStoreId = localStorage.getItem("smite_active_store_id");
+        const preferred =
+            (savedStoreId && stores.find((s) => s.id === savedStoreId)) ||
+            (user.storeId && stores.find((s) => s.id === user.storeId)) ||
+            stores[0];
+
+        if (!preferred) return;
+        if (currentStore?.id === preferred.id) return;
+        setCurrentStore(preferred);
+    }, [user, stores, currentStore?.id]);
+
     // --- Products Listener (store-scoped for owners, all for customers) ---
     useEffect(() => {
         if (USE_MOCK_DATA) {
             // For owners: show only their store's products
             if (user?.role === 'owner' || user?.role === 'cashier') {
-                setProducts(MOCK_PRODUCTS.filter(p => p.storeId === user.storeId));
+                const activeStoreId = currentStore?.id ?? user.storeId;
+                setProducts(MOCK_PRODUCTS.filter(p => p.storeId === activeStoreId));
             } else {
                 setProducts(MOCK_PRODUCTS);
             }
@@ -222,10 +244,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         if (!user) return;
 
         // Owner/Cashier: fetch only their store's products
-        if ((user.role === 'owner' || user.role === 'cashier') && user.storeId) {
+        const activeStoreId = currentStore?.id ?? user.storeId;
+        if ((user.role === 'owner' || user.role === 'cashier') && activeStoreId) {
             const q = query(
                 collection(db, "products"),
-                where("storeId", "==", user.storeId),
+                where("storeId", "==", activeStoreId),
                 orderBy("name")
             );
             const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -249,13 +272,14 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             setAllProducts(productsData);
         });
         return () => unsubscribe();
-    }, [user]);
+    }, [user, currentStore?.id]);
 
     // --- Orders Listener (role-scoped) ---
     useEffect(() => {
         if (USE_MOCK_DATA) {
             if (user?.role === 'owner' || user?.role === 'cashier') {
-                setOrders(MOCK_ORDERS.filter(o => o.storeId === user.storeId));
+                const activeStoreId = currentStore?.id ?? user.storeId;
+                setOrders(MOCK_ORDERS.filter(o => o.storeId === activeStoreId));
             } else if (user?.role === 'driver') {
                 setOrders(MOCK_ORDERS.filter(o => o.status === 'Ready' || o.driverId === user.id));
             } else if (user?.role === 'customer') {
@@ -269,8 +293,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         if (!user) return;
 
         let q;
-        if (user.role === 'owner' && user.storeId) {
-            q = query(collection(db, "orders"), where("storeId", "==", user.storeId), orderBy("date", "desc"));
+        const activeStoreId = currentStore?.id ?? user.storeId;
+        if ((user.role === 'owner' || user.role === 'cashier') && activeStoreId) {
+            q = query(collection(db, "orders"), where("storeId", "==", activeStoreId), orderBy("date", "desc"));
         } else if (user.role === 'customer') {
             q = query(collection(db, "orders"), where("userId", "==", user.uid), orderBy("date", "desc"));
         } else if (user.role === 'driver') {
@@ -289,14 +314,14 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             setOrders(ordersData);
         });
         return () => unsubscribe();
-    }, [user]);
+    }, [user, currentStore?.id]);
 
     // --- Other collections listener ---
     useEffect(() => {
         if (!user) return;
         if (USE_MOCK_DATA) return;
 
-        const storeId = user.storeId;
+        const storeId = currentStore?.id ?? user.storeId;
         const unsubs: (() => void)[] = [];
 
         // Store-scoped collections
@@ -346,7 +371,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
 
         return () => unsubs.forEach(u => u());
-    }, [user]);
+    }, [user, currentStore?.id]);
 
     // --- Local Storage (Cart Only) ---
     useEffect(() => localStorage.setItem('smite_cart', JSON.stringify(cart)), [cart]);
@@ -389,49 +414,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             toast.success("Welcome back!");
         } catch (error) {
             console.error("Login error:", error);
-            if (roleFallback && error instanceof Error && ((error as FirebaseError).code === 'auth/user-not-found' || (error as FirebaseError).code === 'auth/invalid-credential')) {
-                try {
-                    toast.info("Account not found. Creating test account...");
-                    const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
-
-                    const userData: Omit<User, 'id' | 'uid'> = {
-                        name: "Test " + roleFallback.charAt(0).toUpperCase() + roleFallback.slice(1),
-                        email,
-                        role: roleFallback,
-                        storeName: roleFallback === 'owner' ? "Test Store" : undefined
-                    };
-
-                    await setDoc(doc(db, "users", firebaseUser.uid), userData);
-
-                    // Create store if owner
-                    if (roleFallback === 'owner') {
-                        const storeRef = doc(collection(db, "stores"));
-                        const storeData = {
-                            ownerId: firebaseUser.uid,
-                            name: "Test Store",
-                            address: "",
-                            suburb: "",
-                            city: "",
-                            province: "",
-                            status: "Active",
-                            createdAt: new Date().toISOString()
-                        };
-                        await setDoc(storeRef, storeData);
-                        await updateDoc(doc(db, "users", firebaseUser.uid), { storeId: storeRef.id });
-                    }
-
-                    // Create user role
-                    await setDoc(doc(db, "user_roles", firebaseUser.uid), { role: roleFallback });
-
-                    setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
-                    toast.success("Test account created & logged in!");
-                    return;
-                } catch (regError) {
-                    console.error("Auto-registration failed:", regError);
-                    toast.error("Login failed: " + (error instanceof Error ? error.message : "Unknown error"));
-                    throw error;
-                }
-            }
             toast.error("Failed to login: " + (error instanceof Error ? error.message : "Unknown error"));
             throw error;
         }
@@ -1138,10 +1120,16 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const switchStore = (store: Store) => {
+        setCurrentStore(store);
+        localStorage.setItem('smite_active_store_id', store.id);
+        toast.success(`Switched to ${store.name}`);
+    };
+
     return (
         <StoreContext.Provider value={{
             user, login, register, logout, updateUser,
-            stores, currentStore,
+            stores, currentStore, switchStore,
             products, allProducts, addProduct, updateProduct, deleteProduct,
             cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
             orders, placeOrder, updateOrderStatus, assignDriver, isLoading,

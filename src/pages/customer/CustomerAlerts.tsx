@@ -19,7 +19,7 @@ const CustomerAlerts = () => {
         },
         {
             id: 2, type: "success", title: "Credit Pre-Approval",
-            message: "Great news! Based on your SpazaScore, you have been pre-approved for an additional R1,000 credit line.",
+            message: "Great news! Based on your Repayment behaviour, you have been pre-approved for an additional R1,000 credit line.",
             date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), read: false,
             action: { label: "Apply Now", route: "/customer/apply-credit" }
         },

@@ -5,6 +5,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle2, CreditCard, Banknote, Landmark, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/context/StoreContext";
+import { useCredit } from "@/context/CreditContext";
+import { Borrower } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePaystack } from "@/hooks/usePaystack";
@@ -13,6 +15,7 @@ const CashierCheckout = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { placeOrder } = useStore();
+    const { borrowers } = useCredit();
     const { cart, total } = location.state || { cart: [], total: 0 };
     const [success, setSuccess] = useState(false);
 
@@ -20,6 +23,11 @@ const CashierCheckout = () => {
     const [paymentMethod, setPaymentMethod] = useState<"Select" | "Cash" | "Card" | "SS-ID">("Select");
     const [amountTendered, setAmountTendered] = useState<string>("");
     const [changeDue, setChangeDue] = useState<number>(0);
+
+    // SS-ID Payment State
+    const [ssidInput, setSsidInput] = useState("");
+    const [ssidCustomer, setSsidCustomer] = useState<Borrower | null>(null);
+    const [ssidError, setSsidError] = useState("");
 
     // Split Payments State
     const [isSplitPayment, setIsSplitPayment] = useState(false);
@@ -39,13 +47,13 @@ const CashierCheckout = () => {
 
     const completeTransaction = useCallback(async () => {
         await placeOrder({
-            name: "Walk-in Customer",
+            name: ssidCustomer ? ssidCustomer.name : "Walk-in Customer",
             address: "In-Store",
             items: cart,
             paymentMethod: isSplitPayment ? "Split" : paymentMethod,
         });
         setSuccess(true);
-    }, [placeOrder, cart, isSplitPayment, paymentMethod]);
+    }, [placeOrder, cart, isSplitPayment, paymentMethod, ssidCustomer]);
 
     const { pay: payWithCard, processing: cardProcessing } = usePaystack({
         amount: total,
@@ -55,7 +63,29 @@ const CashierCheckout = () => {
         },
     });
 
+    const handleSsidSearch = () => {
+        setSsidError("");
+        setSsidCustomer(null);
+        if (!ssidInput) {
+            setSsidError("Please enter an SS-ID or Phone Number.");
+            return;
+        }
+
+        const hit = borrowers?.find(b => b.id === ssidInput || b.phone === ssidInput || b.name.toLowerCase().includes(ssidInput.toLowerCase()));
+        if (hit) {
+            setSsidCustomer(hit);
+        } else {
+            setSsidError("Customer not found.");
+        }
+    };
+
     const handlePay = async () => {
+        // Guard: SS-ID payments require a verified customer
+        if (!isSplitPayment && paymentMethod === "SS-ID" && !ssidCustomer) {
+            alert("Please verify the customer SS-ID / phone before completing a Store Credit payment.");
+            return;
+        }
+
         // Validate Cash payment
         if (paymentMethod === "Cash" || isSplitPayment) {
             let totalPaid = 0;
@@ -77,6 +107,21 @@ const CashierCheckout = () => {
                     alert(`Split payments are short by R ${(total - totalPaid).toFixed(2)}`);
                     return;
                 }
+            }
+        }
+
+        if (isSplitPayment) {
+            const splitCard = parseFloat(splitAmounts.card || "0");
+            const splitSsid = parseFloat(splitAmounts.ssid || "0");
+
+            if (splitCard > 0) {
+                alert("Split payments with a card portion are not supported yet (partial card charges not implemented). Please use full Card payment or remove the card amount.");
+                return;
+            }
+
+            if (splitSsid > 0 && !ssidCustomer) {
+                alert("Please verify the customer SS-ID / phone before including Store Credit in a split payment.");
+                return;
             }
         }
 
@@ -139,12 +184,12 @@ const CashierCheckout = () => {
                                     </div>
                                 </CardHeader>
                             </Card>
-                            <Card className="cursor-pointer hover:border-amber-500 transition-all border-2 border-transparent" onClick={() => { setPaymentMethod("SS-ID"); handlePay(); }}>
+                            <Card className="cursor-pointer hover:border-amber-500 transition-all border-2 border-transparent" onClick={() => { setPaymentMethod("SS-ID"); setSsidInput(""); setSsidCustomer(null); setSsidError(""); }}>
                                 <CardHeader className="flex flex-row items-center gap-4">
                                     <div className="bg-amber-100 p-3 rounded-lg"><Landmark className="text-amber-600" /></div>
                                     <div>
-                                        <CardTitle>SS-ID Credit</CardTitle>
-                                        <CardDescription>Pay using SpazaScore Credit</CardDescription>
+                                        <CardTitle>Store Credit</CardTitle>
+                                        <CardDescription>Pay using customer's Repayment behaviour account</CardDescription>
                                     </div>
                                 </CardHeader>
                             </Card>
@@ -196,6 +241,56 @@ const CashierCheckout = () => {
                         </Card>
                     )}
 
+                    {paymentMethod === "SS-ID" && !isSplitPayment && (
+                        <Card className="border-amber-500 border-2 bg-slate-900 border-slate-800 text-white">
+                            <CardHeader>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <Button variant="ghost" size="icon" onClick={() => { setPaymentMethod("Select"); setSsidCustomer(null); setSsidError(""); }} className="h-8 w-8 -ml-2 text-white hover:text-white hover:bg-slate-800">
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                    <CardTitle className="text-xl">Store Credit Payment</CardTitle>
+                                </div>
+                                <div className="space-y-6 pt-2">
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-300">Customer SS-ID or Phone</Label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                className="text-lg h-12 bg-slate-950 border-slate-700 text-white"
+                                                placeholder="e.g. 9001015009087"
+                                                autoFocus
+                                                value={ssidInput}
+                                                onChange={(e) => setSsidInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && handleSsidSearch()}
+                                            />
+                                            <Button className="h-12 bg-amber-600 hover:bg-amber-700 text-white" onClick={handleSsidSearch}>
+                                                Verify
+                                            </Button>
+                                        </div>
+                                        {ssidError && <p className="text-red-400 text-sm mt-1">{ssidError}</p>}
+                                    </div>
+
+                                    {ssidCustomer && (
+                                        <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-100 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
+                                            <div>
+                                                <p className="font-bold">{ssidCustomer.name}</p>
+                                                <p className="text-sm opacity-80">Store Credit Account Verified</p>
+                                            </div>
+                                            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700"
+                                        disabled={!ssidCustomer}
+                                        onClick={handlePay}
+                                    >
+                                        Confirm & Deduct Credit
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                        </Card>
+                    )}
+
                     {isSplitPayment && (
                         <Card className="border-indigo-500 border-2">
                             <CardHeader>
@@ -213,10 +308,12 @@ const CashierCheckout = () => {
                                     <div className="space-y-2">
                                         <Label>Card Amount (R)</Label>
                                         <Input type="number" placeholder="0.00" value={splitAmounts.card} onChange={(e) => handleSplitAmountChange('card', e.target.value)} />
+                                        <p className="text-xs text-muted-foreground">Partial card charges are not supported yet. Use full Card payment instead.</p>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>SS-ID Credit (R)</Label>
                                         <Input type="number" placeholder="0.00" value={splitAmounts.ssid} onChange={(e) => handleSplitAmountChange('ssid', e.target.value)} />
+                                        <p className="text-xs text-muted-foreground">If you enter an SS-ID amount, verify the customer in the Store Credit screen first.</p>
                                     </div>
 
                                     <div className={`p-4 rounded-lg flex justify-between items-center ${splitBalance === 0 ? 'bg-green-100' : splitBalance < 0 ? 'bg-red-100' : 'bg-slate-100'}`}>

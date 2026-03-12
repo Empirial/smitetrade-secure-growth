@@ -1,59 +1,12 @@
 import { motion } from "framer-motion";
 import { Shield, Eye } from "lucide-react";
 
-const SpazaScoreGauge = () => {
-  const score = 78;
-  const rotation = (score / 100) * 180 - 90;
-
+const RepaymentBehaviourGauge = () => {
   return (
-    <div className="relative w-48 h-32 md:w-80 md:h-48">
-      {/* Gauge background arc */}
-      <svg viewBox="0 0 200 120" className="w-full h-full">
-        <defs>
-          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="hsl(0, 70%, 50%)" />
-            <stop offset="50%" stopColor="hsl(46, 100%, 55%)" />
-            <stop offset="100%" stopColor="hsl(120, 60%, 45%)" />
-          </linearGradient>
-        </defs>
-        {/* Background track */}
-        <path
-          d="M 20 100 A 80 80 0 0 1 180 100"
-          fill="none"
-          stroke="hsl(160, 30%, 14%)"
-          strokeWidth="12"
-          strokeLinecap="round"
-        />
-        {/* Colored arc */}
-        <path
-          d="M 20 100 A 80 80 0 0 1 180 100"
-          fill="none"
-          stroke="url(#gaugeGrad)"
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeDasharray={`${(score / 100) * 251.2} 251.2`}
-        />
-        {/* Needle */}
-        <motion.line
-          x1="100"
-          y1="100"
-          x2="100"
-          y2="30"
-          stroke="hsl(46, 100%, 70%)"
-          strokeWidth="3"
-          strokeLinecap="round"
-          initial={{ rotate: -90, originX: "100px", originY: "100px" }}
-          animate={{ rotate: rotation }}
-          transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
-          style={{ transformOrigin: "100px 100px" }}
-        />
-        {/* Center dot */}
-        <circle cx="100" cy="100" r="6" fill="hsl(46, 100%, 55%)" />
-      </svg>
-      {/* Score number */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
-        <span className="text-4xl md:text-5xl font-bold text-gradient-gold font-[Orbitron]">{score}</span>
-        <span className="text-muted-foreground text-sm block">/100</span>
+    <div className="relative w-48 h-32 md:w-80 md:h-48 flex items-center justify-center">
+      <div className="text-center space-y-2">
+        <div className="text-2xl md:text-3xl font-bold text-gradient-gold font-[Orbitron]">Pays On Time</div>
+        <div className="text-emerald-500 font-semibold tracking-wide uppercase text-sm">Gold Tier</div>
       </div>
     </div>
   );
@@ -80,7 +33,7 @@ const SpazaScoreSection = () => {
               <span className="text-gradient-gold">Community Credit.</span>
             </h2>
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Meet the SpazaScore. We use real data: sales consistency, profit stability, and debt discipline, to give your customers a score they can finally use. No more paper ledgers; just smart lending.
+              Meet Repayment behaviour. We use real data: sales consistency, profit stability, and debt discipline, to give your customers an explicit tier they can finally use. No more paper ledgers; just smart lending.
             </p>
 
             <div className="space-y-6">
@@ -119,8 +72,8 @@ const SpazaScoreSection = () => {
             className="flex justify-center"
           >
             <div className="glass-card p-10 glow-gold">
-              <p className="text-center text-sm text-muted-foreground mb-4 font-[Orbitron] tracking-wider uppercase">SpazaScore</p>
-              <SpazaScoreGauge />
+              <p className="text-center text-sm text-muted-foreground mb-4 font-[Orbitron] tracking-wider uppercase">Repayment behaviour</p>
+              <RepaymentBehaviourGauge />
             </div>
           </motion.div>
         </div>

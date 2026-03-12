@@ -14,6 +14,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { ShieldCheck, Banknote, Percent, CheckCircle, Info } from "lucide-react";
 import { useCredit } from "@/context/CreditContext";
 import GamificationStatus from "@/components/credit/GamificationStatus";
+import FieldError from "@/components/ui/FieldError";
+import { validateAmount, validateTextArea, validateRequired, validateAccountNumber, validateBranchCode, hasErrors } from "@/utils/validation";
 
 const CustomerCreditApplication = () => {
     const { profile, lenderOffers } = useCredit();
@@ -34,15 +36,35 @@ const CustomerCreditApplication = () => {
     const [accountNumber, setAccountNumber] = useState("");
     const [branchCode, setBranchCode] = useState("");
 
+    // Validation errors
+    const [formErrors, setFormErrors] = useState({
+        amount: null as string | null,
+        lender: null as string | null,
+        term: null as string | null,
+        reason: null as string | null,
+        bankName: null as string | null,
+        accountNumber: null as string | null,
+        branchCode: null as string | null,
+    });
+
+    const clearError = (field: keyof typeof formErrors) => {
+        setFormErrors(prev => ({ ...prev, [field]: null }));
+    };
 
 
     const handleApply = () => {
-        if (!selectedLender) {
-            toast.error("Please select a lender to proceed.");
-            return;
-        }
-        if (!amount || !term || !reason) {
-            toast.error("Please fill in all application details.");
+        const errs = {
+            amount: validateAmount(amount, 1),
+            lender: selectedLender ? null : "Please select a lender to proceed.",
+            term: term ? null : "Please select a repayment term.",
+            reason: validateTextArea(reason, "Loan purpose", 20),
+            bankName: bankName ? null : "Please select your bank.",
+            accountNumber: validateAccountNumber(accountNumber),
+            branchCode: validateBranchCode(branchCode),
+        };
+        setFormErrors(errs);
+        if (hasErrors(errs)) {
+            toast.error("Please fix the errors in the form before applying.");
             return;
         }
         setShowDisclaimer(true);
@@ -67,7 +89,7 @@ const CustomerCreditApplication = () => {
                     <p className="text-muted-foreground">Compare rates and apply for credit from our trusted partners.</p>
                 </div>
 
-                {/* Credit Score Overview */}
+                {/* Repayment Behaviour Overview */}
                 <Card className="border-t-4 border-t-indigo-500 shadow-xl overflow-hidden relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent pointer-events-none" />
                     <CardHeader>
@@ -140,14 +162,16 @@ const CustomerCreditApplication = () => {
                                     type="number"
                                     placeholder="e.g. 2500"
                                     value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
+                                    className={formErrors.amount ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => { setAmount(e.target.value); clearError('amount'); }}
                                 />
+                                <FieldError message={formErrors.amount} />
                             </div>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="lender">Select Lender</Label>
-                                <Select onValueChange={setSelectedLender} value={selectedLender || ""}>
-                                    <SelectTrigger id="lender">
+                                <Select onValueChange={(v) => { setSelectedLender(v); clearError('lender'); }} value={selectedLender || ""}>
+                                    <SelectTrigger id="lender" className={formErrors.lender ? "border-destructive focus-visible:ring-destructive" : ""}>
                                         <SelectValue placeholder="Choose a partner" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -158,6 +182,7 @@ const CustomerCreditApplication = () => {
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <FieldError message={formErrors.lender} />
                             </div>
 
                             <div className="grid gap-2">
@@ -172,8 +197,8 @@ const CustomerCreditApplication = () => {
 
                             <div className="grid gap-2">
                                 <Label htmlFor="term">Repayment Term</Label>
-                                <Select onValueChange={setTerm} value={term}>
-                                    <SelectTrigger>
+                                <Select onValueChange={(v) => { setTerm(v); clearError('term'); }} value={term}>
+                                    <SelectTrigger className={formErrors.term ? "border-destructive focus-visible:ring-destructive" : ""}>
                                         <SelectValue placeholder="Select term" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -183,6 +208,7 @@ const CustomerCreditApplication = () => {
                                         <SelectItem value="90">90 Days</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <FieldError message={formErrors.term} />
                             </div>
 
                             <div className="grid gap-2 md:col-span-2">
@@ -190,10 +216,11 @@ const CustomerCreditApplication = () => {
                                 <Textarea
                                     id="reason"
                                     placeholder="e.g. Stock replenishment for weekend trade..."
-                                    className="min-h-[100px] resize-none"
+                                    className={`min-h-[100px] resize-none ${formErrors.reason ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                     value={reason}
-                                    onChange={(e) => setReason(e.target.value)}
+                                    onChange={(e) => { setReason(e.target.value); clearError('reason'); }}
                                 />
+                                <FieldError message={formErrors.reason} />
                             </div>
                         </div>
                     </div>
@@ -204,8 +231,8 @@ const CustomerCreditApplication = () => {
                         <div className="grid md:grid-cols-3 gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="bankName">Bank Name</Label>
-                                <Select onValueChange={setBankName} value={bankName}>
-                                    <SelectTrigger id="bankName">
+                                <Select onValueChange={(v) => { setBankName(v); clearError('bankName'); }} value={bankName}>
+                                    <SelectTrigger id="bankName" className={formErrors.bankName ? "border-destructive focus-visible:ring-destructive" : ""}>
                                         <SelectValue placeholder="Select bank" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -218,6 +245,7 @@ const CustomerCreditApplication = () => {
                                         <SelectItem value="other">Other</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <FieldError message={formErrors.bankName} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="accountNumber">Account Number</Label>
@@ -226,8 +254,10 @@ const CustomerCreditApplication = () => {
                                     type="text"
                                     placeholder="e.g. 62123456789"
                                     value={accountNumber}
-                                    onChange={(e) => setAccountNumber(e.target.value)}
+                                    className={formErrors.accountNumber ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => { setAccountNumber(e.target.value); clearError('accountNumber'); }}
                                 />
+                                <FieldError message={formErrors.accountNumber} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="branchCode">Branch Code</Label>
@@ -236,8 +266,10 @@ const CustomerCreditApplication = () => {
                                     type="text"
                                     placeholder="e.g. 250655"
                                     value={branchCode}
-                                    onChange={(e) => setBranchCode(e.target.value)}
+                                    className={formErrors.branchCode ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => { setBranchCode(e.target.value); clearError('branchCode'); }}
                                 />
+                                <FieldError message={formErrors.branchCode} />
                             </div>
                         </div>
                     </div>

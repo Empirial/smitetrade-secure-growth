@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
+import FieldError from "@/components/ui/FieldError";
+import { validateRequired, validateEmail, validatePassword, hasErrors } from "@/utils/validation";
 
 const CashierRegister = () => {
     const navigate = useNavigate();
@@ -16,9 +18,27 @@ const CashierRegister = () => {
         email: "",
         password: ""
     });
+    const [errors, setErrors] = useState({
+        firstName: null as string | null,
+        lastName: null as string | null,
+        email: null as string | null,
+        password: null as string | null,
+    });
+
+    const validate = () => {
+        const newErrors = {
+            firstName: validateRequired(formData.firstName, "First name"),
+            lastName: validateRequired(formData.lastName, "Last name"),
+            email: validateEmail(formData.email),
+            password: validatePassword(formData.password),
+        };
+        setErrors(newErrors);
+        return !hasErrors(newErrors);
+    };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
         setLoading(true);
         try {
             await register(
@@ -35,6 +55,11 @@ const CashierRegister = () => {
         }
     };
 
+    const setField = (field: keyof typeof formData, value: string) => {
+        setFormData({ ...formData, [field]: value });
+        setErrors({ ...errors, [field]: null });
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
             <Card className="w-full max-w-md shadow-lg">
@@ -44,26 +69,28 @@ const CashierRegister = () => {
                         Create a cashier account
                     </CardDescription>
                 </CardHeader>
-                <form onSubmit={handleRegister}>
+                <form onSubmit={handleRegister} noValidate>
                     <CardContent className="grid gap-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="first-name">First name</Label>
                                 <Input
                                     id="first-name"
-                                    required
                                     value={formData.firstName}
-                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                    className={errors.firstName ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => setField("firstName", e.target.value)}
                                 />
+                                <FieldError message={errors.firstName} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="last-name">Last name</Label>
                                 <Input
                                     id="last-name"
-                                    required
                                     value={formData.lastName}
-                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                    className={errors.lastName ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => setField("lastName", e.target.value)}
                                 />
+                                <FieldError message={errors.lastName} />
                             </div>
                         </div>
                         <div className="grid gap-2">
@@ -71,21 +98,22 @@ const CashierRegister = () => {
                             <Input
                                 id="email"
                                 type="email"
-                                required
                                 value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => setField("email", e.target.value)}
                             />
+                            <FieldError message={errors.email} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="password">Password</Label>
                             <Input
                                 id="password"
                                 type="password"
-                                minLength={6}
-                                required
                                 value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                className={errors.password ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => setField("password", e.target.value)}
                             />
+                            <FieldError message={errors.password} />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">

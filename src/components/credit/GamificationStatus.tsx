@@ -31,9 +31,6 @@ const GamificationStatus = ({ tier, score }: GamificationStatusProps) => {
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h3 className="text-xl font-bold font-[Orbitron]">{details.label}</h3>
-                    <p className="text-sm text-muted-foreground">
-                        Your reliability index is <span className="font-bold text-foreground">{score.toFixed(1)}%</span>
-                    </p>
                 </div>
                 <motion.div
                     initial={{ scale: 0.8, rotate: -10 }}
@@ -47,13 +44,9 @@ const GamificationStatus = ({ tier, score }: GamificationStatusProps) => {
 
             <div className="space-y-2">
                 <div className="flex justify-between text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    <span>Performance</span>
-                    <span>Target: 0-3%</span>
+                    <span>Performance Category</span>
                 </div>
-                {/* Visualizing "Lower is Better" on a progress bar is tricky. 
-                    We invert it: 100 - score (clamped) for display purposes if score < 100 */}
-                <Progress value={Math.max(0, 100 - Math.min(score, 100))} className={`h-3 ${details.bg}`} />
-                <p className="text-xs text-right text-muted-foreground pt-1">
+                <p className="text-xs text-muted-foreground pt-1">
                     {tier === 'Gold' ? 'Maintain early payments to keep Gold!' : 'Pay earlier next month to level up!'}
                 </p>
             </div>

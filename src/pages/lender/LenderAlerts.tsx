@@ -13,7 +13,7 @@ const LenderAlerts = () => {
     const localAlerts = [
         {
             id: 1, type: "success", title: "New Loan Application",
-            message: "Thabo Mokoena has submitted a loan application for R5,000. SpazaScore: 72/100.",
+            message: "Thabo Mokoena has submitted a loan application for R5,000. Repayment behaviour: Pays On Time.",
             date: new Date(Date.now() - 1000 * 60 * 60).toISOString(), read: false,
             action: { label: "Review Application", route: "/lender/applications" }
         },

@@ -73,6 +73,39 @@ export const MOCK_ORDERS: Order[] = [
         type: "delivery",
         storeId: "mock-store-002",
         storeName: "Diepkloof Mini Mart"
+    },
+    {
+        id: "ord-test-004",
+        customerName: "Mock User",
+        customerAddress: "Soweto, Zone 6",
+        items: [
+            { id: "p1", name: "Bread", quantity: 2, price: 15.00 },
+            { id: "p2", name: "Milk", quantity: 1, price: 22.50 }
+        ],
+        total: 52.50,
+        status: "Out for Delivery",
+        date: new Date(Date.now() - 1800000).toISOString(), // 30 mins ago
+        type: "delivery",
+        storeId: MOCK_STORE_ID,
+        storeName: MOCK_STORE_NAME,
+        userId: "mock-user-123",
+        driverId: "mock-driver-1"
+    },
+    {
+        id: "ord-test-005",
+        customerName: "Mock User",
+        customerAddress: "Soweto, Zone 6",
+        items: [
+            { id: "p8", name: "Maize Meal 5kg", quantity: 1, price: 55.00 },
+            { id: "p4", name: "Coke", quantity: 2, price: 18.00 }
+        ],
+        total: 91.00,
+        status: "Delivered",
+        date: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
+        type: "delivery",
+        storeId: MOCK_STORE_ID,
+        storeName: MOCK_STORE_NAME,
+        userId: "mock-user-123"
     }
 ];
 

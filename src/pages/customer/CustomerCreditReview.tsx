@@ -20,9 +20,9 @@ const getTierBadge = (tier: string) => {
 const getTierDescription = (tier: string) => {
     switch (tier) {
         case 'Platinum': return 'Very Excellent – You pay before the due date';
-        case 'Gold': return 'Excellent – You pay on the due date';
-        case 'Silver': return 'Good – You pay within the month';
-        case 'Bronze': return 'Needs Improvement – Late payments detected';
+        case 'Gold': return 'Pays On Time';
+        case 'Silver': return 'Pays But delays';
+        case 'Bronze': return 'Does not pay at all';
         default: return 'At Risk – Significant late payments';
     }
 };
@@ -51,7 +51,7 @@ const CustomerCreditReview = () => {
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <div>
-                                <CardTitle>BRI Score</CardTitle>
+                                <CardTitle>Repayment behaviour</CardTitle>
                                 <CardDescription>Updated today</CardDescription>
                             </div>
                             <ShieldCheck className="h-8 w-8 text-primary" />
@@ -59,19 +59,10 @@ const CustomerCreditReview = () => {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="text-center py-6 bg-secondary/50 rounded-lg space-y-3">
-                            <span className="text-6xl font-extrabold font-[Orbitron]">{briScore.toFixed(1)}%</span>
                             <div className="flex justify-center">
                                 {getTierBadge(tier)}
                             </div>
                             <p className="text-sm text-muted-foreground mt-2">{getTierDescription(tier)}</p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span>Payment Reliability</span>
-                                <span>Lower % = Better</span>
-                            </div>
-                            <Progress value={progressValue} className="h-3" />
                         </div>
 
                         <div className="pt-4">
@@ -87,23 +78,23 @@ const CustomerCreditReview = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Credit Limit</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Current Balance Owed</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">R {creditLimit.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                <TrendingUp className="h-3 w-3 text-green-600" /> Based on your BRI tier
+                            <div className="text-2xl font-bold text-red-500">R {balance.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Pay this balance to maintain your Store Tier.
                             </p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Available to Spend</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Approved Store Limit</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">R {available.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                R {balance.toLocaleString('en-ZA', { minimumFractionDigits: 2 })} utilized
+                            <div className="text-2xl font-bold text-emerald-600">R {creditLimit.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                <TrendingUp className="h-3 w-3 text-green-600" /> Based on your BRI tier
                             </p>
                         </CardContent>
                     </Card>

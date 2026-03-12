@@ -140,8 +140,8 @@ const LenderClients = () => {
                                         </Badge>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Credit Score:</span>
-                                        <span className={borrower.score > 3 ? 'text-green-600 font-bold' : ''}>{borrower.score}%</span>
+                                        <span>Repayment behaviour:</span>
+                                        <span className={borrower.score > 3 ? 'text-green-600 font-bold' : ''}>{borrower.score > 70 ? 'Gold' : borrower.score > 40 ? 'Silver' : 'Bronze'}</span>
                                     </div>
                                 </div>
                                 {/* Pending Loans Check */}

@@ -6,16 +6,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import FieldError from "@/components/ui/FieldError";
+import { validateEmail } from "@/utils/validation";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
+    const [emailError, setEmailError] = useState<string | null>(null);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        const err = validateEmail(email);
+        setEmailError(err);
+        if (err) return;
 
-        // Simulate API call
+        setLoading(true);
         setTimeout(() => {
             setLoading(false);
             toast.success("Password reset link sent to your email.");
@@ -32,17 +37,18 @@ const ForgotPassword = () => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"
                                 type="email"
                                 placeholder="m@example.com"
-                                required
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                className={emailError ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => { setEmail(e.target.value); setEmailError(null); }}
                             />
+                            <FieldError message={emailError} />
                         </div>
                         <Button className="w-full" type="submit" disabled={loading}>
                             {loading ? "Sending..." : "Send Reset Link"}

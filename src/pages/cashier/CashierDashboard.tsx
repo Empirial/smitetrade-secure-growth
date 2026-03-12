@@ -61,7 +61,7 @@ const CashierDashboard = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">Review Credit</div>
-                            <p className="text-xs text-muted-foreground">Lookup customer SpazaScore</p>
+                            <p className="text-xs text-muted-foreground">Lookup customer Repayment behaviour</p>
                         </CardContent>
                     </Card>
                 </Link>

@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
+import FieldError from "@/components/ui/FieldError";
+import { validateRequired, validateEmail, validatePassword, validatePhone, validateLicensePlate, hasErrors } from "@/utils/validation";
 
 const DriverRegister = () => {
     const navigate = useNavigate();
@@ -15,13 +17,34 @@ const DriverRegister = () => {
         lastName: "",
         phone: "",
         license: "",
-        password: "" // In a real app we'd need email too!
+        password: ""
     });
-    // Adding email field to form as it was missing but required for Firebase
     const [email, setEmail] = useState("");
+    const [errors, setErrors] = useState({
+        firstName: null as string | null,
+        lastName: null as string | null,
+        email: null as string | null,
+        phone: null as string | null,
+        license: null as string | null,
+        password: null as string | null,
+    });
+
+    const validate = () => {
+        const newErrors = {
+            firstName: validateRequired(formData.firstName, "First name"),
+            lastName: validateRequired(formData.lastName, "Last name"),
+            email: validateEmail(email),
+            phone: validatePhone(formData.phone),
+            license: validateLicensePlate(formData.license),
+            password: validatePassword(formData.password),
+        };
+        setErrors(newErrors);
+        return !hasErrors(newErrors);
+    };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
         setLoading(true);
         try {
             await register(
@@ -38,6 +61,11 @@ const DriverRegister = () => {
         }
     };
 
+    const setField = (field: keyof typeof formData, value: string) => {
+        setFormData({ ...formData, [field]: value });
+        setErrors({ ...errors, [field]: null });
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-background px-4">
             <Card className="w-full max-w-sm border-border shadow-sm">
@@ -47,26 +75,28 @@ const DriverRegister = () => {
                         Join the logistics network
                     </CardDescription>
                 </CardHeader>
-                <form onSubmit={handleRegister}>
+                <form onSubmit={handleRegister} noValidate>
                     <CardContent className="grid gap-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="name">First Name</Label>
                                 <Input
                                     id="name"
-                                    required
                                     value={formData.firstName}
-                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                    className={errors.firstName ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => setField("firstName", e.target.value)}
                                 />
+                                <FieldError message={errors.firstName} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="lastname">Last Name</Label>
                                 <Input
                                     id="lastname"
-                                    required
                                     value={formData.lastName}
-                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                    className={errors.lastName ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => setField("lastName", e.target.value)}
                                 />
+                                <FieldError message={errors.lastName} />
                             </div>
                         </div>
                         <div className="grid gap-2">
@@ -74,41 +104,44 @@ const DriverRegister = () => {
                             <Input
                                 id="email"
                                 type="email"
-                                required
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => { setEmail(e.target.value); setErrors({ ...errors, email: null }); }}
                             />
+                            <FieldError message={errors.email} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="phone">Mobile Number</Label>
                             <Input
                                 id="phone"
                                 type="tel"
-                                required
                                 value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                className={errors.phone ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => setField("phone", e.target.value)}
                             />
+                            <FieldError message={errors.phone} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="license">License Plate</Label>
                             <Input
                                 id="license"
                                 placeholder="ABC 123 GP"
-                                required
                                 value={formData.license}
-                                onChange={(e) => setFormData({ ...formData, license: e.target.value })}
+                                className={errors.license ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => setField("license", e.target.value)}
                             />
+                            <FieldError message={errors.license} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="password">Create Password</Label>
                             <Input
                                 id="password"
                                 type="password"
-                                required
-                                minLength={6}
                                 value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                className={errors.password ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => setField("password", e.target.value)}
                             />
+                            <FieldError message={errors.password} />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">

@@ -30,9 +30,6 @@ const CustomerPayment = () => {
     const handlePayment = () => {
         if (paymentMethod === "card") {
             pay();
-        } else {
-            // Cash on delivery — no payment processing needed
-            setSuccess(true);
         }
     };
 
@@ -79,14 +76,6 @@ const CustomerPayment = () => {
                                     </Label>
                                 </div>
                                 <span className="text-xs text-muted-foreground">via PayStack</span>
-                            </div>
-                            <div className={`flex items-center justify-between space-x-2 border p-4 rounded-md ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : ''}`}>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="cod" id="cod" />
-                                    <Label htmlFor="cod" className="flex items-center gap-2 font-medium cursor-pointer">
-                                        <Banknote className="h-4 w-4" /> Cash on Delivery
-                                    </Label>
-                                </div>
                             </div>
                         </RadioGroup>
 

@@ -3,27 +3,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
-import { Truck } from "lucide-react";
+import { Truck, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
+import FieldError from "@/components/ui/FieldError";
+import { validateEmail, validatePassword, hasErrors } from "@/utils/validation";
 
 const DriverLogin = () => {
     const navigate = useNavigate();
     const { login } = useStore();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({ email: "", password: "" });
+    const [errors, setErrors] = useState({ email: null as string | null, password: null as string | null });
+    const [authError, setAuthError] = useState<string | null>(null);
+
+    const validate = () => {
+        const newErrors = {
+            email: validateEmail(formData.email),
+            password: validatePassword(formData.password),
+        };
+        setErrors(newErrors);
+        return !hasErrors(newErrors);
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setAuthError(null);
+        if (!validate()) return;
         setLoading(true);
         try {
             await login(formData.email, formData.password, "driver");
             navigate("/driver/orders");
         } catch (error) {
-            // Error handled in context
+            setAuthError("Incorrect email or password. Please try again.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleChange = (field: "email" | "password", value: string) => {
+        setFormData({ ...formData, [field]: value });
+        setErrors({ ...errors, [field]: null });
+        setAuthError(null);
     };
 
     return (
@@ -43,7 +64,13 @@ const DriverLogin = () => {
 
                 <Card className="border-border shadow-xl">
                     <CardContent className="pt-8">
-                        <form onSubmit={handleLogin} className="space-y-6">
+                        <form onSubmit={handleLogin} className="space-y-6" noValidate>
+                            {authError && (
+                                <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                                    <AlertCircle className="h-4 w-4 shrink-0" />
+                                    {authError}
+                                </div>
+                            )}
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="email">Email</Label>
@@ -51,11 +78,11 @@ const DriverLogin = () => {
                                         id="email"
                                         type="email"
                                         placeholder="driver@smitetrade.com"
-                                        required
-                                        className="bg-background"
+                                        className={`bg-background ${errors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                         value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        onChange={(e) => handleChange("email", e.target.value)}
                                     />
+                                    <FieldError message={errors.email} />
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
@@ -67,11 +94,11 @@ const DriverLogin = () => {
                                     <Input
                                         id="password"
                                         type="password"
-                                        required
-                                        className="bg-background"
+                                        className={`bg-background ${errors.password ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                         value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        onChange={(e) => handleChange("password", e.target.value)}
                                     />
+                                    <FieldError message={errors.password} />
                                 </div>
                             </div>
 

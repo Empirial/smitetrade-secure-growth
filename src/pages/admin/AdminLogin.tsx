@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, AlertCircle } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
+import FieldError from "@/components/ui/FieldError";
+import { validateRequired, validatePassword, hasErrors } from "@/utils/validation";
 
 const AdminLogin = () => {
     const navigate = useNavigate();
@@ -13,15 +15,28 @@ const AdminLogin = () => {
     const [id, setId] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState({ id: null as string | null, password: null as string | null });
+    const [authError, setAuthError] = useState<string | null>(null);
+
+    const validate = () => {
+        const newErrors = {
+            id: validateRequired(id, "Admin ID"),
+            password: validatePassword(password),
+        };
+        setErrors(newErrors);
+        return !hasErrors(newErrors);
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setAuthError(null);
+        if (!validate()) return;
         setIsLoading(true);
         try {
             await login(id.includes("@") ? id : `${id}@admin.smitetrade.co.za`, password, "admin");
             navigate("/admin/dashboard");
         } catch {
-            // error handled in login
+            setAuthError("Access denied. Invalid credentials or insufficient permissions.");
         } finally {
             setIsLoading(false);
         }
@@ -44,18 +59,24 @@ const AdminLogin = () => {
 
                 <Card className="border-border shadow-xl">
                     <CardContent className="pt-8">
-                        <form onSubmit={handleLogin} className="space-y-6">
+                        <form onSubmit={handleLogin} className="space-y-6" noValidate>
+                            {authError && (
+                                <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                                    <AlertCircle className="h-4 w-4 shrink-0" />
+                                    {authError}
+                                </div>
+                            )}
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="id">Admin ID</Label>
                                     <Input
                                         id="id"
                                         placeholder="sysadmin"
-                                        required
                                         value={id}
-                                        onChange={(e) => setId(e.target.value)}
-                                        className="bg-background"
+                                        onChange={(e) => { setId(e.target.value); setErrors({ ...errors, id: null }); setAuthError(null); }}
+                                        className={`bg-background ${errors.id ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                     />
+                                    <FieldError message={errors.id} />
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
@@ -67,11 +88,11 @@ const AdminLogin = () => {
                                     <Input
                                         id="password"
                                         type="password"
-                                        required
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="bg-background"
+                                        onChange={(e) => { setPassword(e.target.value); setErrors({ ...errors, password: null }); setAuthError(null); }}
+                                        className={`bg-background ${errors.password ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                     />
+                                    <FieldError message={errors.password} />
                                 </div>
                             </div>
 

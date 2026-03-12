@@ -6,6 +6,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
 import { Building2 } from "lucide-react";
+import FieldError from "@/components/ui/FieldError";
+import { validateRequired, validateEmail, validatePassword, hasErrors } from "@/utils/validation";
 
 const LenderRegister = () => {
     const navigate = useNavigate();
@@ -18,9 +20,29 @@ const LenderRegister = () => {
         email: "",
         password: ""
     });
+    const [errors, setErrors] = useState({
+        firstName: null as string | null,
+        lastName: null as string | null,
+        companyName: null as string | null,
+        email: null as string | null,
+        password: null as string | null,
+    });
+
+    const validate = () => {
+        const newErrors = {
+            firstName: validateRequired(formData.firstName, "First name"),
+            lastName: validateRequired(formData.lastName, "Last name"),
+            companyName: validateRequired(formData.companyName, "Company name"),
+            email: validateEmail(formData.email),
+            password: validatePassword(formData.password),
+        };
+        setErrors(newErrors);
+        return !hasErrors(newErrors);
+    };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
         setLoading(true);
         try {
             await register(
@@ -36,6 +58,11 @@ const LenderRegister = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const setField = (field: keyof typeof formData, value: string) => {
+        setFormData({ ...formData, [field]: value });
+        setErrors({ ...errors, [field]: null });
     };
 
     return (
@@ -55,27 +82,27 @@ const LenderRegister = () => {
 
                 <Card className="border-border shadow-xl">
                     <CardContent className="pt-8">
-                        <form onSubmit={handleRegister} className="space-y-6">
+                        <form onSubmit={handleRegister} className="space-y-6" noValidate>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="first-name">First name</Label>
                                     <Input
                                         id="first-name"
-                                        required
-                                        className="bg-background"
+                                        className={`bg-background ${errors.firstName ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                         value={formData.firstName}
-                                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                        onChange={(e) => setField("firstName", e.target.value)}
                                     />
+                                    <FieldError message={errors.firstName} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="last-name">Last name</Label>
                                     <Input
                                         id="last-name"
-                                        required
-                                        className="bg-background"
+                                        className={`bg-background ${errors.lastName ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                         value={formData.lastName}
-                                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                        onChange={(e) => setField("lastName", e.target.value)}
                                     />
+                                    <FieldError message={errors.lastName} />
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -83,11 +110,11 @@ const LenderRegister = () => {
                                 <Input
                                     id="company-name"
                                     placeholder="My Lending Co."
-                                    required
-                                    className="bg-background"
+                                    className={`bg-background ${errors.companyName ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                     value={formData.companyName}
-                                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                                    onChange={(e) => setField("companyName", e.target.value)}
                                 />
+                                <FieldError message={errors.companyName} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
@@ -95,23 +122,22 @@ const LenderRegister = () => {
                                     id="email"
                                     type="email"
                                     placeholder="lender@smitetrade.com"
-                                    required
-                                    className="bg-background"
+                                    className={`bg-background ${errors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                     value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    onChange={(e) => setField("email", e.target.value)}
                                 />
+                                <FieldError message={errors.email} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password</Label>
                                 <Input
                                     id="password"
                                     type="password"
-                                    required
-                                    minLength={6}
-                                    className="bg-background"
+                                    className={`bg-background ${errors.password ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                     value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    onChange={(e) => setField("password", e.target.value)}
                                 />
+                                <FieldError message={errors.password} />
                             </div>
 
                             <Button type="submit" className="w-full shadow-md" disabled={loading}>

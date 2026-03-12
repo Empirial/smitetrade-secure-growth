@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useStore } from "@/context/StoreContext";
+import FieldError from "@/components/ui/FieldError";
+import { validateRequired, validateEmail, validatePassword, hasErrors } from "@/utils/validation";
 
 const OwnerRegister = () => {
     const navigate = useNavigate();
@@ -21,9 +23,29 @@ const OwnerRegister = () => {
         email: "",
         password: ""
     });
+    const [errors, setErrors] = useState({
+        firstName: null as string | null,
+        lastName: null as string | null,
+        storeName: null as string | null,
+        email: null as string | null,
+        password: null as string | null,
+    });
+
+    const validate = () => {
+        const newErrors = {
+            firstName: validateRequired(formData.firstName, "First name"),
+            lastName: validateRequired(formData.lastName, "Last name"),
+            storeName: validateRequired(formData.storeName, "Store name"),
+            email: validateEmail(formData.email),
+            password: validatePassword(formData.password),
+        };
+        setErrors(newErrors);
+        return !hasErrors(newErrors);
+    };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
         setLoading(true);
         try {
             await register(
@@ -41,6 +63,11 @@ const OwnerRegister = () => {
         }
     };
 
+    const setField = (field: keyof typeof formData, value: string) => {
+        setFormData({ ...formData, [field]: value });
+        if (field in errors) setErrors({ ...errors, [field]: null });
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-background px-4">
             <Card className="w-full max-w-md shadow-lg">
@@ -50,88 +77,92 @@ const OwnerRegister = () => {
                         Create an owner account to start trading on SMITETRADE
                     </CardDescription>
                 </CardHeader>
-                <form onSubmit={handleRegister}>
+                <form onSubmit={handleRegister} noValidate>
                     <CardContent className="grid gap-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="first-name">First name</Label>
-                                <Input 
-                                    id="first-name" 
-                                    required 
+                                <Input
+                                    id="first-name"
                                     value={formData.firstName}
-                                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                                    className={errors.firstName ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => setField("firstName", e.target.value)}
                                 />
+                                <FieldError message={errors.firstName} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="last-name">Last name</Label>
-                                <Input 
-                                    id="last-name" 
-                                    required 
+                                <Input
+                                    id="last-name"
                                     value={formData.lastName}
-                                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                                    className={errors.lastName ? "border-destructive focus-visible:ring-destructive" : ""}
+                                    onChange={(e) => setField("lastName", e.target.value)}
                                 />
+                                <FieldError message={errors.lastName} />
                             </div>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="store-name">Store Name</Label>
-                            <Input 
-                                id="store-name" 
-                                placeholder="My Spaza Shop" 
-                                required 
+                            <Input
+                                id="store-name"
+                                placeholder="My Spaza Shop"
                                 value={formData.storeName}
-                                onChange={(e) => setFormData({...formData, storeName: e.target.value})}
+                                className={errors.storeName ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => setField("storeName", e.target.value)}
                             />
+                            <FieldError message={errors.storeName} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="store-address">Store Address</Label>
-                            <Input 
-                                id="store-address" 
-                                placeholder="12 Vilakazi Street" 
+                            <Input
+                                id="store-address"
+                                placeholder="12 Vilakazi Street"
                                 value={formData.storeAddress}
-                                onChange={(e) => setFormData({...formData, storeAddress: e.target.value})}
+                                onChange={(e) => setField("storeAddress", e.target.value)}
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="store-suburb">Suburb</Label>
-                                <Input 
-                                    id="store-suburb" 
-                                    placeholder="Orlando West" 
+                                <Input
+                                    id="store-suburb"
+                                    placeholder="Orlando West"
                                     value={formData.storeSuburb}
-                                    onChange={(e) => setFormData({...formData, storeSuburb: e.target.value})}
+                                    onChange={(e) => setField("storeSuburb", e.target.value)}
                                 />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="store-city">City</Label>
-                                <Input 
-                                    id="store-city" 
-                                    placeholder="Soweto" 
+                                <Input
+                                    id="store-city"
+                                    placeholder="Soweto"
                                     value={formData.storeCity}
-                                    onChange={(e) => setFormData({...formData, storeCity: e.target.value})}
+                                    onChange={(e) => setField("storeCity", e.target.value)}
                                 />
                             </div>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input 
-                                id="email" 
-                                type="email" 
-                                placeholder="owner@example.com" 
-                                required 
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="owner@example.com"
                                 value={formData.email}
-                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => setField("email", e.target.value)}
                             />
+                            <FieldError message={errors.email} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input 
-                                id="password" 
-                                type="password" 
-                                required 
-                                minLength={6}
+                            <Input
+                                id="password"
+                                type="password"
                                 value={formData.password}
-                                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                className={errors.password ? "border-destructive focus-visible:ring-destructive" : ""}
+                                onChange={(e) => setField("password", e.target.value)}
                             />
+                            <FieldError message={errors.password} />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-4">

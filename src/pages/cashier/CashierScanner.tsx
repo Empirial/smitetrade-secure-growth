@@ -106,7 +106,6 @@ const CashierScanner = () => {
             setShowDownloadDialog(true);
             toast.success("PDF created successfully!");
         } catch (error) {
-            console.error("Error creating PDF:", error);
             toast.error("Failed to create PDF. Please try again.");
         } finally {
             setIsProcessing(false);

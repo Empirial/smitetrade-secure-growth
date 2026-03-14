@@ -8,24 +8,85 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStore } from "@/context/StoreContext";
 import { useCredit } from "@/context/CreditContext";
 import { Switch } from "@/components/ui/switch";
-import { Globe, ShieldCheck } from "lucide-react";
+import { Globe, ShieldCheck, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { useState, useRef } from "react";
 
 const LenderProfile = () => {
     const { user } = useStore();
     const { addLenderOffer } = useCredit();
 
+    // Profile form state
+    const [name, setName] = useState(user?.name || "Lufuno Lender");
+    const [email, setEmail] = useState(user?.email || "lender@smitetrade.com");
+    const [phone, setPhone] = useState("+27 12 345 6789");
+
+    // Password form state
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+
+    // Marketplace / lending settings state
+    const [interest, setInterest] = useState("5.0");
+    const [maxTerm, setMaxTerm] = useState("30");
+    const [maxAmount, setMaxAmount] = useState("50000");
+    const [businessName, setBusinessName] = useState("Smitetrade Secured Partner");
+    const [pubAddress, setPubAddress] = useState("123 Financial District, Sandton, 2196");
+    const [pubEmail, setPubEmail] = useState("contact@smitetrade.com");
+    const [pubPhone, setPubPhone] = useState("+27 11 123 4567");
+
+    // Document upload refs
+    const idUploadRef = useRef<HTMLInputElement>(null);
+    const bizUploadRef = useRef<HTMLInputElement>(null);
+    const [idFileName, setIdFileName] = useState<string | null>(null);
+    const [bizFileName, setBizFileName] = useState<string | null>(null);
+
+    const handleSaveProfile = () => {
+        if (!name.trim() || !email.trim()) {
+            toast.error("Name and email are required.");
+            return;
+        }
+        toast.success("Profile saved!", { description: "Your personal details have been updated." });
+    };
+
+    const handleUpdatePassword = () => {
+        if (!currentPassword) {
+            toast.error("Please enter your current password.");
+            return;
+        }
+        if (newPassword.length < 6) {
+            toast.error("New password must be at least 6 characters.");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            toast.error("New passwords do not match.");
+            return;
+        }
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        toast.success("Password updated successfully.");
+    };
+
     const handlePublishProfile = () => {
-        // Mock publishing the lender's custom rates to the marketplace
+        const rate = parseFloat(interest);
+        const maxAmt = parseFloat(maxAmount);
+        const term = parseInt(maxTerm);
+
+        if (isNaN(rate) || isNaN(maxAmt) || isNaN(term)) {
+            toast.error("Please fill in all lending parameters before publishing.");
+            return;
+        }
+
         const newOffer = {
             id: `lender-${Date.now()}`,
-            name: "Smitetrade Secured Partner",
-            rate: "15%", // hardcoded for demo, normally would come from State
-            term: "60 Days",
-            maxAmount: 50000,
+            name: businessName || "Smitetrade Secured Partner",
+            rate: `${rate}%`,
+            term: `${term} Days`,
+            maxAmount: maxAmt,
             minScore: 680,
             features: ["Verified Lender", "Custom Terms"],
-            description: "A newly verified lending partner offering competitive terms for growing Spaza shops."
+            description: `${businessName} offering competitive terms for growing Spaza shops.`
         };
         addLenderOffer(newOffer);
         toast.success("Profile Published!", { description: "Your lending offer is now live on the Customer Marketplace." });
@@ -62,21 +123,21 @@ const LenderProfile = () => {
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="name">Full Name</Label>
-                                        <Input id="name" defaultValue="Lufuno Lender" />
+                                        <Input id="name" value={name} onChange={e => setName(e.target.value)} />
                                     </div>
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="grid gap-2">
                                             <Label htmlFor="email">Email</Label>
-                                            <Input id="email" defaultValue={user?.email || "lender@smitetrade.com"} />
+                                            <Input id="email" value={email} onChange={e => setEmail(e.target.value)} />
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="phone">Phone Number</Label>
-                                            <Input id="phone" defaultValue="+27 12 345 6789" />
+                                            <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} />
                                         </div>
                                     </div>
                                 </CardContent>
                                 <CardFooter>
-                                    <Button>Save Changes</Button>
+                                    <Button onClick={handleSaveProfile}>Save Changes</Button>
                                 </CardFooter>
                             </Card>
 
@@ -86,18 +147,45 @@ const LenderProfile = () => {
                                     <CardDescription>Upload business documents to verify your lender status.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="border border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-2 hover:bg-muted/50 transition-colors cursor-pointer">
+                                    <input
+                                        ref={idUploadRef}
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        className="hidden"
+                                        onChange={e => {
+                                            const f = e.target.files?.[0];
+                                            if (f) { setIdFileName(f.name); toast.success(`ID document "${f.name}" ready to upload.`); }
+                                        }}
+                                    />
+                                    <div
+                                        className="border border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-2 hover:bg-muted/50 transition-colors cursor-pointer"
+                                        onClick={() => idUploadRef.current?.click()}
+                                    >
                                         <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-muted-foreground"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+                                            <Upload className="h-5 w-5 text-muted-foreground" />
                                         </div>
-                                        <div className="font-medium text-sm">Upload ID / Passport</div>
+                                        <div className="font-medium text-sm">{idFileName ?? "Upload ID / Passport"}</div>
                                         <div className="text-xs text-muted-foreground">PDF or JPG up to 5MB</div>
                                     </div>
-                                    <div className="border border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-2 hover:bg-muted/50 transition-colors cursor-pointer">
+
+                                    <input
+                                        ref={bizUploadRef}
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        className="hidden"
+                                        onChange={e => {
+                                            const f = e.target.files?.[0];
+                                            if (f) { setBizFileName(f.name); toast.success(`Business document "${f.name}" ready to upload.`); }
+                                        }}
+                                    />
+                                    <div
+                                        className="border border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-2 hover:bg-muted/50 transition-colors cursor-pointer"
+                                        onClick={() => bizUploadRef.current?.click()}
+                                    >
                                         <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-muted-foreground"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+                                            <Upload className="h-5 w-5 text-muted-foreground" />
                                         </div>
-                                        <div className="font-medium text-sm">Business Registration</div>
+                                        <div className="font-medium text-sm">{bizFileName ?? "Business Registration"}</div>
                                         <div className="text-xs text-muted-foreground">PDF or JPG up to 5MB</div>
                                     </div>
                                 </CardContent>
@@ -111,19 +199,19 @@ const LenderProfile = () => {
                                 <CardContent className="space-y-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="current-password">Current Password</Label>
-                                        <Input id="current-password" type="password" />
+                                        <Input id="current-password" type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="new-password">New Password</Label>
-                                        <Input id="new-password" type="password" />
+                                        <Input id="new-password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="confirm-password">Confirm Password</Label>
-                                        <Input id="confirm-password" type="password" />
+                                        <Input id="confirm-password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                                     </div>
                                 </CardContent>
                                 <CardFooter>
-                                    <Button variant="outline">Update Password</Button>
+                                    <Button variant="outline" onClick={handleUpdatePassword}>Update Password</Button>
                                 </CardFooter>
                             </Card>
                         </div>
@@ -170,16 +258,16 @@ const LenderProfile = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="interest">Default Interest Rate (%)</Label>
-                                            <Input id="interest" placeholder="e.g. 5.0" defaultValue="5.0" />
+                                            <Input id="interest" placeholder="e.g. 5.0" value={interest} onChange={e => setInterest(e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="max-term">Max Loan Term (Days)</Label>
-                                            <Input id="max-term" placeholder="e.g. 30" defaultValue="30" />
+                                            <Input id="max-term" placeholder="e.g. 30" value={maxTerm} onChange={e => setMaxTerm(e.target.value)} />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="max-amount">Maximum Loan Amount (R)</Label>
-                                        <Input id="max-amount" placeholder="e.g. 50000" defaultValue="50000" />
+                                        <Input id="max-amount" placeholder="e.g. 50000" value={maxAmount} onChange={e => setMaxAmount(e.target.value)} />
                                     </div>
                                 </div>
 
@@ -188,19 +276,19 @@ const LenderProfile = () => {
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="grid gap-2">
                                             <Label htmlFor="pubBusinessName">Public Business Name</Label>
-                                            <Input id="pubBusinessName" defaultValue="Smitetrade Secured Partner" />
+                                            <Input id="pubBusinessName" value={businessName} onChange={e => setBusinessName(e.target.value)} />
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="pubAddress">Public Office Address</Label>
-                                            <Input id="pubAddress" defaultValue="123 Financial District, Sandton, 2196" />
+                                            <Input id="pubAddress" value={pubAddress} onChange={e => setPubAddress(e.target.value)} />
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="pubEmail">Public Email Address</Label>
-                                            <Input id="pubEmail" type="email" defaultValue="contact@smitetrade.com" />
+                                            <Input id="pubEmail" type="email" value={pubEmail} onChange={e => setPubEmail(e.target.value)} />
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="pubPhone">Public Phone Number</Label>
-                                            <Input id="pubPhone" type="tel" defaultValue="+27 11 123 4567" />
+                                            <Input id="pubPhone" type="tel" value={pubPhone} onChange={e => setPubPhone(e.target.value)} />
                                         </div>
                                     </div>
                                 </div>

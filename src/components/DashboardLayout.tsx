@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package, Banknote, FileText, Bell, AlertTriangle, Search, Heart, Wallet, Receipt, Tag, ClipboardList, Briefcase, ChevronDown, LifeBuoy } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, User, Scan, CreditCard, LogOut, Menu, Truck, ShieldCheck, Box, Users, Settings, BarChart3, Package, Banknote, FileText, Bell, AlertTriangle, Search, Heart, Wallet, Receipt, Tag, ClipboardList, Briefcase, ChevronDown, LifeBuoy, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -47,6 +47,7 @@ const getLinks = (role: string) => {
             { href: "/owner/pricing", label: "Pricing & Promos", icon: Tag },
             { href: "/owner/credit-review", label: "Credit Review", icon: ShieldCheck },
             { href: "/owner/support", label: "Support", icon: LifeBuoy },
+            { href: "/owner/subscription", label: "Subscription", icon: Star },
         ]
     };
 
@@ -75,6 +76,7 @@ const getLinks = (role: string) => {
     ];
 
     const driverLinks = [
+        { href: "/driver/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/driver/orders", label: "My Orders", icon: Box },
         { href: "/driver/out-to-deliver", label: "Active Deliveries", icon: Truck },
         { href: "/driver/wallet", label: "Wallet & Earnings", icon: Wallet },

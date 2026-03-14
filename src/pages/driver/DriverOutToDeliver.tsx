@@ -10,7 +10,7 @@ import { useState } from "react";
 
 const DriverOutToDeliver = () => {
     const navigate = useNavigate();
-    const { orders, updateOrderStatus, user } = useStore();
+    const { orders, updateOrderStatus, user, currentStore } = useStore();
     const [progress, setProgress] = useState(33);
 
     // Find the active order for this driver
@@ -74,7 +74,7 @@ const DriverOutToDeliver = () => {
                             <div className="space-y-8 flex-1">
                                 <div>
                                     <p className="text-xs text-muted-foreground uppercase font-semibold">Pickup</p>
-                                    <p className="font-medium">My Spaza Shop</p>
+                                    <p className="font-medium">{currentStore?.name || user?.storeName || "Your Spaza Shop"}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-muted-foreground uppercase font-semibold">Dropoff</p>
@@ -93,7 +93,7 @@ const DriverOutToDeliver = () => {
 
                         <div className="bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/20 flex gap-3 text-sm text-yellow-400">
                             <ShieldCheck className="h-5 w-5 shrink-0" />
-                            <p>Verify customer ID/PIN code "1029" upon delivery.</p>
+                            <p>Verify customer PIN: <strong>{currentOrder.id.slice(-4).toUpperCase()}</strong> upon delivery.</p>
                         </div>
                     </CardContent>
                     <CardFooter className="flex-col gap-3 pt-2">

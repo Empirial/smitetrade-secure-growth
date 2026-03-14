@@ -6,30 +6,36 @@ import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle } from "luci
 import { Link } from "react-router-dom";
 import SystemNotifications from "@/components/SystemNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useState } from "react";
+
+const INITIAL_LOCAL_ALERTS = [
+    {
+        id: 1, type: "success", title: "New Delivery Assigned",
+        message: "You have been assigned order #ORD-4521 for delivery to 42 Mandela Ave, Soweto. Pickup by 11:00 AM.",
+        date: new Date(Date.now() - 1000 * 60 * 30).toISOString(), read: false,
+        action: { label: "View Order", route: "/driver/orders" }
+    },
+    {
+        id: 2, type: "warning", title: "Route Change Advisory",
+        message: "Road construction on N1 between Buccleuch and Midrand. Expected delays of 20-30 minutes.",
+        date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), read: false,
+        action: { label: "View Active Deliveries", route: "/driver/out-to-deliver" }
+    },
+    {
+        id: 3, type: "info", title: "Earnings Deposited",
+        message: "Your weekly earnings of R1,850 have been deposited to your wallet.",
+        date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), read: true,
+        action: { label: "View Wallet", route: "/driver/wallet" }
+    },
+];
 
 const DriverAlerts = () => {
     const { notifications, isRead, markAsRead, dismiss, markAllAsRead, loading } = useNotifications();
+    const [localAlerts, setLocalAlerts] = useState(INITIAL_LOCAL_ALERTS);
 
-    const localAlerts = [
-        {
-            id: 1, type: "success", title: "New Delivery Assigned",
-            message: "You have been assigned order #ORD-4521 for delivery to 42 Mandela Ave, Soweto. Pickup by 11:00 AM.",
-            date: new Date(Date.now() - 1000 * 60 * 30).toISOString(), read: false,
-            action: { label: "View Order", route: "/driver/orders" }
-        },
-        {
-            id: 2, type: "warning", title: "Route Change Advisory",
-            message: "Road construction on N1 between Buccleuch and Midrand. Expected delays of 20-30 minutes.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), read: false,
-            action: { label: "View Active Deliveries", route: "/driver/out-to-deliver" }
-        },
-        {
-            id: 3, type: "info", title: "Earnings Deposited",
-            message: "Your weekly earnings of R1,850 have been deposited to your wallet.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), read: true,
-            action: { label: "View Wallet", route: "/driver/wallet" }
-        },
-    ];
+    const markLocalRead = (id: number) => {
+        setLocalAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
+    };
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -81,7 +87,7 @@ const DriverAlerts = () => {
                             <CardFooter className="p-4 pt-2 pl-[3.25rem]">
                                 {alert.action && (
                                     <Button asChild variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
-                                        <Link to={alert.action.route}>
+                                        <Link to={alert.action.route} onClick={() => markLocalRead(alert.id)}>
                                             {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
                                         </Link>
                                     </Button>

@@ -1,4 +1,4 @@
-import { Product, User, Order } from "@/types";
+import { Product, User, Order, StaffMember } from "@/types";
 
 export const USE_MOCK_DATA = true;
 
@@ -134,4 +134,10 @@ export const MOCK_STORES = [
         status: "Active" as const,
         createdAt: new Date().toISOString()
     }
+];
+
+export const MOCK_STAFF: StaffMember[] = [
+    { id: "driver-1", name: "Sipho Ndlovu", email: "sipho@smitetrade.co.za", role: "driver", status: "Active", joined: "2025-01-15", storeId: MOCK_STORE_ID },
+    { id: "driver-2", name: "Bongani Dube", email: "bongani@smitetrade.co.za", role: "driver", status: "Active", joined: "2025-03-01", storeId: MOCK_STORE_ID },
+    { id: "cashier-1", name: "Nomvula Sithole", email: "nomvula@smitetrade.co.za", role: "cashier", status: "Active", joined: "2025-01-10", storeId: MOCK_STORE_ID },
 ];

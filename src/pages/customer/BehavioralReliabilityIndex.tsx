@@ -108,7 +108,7 @@ const BehavioralReliabilityIndex = () => {
                                             <p className="text-2xl font-bold">R {loan.amount.toFixed(2)}</p>
                                         </div>
                                         <Button size="sm" variant="outline" asChild>
-                                            <Link to="/customer/credit/pay">Pay Now</Link>
+                                            <Link to="/customer/payment">Pay Now</Link>
                                         </Button>
                                     </div>
                                 </CardContent>
@@ -119,7 +119,7 @@ const BehavioralReliabilityIndex = () => {
                                 <CardContent className="flex flex-col items-center justify-center py-8 text-muted-foreground text-center">
                                     <p>No active loans.</p>
                                     <Button variant="link" asChild className="text-emerald-600">
-                                        <Link to="/customer/credit/apply">Apply for a new loan &rarr;</Link>
+                                        <Link to="/customer/apply-credit">Apply for a new loan &rarr;</Link>
                                     </Button>
                                 </CardContent>
                             </Card>

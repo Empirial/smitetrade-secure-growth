@@ -35,33 +35,13 @@ const LenderCreditCheck = () => {
 
         if (!queryToUse) return;
 
-        // Mock Data for specific user demo
-        if (queryToUse.toLowerCase().includes("lufuno") || queryToUse.toLowerCase().includes("mphela")) {
-            setSearchResult({
-                id: "9001015009087",
-                ssid: "SS-ID0001",
-                name: "Lufuno Mphela",
-                phone: "082 123 4567",
-                email: "mphelalufuno1.0@gmail.com",
-                businessName: "Mphela General Trading",
-                score: 3.2,
-                rating: "Good",
-                status: "Active",
-                totalDebt: 0,
-                totalPaid: 15,
-                defaults: 0,
-                limit: 50000,
-                photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop"
-            });
-            return;
-        }
-
         const result = borrowers.find((b: Borrower) =>
             b.name.toLowerCase().includes(queryToUse.toLowerCase()) ||
             b.id.toString() === queryToUse ||
+            b.phone === queryToUse ||
             b.ssid?.toLowerCase() === queryToUse.toLowerCase()
         );
-        setSearchResult(result);
+        setSearchResult(result ?? null);
     };
 
     const getStatusColor = (status: string) => {
@@ -93,13 +73,13 @@ const LenderCreditCheck = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle>Search Borrower</CardTitle>
-                        <CardDescription>Enter name, ID, or email to retrieve risk profile.</CardDescription>
+                        <CardDescription>Enter name, phone number, or SS:ID to retrieve repayment profile.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="flex gap-4">
                             <div className="flex-1">
                                 <Input
-                                    placeholder="Try searching for 'Lufuno Mphela'..."
+                                    placeholder="Search by name, phone, or SS:ID..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -217,7 +197,7 @@ const LenderCreditCheck = () => {
                                 <CardContent className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
                                     <AlertTriangle className="h-12 w-12 mb-4 opacity-20" />
                                     <p>No borrower found with that information.</p>
-                                    <p className="text-sm">Try searching for "Lufuno Mphela".</p>
+                                    <p className="text-sm">Try a different name, phone number, or SS:ID.</p>
                                 </CardContent>
                             </Card>
                         )}

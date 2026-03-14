@@ -9,20 +9,37 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/context/StoreContext";
+import { toast } from "sonner";
 
-const mockAdjustments = [
+const INITIAL_ADJUSTMENTS = [
     { id: 1, date: "2026-02-26", product: "Albany Brown Bread", qty: -2, reason: "Expired", cost: 36.00, user: "Thabo (Owner)" },
     { id: 2, date: "2026-02-25", product: "Coke 2L", qty: -1, reason: "Damaged in store", cost: 24.50, user: "Lerato (Cashier)" },
 ];
 
 const OwnerStockAdjustment = () => {
-    const { products } = useStore();
+    const { products, user } = useStore();
+    const [adjustments, setAdjustments] = useState(INITIAL_ADJUSTMENTS);
     const [searchTerm, setSearchTerm] = useState("");
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newAdj, setNewAdj] = useState({ productId: "", qty: "", reason: "Damaged" });
 
-    // Mock functionality for the UI
     const handleAddAdjustment = () => {
+        if (!newAdj.productId) { toast.error("Please select a product."); return; }
+        const qty = parseInt(newAdj.qty);
+        if (!newAdj.qty || isNaN(qty) || qty <= 0) { toast.error("Please enter a valid quantity."); return; }
+        const product = products.find(p => p.id === newAdj.productId);
+        if (!product) return;
+        const cost = product.price * qty;
+        setAdjustments(prev => [{
+            id: Date.now(),
+            date: new Date().toISOString().split('T')[0],
+            product: product.name,
+            qty: -qty,
+            reason: newAdj.reason,
+            cost,
+            user: user?.name || "Owner",
+        }, ...prev]);
+        toast.success(`Stock adjustment logged: -${qty} ${product.name}`);
         setIsAddOpen(false);
         setNewAdj({ productId: "", qty: "", reason: "Damaged" });
     };
@@ -120,7 +137,7 @@ const OwnerStockAdjustment = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {mockAdjustments.map((adj) => (
+                                {adjustments.filter(a => a.product.toLowerCase().includes(searchTerm.toLowerCase())).map((adj) => (
                                     <TableRow key={adj.id}>
                                         <TableCell>{adj.date}</TableCell>
                                         <TableCell className="font-medium">{adj.product}</TableCell>

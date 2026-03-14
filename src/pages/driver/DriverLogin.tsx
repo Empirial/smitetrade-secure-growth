@@ -33,7 +33,7 @@ const DriverLogin = () => {
         setLoading(true);
         try {
             await login(formData.email, formData.password, "driver");
-            navigate("/driver/orders");
+            navigate("/driver/dashboard");
         } catch (error) {
             setAuthError("Incorrect email or password. Please try again.");
         } finally {

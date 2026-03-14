@@ -15,7 +15,8 @@ import FieldError from "@/components/ui/FieldError";
 import { validateRequired, validateEmail, validatePhone, validateIdNumber, validatePassword, validatePasswordMatch, hasErrors } from "@/utils/validation";
 
 const CustomerProfile = () => {
-    const { user, updateUser } = useStore();
+    const { user, updateUser, orders } = useStore();
+    const myOrderCount = orders.filter(o => o.userId === user?.id || o.customerName === user?.name).length;
     const { profile, isLoading: isCreditLoading } = useCredit();
     const [isSaving, setIsSaving] = useState(false);
 
@@ -196,8 +197,8 @@ const CustomerProfile = () => {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Recent Orders</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">3</div>
-                            <p className="text-xs text-muted-foreground mt-1">Last order: 2 days ago</p>
+                            <div className="text-2xl font-bold">{myOrderCount}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Total orders placed</p>
                             <Button size="sm" variant="link" className="px-0" asChild>
                                 <Link to="/customer/orders">View All &rarr;</Link>
                             </Button>
@@ -205,13 +206,13 @@ const CustomerProfile = () => {
                     </Card>
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Wishlist</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Shop</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">5 Items</div>
-                            <p className="text-xs text-muted-foreground mt-1">Saved for later</p>
+                            <div className="text-2xl font-bold">Browse</div>
+                            <p className="text-xs text-muted-foreground mt-1">Find products near you</p>
                             <Button size="sm" variant="link" className="px-0" asChild>
-                                <Link to="/customer/wishlist">Go to Wishlist &rarr;</Link>
+                                <Link to="/customer/products">Go to Shop &rarr;</Link>
                             </Button>
                         </CardContent>
                     </Card>
@@ -326,13 +327,9 @@ const CustomerProfile = () => {
                                         <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none">Default</Badge>
                                     </div>
                                 )}
-                                <div className="p-3 border rounded-md flex justify-between items-center">
-                                    <div>
-                                        <p className="font-medium text-sm">Home</p>
-                                        <p className="text-xs text-muted-foreground">45 Diepkloof Ext, Soweto</p>
-                                    </div>
-                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">...</Button>
-                                </div>
+                                {!defaultAddress && (
+                                    <p className="text-xs text-muted-foreground text-center py-2">No addresses saved. Update your profile to add one.</p>
+                                )}
                             </CardContent>
                         </Card>
 

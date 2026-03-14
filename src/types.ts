@@ -34,6 +34,9 @@ export interface User {
         postalCode: string;
     }[];
     wishlist?: string[]; // Array of Product IDs
+    vehicleType?: string; // For Drivers
+    licensePlate?: string; // For Drivers
+    region?: string; // For Drivers
     subscription?: {
         plan: 'basic' | 'pro';
         status: 'active' | 'cancelled' | 'trial';

@@ -35,7 +35,8 @@ const CustomerOrderDetails = () => {
     // We can use those directly.
 
     const handleDownloadReceipt = () => {
-        toast.success("Receipt downloading...");
+        toast.success("Opening print dialog...");
+        setTimeout(() => window.print(), 300);
     };
 
     const handleReorder = () => {

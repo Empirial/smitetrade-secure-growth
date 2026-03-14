@@ -120,7 +120,7 @@ const LenderDashboard = () => {
 
                 {/* Compliance Disclaimer */}
                 <div className="text-xs text-muted-foreground text-center max-w-2xl mx-auto space-y-1 pt-8 border-t">
-                    <p className="font-semibold">Smitetrade provides scoring and risk-assessment insights for decision-support purposes only.</p>
+                    <p className="font-semibold">Smitetrade provides repayment behavioural insights for decision-support purposes only.</p>
                     <p>The platform does not provide credit, approve or decline loans, extend goods on credit, or make tenancy decisions.</p>
                     <p>All lending, goods-on-credit, and rental decisions remain the sole responsibility of the lender, spaza shop owner, or landlord.</p>
                     <p>Smitetrade does not act as a credit provider, financial adviser, or credit bureau.</p>
@@ -128,15 +128,6 @@ const LenderDashboard = () => {
             </div>
 
 
-            <div className="mt-8 border-t pt-6 text-xs text-muted-foreground space-y-2">
-                <p className="font-semibold">Safe Compliance Statement</p>
-                <p>
-                    "Smitetrade provides scoring and risk-assessment insights for decision-support purposes only.
-                    The platform does not provide credit, approve or decline loans, extend goods on credit, or make tenancy decisions.
-                    All lending, goods-on-credit, and rental decisions remain the sole responsibility of the lender, spaza shop owner, or landlord.
-                    Smitetrade does not act as a credit provider, financial adviser, or credit bureau."
-                </p>
-            </div>
         </DashboardLayout >
     );
 };

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Building2, UploadCloud, CheckCircle2 } from "lucide-react";
@@ -13,6 +13,10 @@ const CustomerLenderRegistration = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1);
+    const idUploadRef = useRef<HTMLInputElement>(null);
+    const addressUploadRef = useRef<HTMLInputElement>(null);
+    const [idFileName, setIdFileName] = useState<string | null>(null);
+    const [addressFileName, setAddressFileName] = useState<string | null>(null);
 
     const handleNext = () => setStep(2);
     const handleBack = () => setStep(1);
@@ -92,20 +96,46 @@ const CustomerLenderRegistration = () => {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <div className="border border-dashed border-slate-700 rounded-lg p-6 bg-slate-900/50 flex flex-col items-center justify-center text-center space-y-2 hover:bg-slate-900 transition-colors cursor-pointer">
+                                <input
+                                    ref={idUploadRef}
+                                    type="file"
+                                    accept="image/*,.pdf"
+                                    className="hidden"
+                                    onChange={e => {
+                                        const f = e.target.files?.[0];
+                                        if (f) { setIdFileName(f.name); toast.success(`ID document "${f.name}" selected.`); }
+                                    }}
+                                />
+                                <div
+                                    className="border border-dashed border-slate-700 rounded-lg p-6 bg-slate-900/50 flex flex-col items-center justify-center text-center space-y-2 hover:bg-slate-900 transition-colors cursor-pointer"
+                                    onClick={() => idUploadRef.current?.click()}
+                                >
                                     <div className="p-3 bg-slate-800 rounded-full">
-                                        <UploadCloud className="h-6 w-6 text-emerald-500" />
+                                        <UploadCloud className={`h-6 w-6 ${idFileName ? 'text-emerald-400' : 'text-emerald-500'}`} />
                                     </div>
-                                    <div className="font-medium">Upload ID Document</div>
-                                    <div className="text-xs text-muted-foreground">Clear photo of your South African ID or Passport</div>
+                                    <div className="font-medium">{idFileName ?? "Upload ID Document"}</div>
+                                    <div className="text-xs text-muted-foreground">{idFileName ? "Click to change" : "Clear photo of your South African ID or Passport"}</div>
                                 </div>
 
-                                <div className="border border-dashed border-slate-700 rounded-lg p-6 bg-slate-900/50 flex flex-col items-center justify-center text-center space-y-2 hover:bg-slate-900 transition-colors cursor-pointer">
+                                <input
+                                    ref={addressUploadRef}
+                                    type="file"
+                                    accept="image/*,.pdf"
+                                    className="hidden"
+                                    onChange={e => {
+                                        const f = e.target.files?.[0];
+                                        if (f) { setAddressFileName(f.name); toast.success(`Address document "${f.name}" selected.`); }
+                                    }}
+                                />
+                                <div
+                                    className="border border-dashed border-slate-700 rounded-lg p-6 bg-slate-900/50 flex flex-col items-center justify-center text-center space-y-2 hover:bg-slate-900 transition-colors cursor-pointer"
+                                    onClick={() => addressUploadRef.current?.click()}
+                                >
                                     <div className="p-3 bg-slate-800 rounded-full">
-                                        <UploadCloud className="h-6 w-6 text-emerald-500" />
+                                        <UploadCloud className={`h-6 w-6 ${addressFileName ? 'text-emerald-400' : 'text-emerald-500'}`} />
                                     </div>
-                                    <div className="font-medium">Proof of Address / Operating Location</div>
-                                    <div className="text-xs text-muted-foreground">Utility bill or affidavit not older than 3 months</div>
+                                    <div className="font-medium">{addressFileName ?? "Proof of Address / Operating Location"}</div>
+                                    <div className="text-xs text-muted-foreground">{addressFileName ? "Click to change" : "Utility bill or affidavit not older than 3 months"}</div>
                                 </div>
 
                                 <div className="border border-emerald-900/50 rounded-lg p-4 bg-emerald-900/10 flex items-start gap-3 mt-4">

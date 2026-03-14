@@ -63,10 +63,9 @@ const CustomerCheckout = () => {
             address: `${address.street}, ${address.city}`,
             paymentMethod,
             storeId: selectedStore,
-            // @ts-ignore
-            allowSubstitutions: allowSubstitutions
+            allowSubstitutions: allowSubstitutions as boolean
         });
-        navigate("/customer/payment");
+        navigate("/customer/payment", { state: { total: cartTotal + 20, paymentMethod, orderPlaced: true } });
         toast.success("Order Placed Successfully!");
     }, [placeOrder, address, paymentMethod, selectedStore, allowSubstitutions, navigate]);
 
@@ -229,7 +228,7 @@ const CustomerCheckout = () => {
                                     </div>
 
                                     <div className="pt-4 border-t border-dashed">
-                                        <div className="flex items-center space-x-2 p-3 bg-blue-50/50 rounded-lg border border-blue-10>">
+                                        <div className="flex items-center space-x-2 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
                                             <Checkbox
                                                 id="substitutions"
                                                 checked={allowSubstitutions}

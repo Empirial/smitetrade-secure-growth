@@ -35,7 +35,7 @@ const OwnerOrders = () => {
             matchesDate = orderDateStr === filterDate;
         }
 
-        const matchesType = true;
+        const matchesType = filterType === "all" || (order as any).orderType === filterType;
         return matchesSearch && matchesDate && matchesType;
     });
 

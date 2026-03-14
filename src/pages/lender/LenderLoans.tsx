@@ -231,8 +231,21 @@ const LenderLoans = () => {
                             <Button variant="outline" onClick={() => setIsRestructureOpen(false)}>Cancel</Button>
                             <Button
                                 onClick={() => {
-                                    if (selectedLoan && restructureData.amount && restructureData.dueDate) {
-                                        restructureLoan(selectedLoan.id, Number(restructureData.amount), restructureData.dueDate);
+                                    const amount = Number(restructureData.amount);
+                                    if (!restructureData.amount || isNaN(amount) || amount <= 0) {
+                                        toast.error("Please enter a valid amount greater than R0.");
+                                        return;
+                                    }
+                                    if (!restructureData.dueDate) {
+                                        toast.error("Please select a new due date.");
+                                        return;
+                                    }
+                                    if (new Date(restructureData.dueDate) <= new Date()) {
+                                        toast.error("New due date must be in the future.");
+                                        return;
+                                    }
+                                    if (selectedLoan) {
+                                        restructureLoan(selectedLoan.id, amount, restructureData.dueDate);
                                         setIsRestructureOpen(false);
                                     }
                                 }}
@@ -245,17 +258,13 @@ const LenderLoans = () => {
 
                 {/* Compliance Disclaimer */}
                 <div className="text-xs text-muted-foreground text-center max-w-2xl mx-auto space-y-1 pt-8 border-t">
-                    <p className="font-semibold">Smitetrade provides scoring and risk-assessment insights for decision-support purposes only.</p>
+                    <p className="font-semibold">Smitetrade provides repayment behavioural insights for decision-support purposes only.</p>
                     <p>The platform does not provide credit, approve or decline loans, extend goods on credit, or make tenancy decisions.</p>
                     <p>All lending, goods-on-credit, and rental decisions remain the sole responsibility of the lender, spaza shop owner, or landlord.</p>
                     <p>Smitetrade does not act as a credit provider, financial adviser, or credit bureau.</p>
                 </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t text-center text-xs text-muted-foreground">
-                <p>Safe Compliance Statement: All lending activities on Smitetrade are subject to the National Credit Act (NCA) and Fair Lending Practices.</p>
-                <p>Lenders are responsible for ensuring affordability assessments are conducted responsibly.</p>
-            </div>
         </DashboardLayout>
     );
 };

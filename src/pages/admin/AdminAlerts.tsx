@@ -19,11 +19,11 @@ const AdminAlerts = () => {
     const [open, setOpen] = useState(false);
     const [newTitle, setNewTitle] = useState("");
     const [newMessage, setNewMessage] = useState("");
-    const [newType, setNewType] = useState<string>("info");
+    const [newType, setNewType] = useState<'info' | 'warning' | 'error' | 'success'>("info");
     const [newTarget, setNewTarget] = useState<string>("all");
     const [sending, setSending] = useState(false);
 
-    const localAlerts = [
+    const [localAlerts, setLocalAlerts] = useState([
         {
             id: 1, type: "error", title: "Security Alert — Suspicious Login",
             message: "Multiple failed login attempts detected for owner@kasifresh.co.za. Account temporarily locked.",
@@ -42,7 +42,11 @@ const AdminAlerts = () => {
             date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), read: true,
             action: { label: "View Tickets", route: "/admin/support" }
         },
-    ];
+    ]);
+
+    const markLocalRead = (id: number) => {
+        setLocalAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
+    };
 
     const handleBroadcast = async () => {
         if (!newTitle.trim() || !newMessage.trim()) {
@@ -55,7 +59,7 @@ const AdminAlerts = () => {
             await createNotification({
                 title: newTitle,
                 message: newMessage,
-                type: newType as any,
+                type: newType,
                 targetRoles,
                 action: null,
             });
@@ -179,7 +183,7 @@ const AdminAlerts = () => {
                             <CardFooter className="p-4 pt-2 pl-[3.25rem]">
                                 {alert.action && (
                                     <Button asChild variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
-                                        <Link to={alert.action.route}>
+                                        <Link to={alert.action.route} onClick={() => markLocalRead(alert.id)}>
                                             {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
                                         </Link>
                                     </Button>

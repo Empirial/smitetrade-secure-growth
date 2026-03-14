@@ -3,34 +3,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { CheckCircle2, CreditCard, Banknote } from "lucide-react";
+import { CheckCircle2, CreditCard } from "lucide-react";
 import { usePaystack } from "@/hooks/usePaystack";
 import { useStore } from "@/context/StoreContext";
 
 const CustomerPayment = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useStore();
-    const [success, setSuccess] = useState(false);
+
+    const { total: stateTotal, orderPlaced = false } = (location.state as { total?: number; orderPlaced?: boolean }) || {};
+    const orderTotal = stateTotal ?? 0;
+
+    const [success, setSuccess] = useState(orderPlaced);
     const [paymentMethod, setPaymentMethod] = useState("card");
-    const orderTotal = 220.00;
 
     const { pay, processing } = usePaystack({
         amount: orderTotal,
         email: user?.email || 'customer@smitetrade.co.za',
-        onSuccess: () => {
-            setSuccess(true);
-        },
-        onClose: () => {
-            // User cancelled — do nothing
-        },
+        onSuccess: () => setSuccess(true),
+        onClose: () => {},
     });
 
     const handlePayment = () => {
-        if (paymentMethod === "card") {
-            pay();
-        }
+        if (paymentMethod === "card") pay();
     };
 
     if (success) {
@@ -44,6 +42,9 @@ const CustomerPayment = () => {
                     <p className="text-muted-foreground max-w-md">
                         Your order has been confirmed and sent to the shop. You can track your delivery status below.
                     </p>
+                    {orderTotal > 0 && (
+                        <p className="text-lg font-semibold text-emerald-600">R {orderTotal.toFixed(2)} paid</p>
+                    )}
                     <div className="flex gap-4">
                         <Button onClick={() => navigate("/customer/tracking")} className="w-40">
                             Track Order
@@ -82,13 +83,12 @@ const CustomerPayment = () => {
                         {paymentMethod === "card" && (
                             <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
                                 <p>You'll be redirected to PayStack's secure payment page to complete your card payment.</p>
-                                <p className="mt-1 text-xs">Test card: <code className="bg-muted px-1 rounded">4084 0840 8408 4081</code> (any expiry/CVV)</p>
                             </div>
                         )}
                     </CardContent>
                     <CardFooter>
-                        <Button className="w-full h-12 text-lg" onClick={handlePayment} disabled={processing}>
-                            {processing ? "Processing..." : `Pay R ${orderTotal.toFixed(2)}`}
+                        <Button className="w-full h-12 text-lg" onClick={handlePayment} disabled={processing || orderTotal === 0}>
+                            {processing ? "Processing..." : orderTotal > 0 ? `Pay R ${orderTotal.toFixed(2)}` : "No amount due"}
                         </Button>
                     </CardFooter>
                 </Card>

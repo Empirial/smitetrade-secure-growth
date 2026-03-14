@@ -11,7 +11,7 @@ import { useStore } from "@/context/StoreContext";
 
 const CustomerOrders = () => {
     const navigate = useNavigate();
-    const { orders, user } = useStore();
+    const { orders, user, addToCart } = useStore();
 
     // Filter orders for the current user
     const myOrders = orders.filter(o => {
@@ -78,7 +78,8 @@ const CustomerOrders = () => {
                                     size="sm"
                                     className="bg-emerald-600 hover:bg-emerald-700"
                                     onClick={() => {
-                                        toast.success("Items added to cart");
+                                        order.items.forEach(item => addToCart({ ...item, storeId: order.storeId || '' }));
+                                        toast.success(`${order.items.length} item${order.items.length > 1 ? 's' : ''} added to cart`);
                                         navigate("/customer/cart");
                                     }}
                                 >

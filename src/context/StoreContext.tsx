@@ -25,7 +25,7 @@ import {
 } from 'firebase/firestore';
 import { OrderSchema } from '@/lib/schemas';
 
-import { MOCK_USER, MOCK_LENDER, MOCK_PRODUCTS, MOCK_ORDERS, USE_MOCK_DATA, MOCK_STORES, MOCK_STORE_ID } from '@/lib/constants';
+import { MOCK_USER, MOCK_LENDER, MOCK_PRODUCTS, MOCK_ORDERS, USE_MOCK_DATA, MOCK_STORES, MOCK_STORE_ID, MOCK_STAFF } from '@/lib/constants';
 
 import { User, Product, Order, CartItem, UserRole, Supplier, StaffMember, Shift, Issue, Customer, Expense, Store } from "@/types";
 
@@ -131,6 +131,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         return saved ? JSON.parse(saved) : [];
     });
     const [staff, setStaff] = useState<StaffMember[]>(() => {
+        if (USE_MOCK_DATA) return MOCK_STAFF;
         const saved = localStorage.getItem('smite_staff');
         return saved ? JSON.parse(saved) : [];
     });
@@ -763,16 +764,44 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    // ─────────────────────────────────────────────
+    // ALGORITHM 8: Driver Assignment Algorithm
+    // When an order becomes "Ready", find the available driver
+    // with the fewest active "Out for Delivery" orders (least busy).
+    // ─────────────────────────────────────────────
+    const findBestAvailableDriver = (): StaffMember | null => {
+        const activeDrivers = staff.filter(s => s.role === 'driver' && s.status === 'Active');
+        if (activeDrivers.length === 0) return null;
+        const activeDeliveries = orders.filter(o => o.status === 'Out for Delivery');
+        return activeDrivers
+            .map(d => ({ driver: d, load: activeDeliveries.filter(o => o.driverId === d.id).length }))
+            .sort((a, b) => a.load - b.load)[0].driver;
+    };
+
     const updateOrderStatus = async (orderId: string, status: Order['status']) => {
+        const bestDriver = status === 'Ready' ? findBestAvailableDriver() : null;
+
         if (USE_MOCK_DATA) {
-            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
-            toast.info(`Order updated to ${status} (Mock)`);
+            setOrders(prev => prev.map(o =>
+                o.id === orderId ? { ...o, status, ...(bestDriver ? { driverId: bestDriver.id } : {}) } : o
+            ));
+            if (bestDriver) {
+                toast.info(`Order ready — pre-assigned to ${bestDriver.name}`);
+            } else {
+                toast.info(`Order updated to ${status} (Mock)`);
+            }
             return;
         }
 
         try {
-            await updateDoc(doc(db, "orders", orderId), { status });
-            toast.info(`Order updated to ${status}`);
+            const updateData: Partial<Order> = { status };
+            if (bestDriver) updateData.driverId = bestDriver.id;
+            await updateDoc(doc(db, "orders", orderId), updateData);
+            if (bestDriver) {
+                toast.info(`Order ready — pre-assigned to ${bestDriver.name}`);
+            } else {
+                toast.info(`Order updated to ${status}`);
+            }
         } catch (error) {
             toast.error("Failed to update order");
             throw error;

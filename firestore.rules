@@ -161,18 +161,37 @@ service cloud.firestore {
       allow update: if isSignedIn() && (isOwner() || isAdmin());
     }
 
+    // --- Credit Profiles Collection ---
+    match /credit_profiles/{userId} {
+      allow read: if request.auth.uid == userId || isLender() || isOwner() || isAdmin();
+      allow create, update: if request.auth.uid == userId || isAdmin();
+    }
+
     // --- Borrowers Collection ---
     match /borrowers/{borrowerId} {
       allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin());
       allow create: if isSignedIn() && (isLender() || isOwner());
-      allow update, delete: if isSignedIn() && (isLender() || isAdmin());
+      allow update, delete: if isSignedIn() && (resource.data.lenderId == request.auth.uid || isAdmin());
     }
 
     // --- Loans Collection ---
     match /loans/{loanId} {
-      allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin() || resource.data.customerId == request.auth.uid);
+      allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin() || resource.data.borrowerId == request.auth.uid);
       allow create: if isSignedIn() && (isLender() || isOwner());
+      allow update: if isSignedIn() && (resource.data.lenderId == request.auth.uid || isAdmin());
+    }
+
+    // --- Loan Applications Collection ---
+    match /applications/{appId} {
+      allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin() || resource.data.applicantId == request.auth.uid);
+      allow create: if isSignedIn();
       allow update: if isSignedIn() && (isLender() || isAdmin());
+    }
+
+    // --- Lender Offers Collection ---
+    match /lender_offers/{offerId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && (isLender() || isAdmin());
     }
 
     // --- Audit Logs Collection ---

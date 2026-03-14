@@ -16,11 +16,12 @@ const Login = () => {
 
     const handleSeed = async () => {
         const { seedDatabase } = await import('@/lib/seed');
+        const { toast } = await import('sonner');
         const success = await seedDatabase();
         if (success) {
-            alert("Database seeded successfully!");
+            toast.success("Database seeded successfully!");
         } else {
-            alert("Failed to seed database.");
+            toast.error("Failed to seed database.");
         }
     };
 

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useCredit } from "@/context/CreditContext";
 import { Loan } from "@/types";
 const LenderCollections = () => {
-    const { loans, sendReminder } = useCredit();
+    const { loans, sendReminder, recordPayment } = useCredit();
 
     // Active overdue loans
     const overdueLoans = loans.filter(l => l.status === 'overdue' || (new Date(l.dueDate) < new Date() && l.status === 'active'));
@@ -108,12 +108,14 @@ const LenderCollections = () => {
                                                     <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b pb-2">Loan Summary</h4>
                                                     <div className="space-y-3 text-sm">
                                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded">
-                                                            <span className="text-muted-foreground">Principal Amount</span>
-                                                            <span className="font-medium">R {(loan.amount * 0.9).toFixed(2)}</span>
+                                                            <span className="text-muted-foreground">Loan Amount</span>
+                                                            <span className="font-medium">R {loan.amount.toFixed(2)}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded">
-                                                            <span className="text-muted-foreground">Interest & Fees</span>
-                                                            <span className="font-medium">R {(loan.amount * 0.1).toFixed(2)}</span>
+                                                            <span className="text-muted-foreground">Days Overdue</span>
+                                                            <span className="font-medium text-amber-500">
+                                                                {Math.max(0, Math.floor((Date.now() - new Date(loan.dueDate).getTime()) / (1000 * 60 * 60 * 24)))} days
+                                                            </span>
                                                         </div>
                                                         <div className="flex justify-between items-center bg-red-950/20 p-2 rounded border border-red-900/50">
                                                             <span className="text-red-400 font-medium">Total Outstanding</span>
@@ -164,7 +166,10 @@ const LenderCollections = () => {
                                                         </div>
                                                     </PopoverContent>
                                                 </Popover>
-                                                <Button className="w-full sm:w-auto ml-auto bg-emerald-600 hover:bg-emerald-700">
+                                                <Button
+                                                    className="w-full sm:w-auto ml-auto bg-emerald-600 hover:bg-emerald-700"
+                                                    onClick={() => recordPayment(loan.id)}
+                                                >
                                                     Mark Paid
                                                 </Button>
                                             </DialogFooter>

@@ -5,17 +5,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
+
+const INITIAL_DISPUTES = [
+    { id: "1", type: "Fraud Flag", desc: "Multiple high-value transactions from same IP in 5 mins", status: "Pending", priority: "High" },
+    { id: "2", type: "Delivery Complaint", desc: "Customer claims driver never arrived (Order #1023)", status: "Investigating", priority: "Medium" },
+    { id: "3", type: "Late Delivery", desc: "Customer A: Order arrived over 2 hours late", status: "Open", priority: "Low" },
+    { id: "4", type: "Wrong Address", desc: "Driver B delivered to incorrect location", status: "Resolved", priority: "Low" },
+];
 
 const AdminDisputes = () => {
-    // Mock disputes
-    const disputes = [
-        { id: "1", type: "Fraud Flag", desc: "Multiple high-value transactions from same IP in 5 mins", status: "Pending", priority: "High" },
-        { id: "2", type: "Delivery Complaint", desc: "Customer claims driver never arrived (Order #1023)", status: "Investigating", priority: "Medium" },
-        { id: "3", user: "Customer A", issue: "Late Delivery", status: "Open" },
-        { id: "4", user: "Driver B", issue: "Wrong Address", status: "Resolved", priority: "Low" },
-    ];
+    const [disputes, setDisputes] = useState(INITIAL_DISPUTES);
 
     const handleAction = (id: string, action: string) => {
+        setDisputes(prev => prev.map(d => d.id === id ? { ...d, status: action } : d));
         toast.success(`Dispute #${id} marked as ${action}.`);
     };
 

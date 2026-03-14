@@ -10,6 +10,7 @@ import { Borrower } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePaystack } from "@/hooks/usePaystack";
+import { toast } from "sonner";
 
 const CashierCheckout = () => {
     const location = useLocation();
@@ -82,7 +83,7 @@ const CashierCheckout = () => {
     const handlePay = async () => {
         // Guard: SS-ID payments require a verified customer
         if (!isSplitPayment && paymentMethod === "SS-ID" && !ssidCustomer) {
-            alert("Please verify the customer SS-ID / phone before completing a Store Credit payment.");
+            toast.error("Please verify the customer SS-ID / phone before completing a Store Credit payment.");
             return;
         }
 
@@ -98,13 +99,13 @@ const CashierCheckout = () => {
             }
 
             if (!isSplitPayment && paymentMethod === "Cash" && totalPaid < total) {
-                alert("Amount tendered is less than the total due.");
+                toast.error("Amount tendered is less than the total due.");
                 return;
             }
 
             if (isSplitPayment && Math.abs(totalPaid - total) > 0.01) {
                 if (totalPaid < total) {
-                    alert(`Split payments are short by R ${(total - totalPaid).toFixed(2)}`);
+                    toast.error(`Split payments are short by R ${(total - totalPaid).toFixed(2)}`);
                     return;
                 }
             }
@@ -115,12 +116,12 @@ const CashierCheckout = () => {
             const splitSsid = parseFloat(splitAmounts.ssid || "0");
 
             if (splitCard > 0) {
-                alert("Split payments with a card portion are not supported yet (partial card charges not implemented). Please use full Card payment or remove the card amount.");
+                toast.error("Split payments with a card portion are not supported yet. Please use full Card payment or remove the card amount.");
                 return;
             }
 
             if (splitSsid > 0 && !ssidCustomer) {
-                alert("Please verify the customer SS-ID / phone before including Store Credit in a split payment.");
+                toast.error("Please verify the customer SS-ID / phone before including Store Credit in a split payment.");
                 return;
             }
         }
@@ -313,7 +314,28 @@ const CashierCheckout = () => {
                                     <div className="space-y-2">
                                         <Label>SS-ID Credit (R)</Label>
                                         <Input type="number" placeholder="0.00" value={splitAmounts.ssid} onChange={(e) => handleSplitAmountChange('ssid', e.target.value)} />
-                                        <p className="text-xs text-muted-foreground">If you enter an SS-ID amount, verify the customer in the Store Credit screen first.</p>
+                                        {parseFloat(splitAmounts.ssid || "0") > 0 && (
+                                            <div className="mt-2 p-3 rounded-lg bg-amber-50 border border-amber-200 space-y-2">
+                                                <Label className="text-amber-800 font-medium text-xs">Verify SS-ID Customer</Label>
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        className="text-sm h-9"
+                                                        placeholder="SS-ID or Phone"
+                                                        value={ssidInput}
+                                                        onChange={(e) => { setSsidInput(e.target.value); setSsidCustomer(null); setSsidError(""); }}
+                                                        onKeyDown={(e) => e.key === "Enter" && handleSsidSearch()}
+                                                    />
+                                                    <Button size="sm" className="h-9 bg-amber-600 hover:bg-amber-700 text-white" onClick={handleSsidSearch}>Verify</Button>
+                                                </div>
+                                                {ssidError && <p className="text-red-500 text-xs">{ssidError}</p>}
+                                                {ssidCustomer && (
+                                                    <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                        {ssidCustomer.name} verified
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className={`p-4 rounded-lg flex justify-between items-center ${splitBalance === 0 ? 'bg-green-100' : splitBalance < 0 ? 'bg-red-100' : 'bg-slate-100'}`}>
@@ -324,11 +346,15 @@ const CashierCheckout = () => {
                                     </div>
 
                                     <Button
-                                        className={`w-full h-12 ${splitBalance === 0 ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
-                                        disabled={splitBalance > 0}
+                                        className={`w-full h-12 ${splitBalance <= 0 && (!parseFloat(splitAmounts.ssid || "0") || ssidCustomer) ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                                        disabled={splitBalance > 0 || (parseFloat(splitAmounts.ssid || "0") > 0 && !ssidCustomer)}
                                         onClick={handlePay}
                                     >
-                                        {splitBalance === 0 ? 'Complete Payment' : splitBalance < 0 ? 'Give Change & Complete' : 'Awaiting Full Payment'}
+                                        {parseFloat(splitAmounts.ssid || "0") > 0 && !ssidCustomer
+                                            ? 'Verify SS-ID Customer First'
+                                            : splitBalance === 0 ? 'Complete Payment'
+                                            : splitBalance < 0 ? 'Give Change & Complete'
+                                            : 'Awaiting Full Payment'}
                                     </Button>
                                 </div>
                             </CardHeader>

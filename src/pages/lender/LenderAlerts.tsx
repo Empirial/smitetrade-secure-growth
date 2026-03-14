@@ -6,30 +6,36 @@ import { AlertTriangle, Info, CheckCircle2, Navigation, AlertCircle } from "luci
 import { Link } from "react-router-dom";
 import SystemNotifications from "@/components/SystemNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useState } from "react";
+
+const INITIAL_LOCAL_ALERTS = [
+    {
+        id: 1, type: "success", title: "New Loan Application",
+        message: "Thabo Mokoena has submitted a loan application for R5,000. Repayment behaviour: Pays On Time.",
+        date: new Date(Date.now() - 1000 * 60 * 60).toISOString(), read: false,
+        action: { label: "Review Application", route: "/lender/applications" }
+    },
+    {
+        id: 2, type: "error", title: "Overdue Repayment Alert",
+        message: "Client Nomsa Dlamini has missed her R1,200 repayment. Second consecutive missed payment.",
+        date: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), read: false,
+        action: { label: "View Collections", route: "/lender/collections" }
+    },
+    {
+        id: 3, type: "warning", title: "Compliance Reminder",
+        message: "Monthly NCR compliance report is due by March 15. Ensure all loan records are up to date.",
+        date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), read: true,
+        action: { label: "View Active Loans", route: "/lender/loans" }
+    },
+];
 
 const LenderAlerts = () => {
     const { notifications, isRead, markAsRead, dismiss, markAllAsRead, loading } = useNotifications();
+    const [localAlerts, setLocalAlerts] = useState(INITIAL_LOCAL_ALERTS);
 
-    const localAlerts = [
-        {
-            id: 1, type: "success", title: "New Loan Application",
-            message: "Thabo Mokoena has submitted a loan application for R5,000. Repayment behaviour: Pays On Time.",
-            date: new Date(Date.now() - 1000 * 60 * 60).toISOString(), read: false,
-            action: { label: "Review Application", route: "/lender/applications" }
-        },
-        {
-            id: 2, type: "error", title: "Overdue Repayment Alert",
-            message: "Client Nomsa Dlamini has missed her R1,200 repayment. Second consecutive missed payment.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), read: false,
-            action: { label: "View Collections", route: "/lender/collections" }
-        },
-        {
-            id: 3, type: "warning", title: "Compliance Reminder",
-            message: "Monthly NCR compliance report is due by March 15. Ensure all loan records are up to date.",
-            date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), read: true,
-            action: { label: "View Active Loans", route: "/lender/loans" }
-        },
-    ];
+    const markLocalRead = (id: number) => {
+        setLocalAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
+    };
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -80,7 +86,7 @@ const LenderAlerts = () => {
                             </CardContent>
                             <CardFooter className="p-4 pt-2 pl-[3.25rem]">
                                 {alert.action && (
-                                    <Button asChild variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
+                                    <Button asChild variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm" onClick={() => markLocalRead(alert.id)}>
                                         <Link to={alert.action.route}>
                                             {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
                                         </Link>

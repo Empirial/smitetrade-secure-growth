@@ -37,6 +37,7 @@ import OwnerCustomers from "./pages/owner/OwnerCustomers";
 import OwnerCreditReview from "./pages/owner/OwnerCreditReview";
 import OwnerStockAdjustment from "./pages/owner/OwnerStockAdjustment";
 import OwnerSupport from "./pages/owner/OwnerSupport";
+import OwnerSubscription from "./pages/owner/OwnerSubscription";
 // Cashier
 import CashierLogin from "./pages/cashier/CashierLogin";
 import CashierRegister from "./pages/cashier/CashierRegister";
@@ -70,6 +71,7 @@ import CustomerOrders from "./pages/customer/CustomerOrders";
 import BehavioralReliabilityIndex from "./pages/customer/BehavioralReliabilityIndex";
 
 // Driver
+import DriverDashboard from "./pages/driver/DriverDashboard";
 import DriverLogin from "./pages/driver/DriverLogin";
 import DriverRegister from "./pages/driver/DriverRegister";
 import DriverOrders from "./pages/driver/DriverOrders";
@@ -144,6 +146,7 @@ const App = () => (
               <Route path="/owner/orders" element={<AuthGuard role="owner"><OwnerOrders /></AuthGuard>} />
               <Route path="/owner/pricing" element={<AuthGuard role="owner"><OwnerPricing /></AuthGuard>} />
               <Route path="/owner/suppliers" element={<AuthGuard role="owner"><OwnerSuppliers /></AuthGuard>} />
+              <Route path="/owner/subscription" element={<AuthGuard role="owner"><OwnerSubscription /></AuthGuard>} />
               <Route path="/owner/alerts" element={<AuthGuard role="owner"><OwnerAlerts /></AuthGuard>} />
               <Route path="/owner/analytics" element={<AuthGuard role="owner"><OwnerAnalytics /></AuthGuard>} />
               <Route path="/owner/expenses" element={<AuthGuard role="owner"><OwnerExpenses /></AuthGuard>} />
@@ -187,6 +190,7 @@ const App = () => (
               {/* Driver Portal */}
               <Route path="/driver/login" element={<DriverLogin />} />
               <Route path="/driver/register" element={<DriverRegister />} />
+              <Route path="/driver/dashboard" element={<AuthGuard role="driver"><DriverDashboard /></AuthGuard>} />
               <Route path="/driver/orders" element={<AuthGuard role="driver"><DriverOrders /></AuthGuard>} />
               <Route path="/driver/out-to-deliver" element={<AuthGuard role="driver"><DriverOutToDeliver /></AuthGuard>} />
               <Route path="/driver/delivered" element={<AuthGuard role="driver"><DriverDelivered /></AuthGuard>} />

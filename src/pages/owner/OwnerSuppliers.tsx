@@ -8,10 +8,14 @@ import { Plus, Search, Truck } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/context/StoreContext";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { toast } from "sonner";
+import { db } from "@/lib/firebase";
+import { addDoc, collection } from "firebase/firestore";
+import { USE_MOCK_DATA } from "@/lib/constants";
 
 const OwnerSuppliers = () => {
-    const { suppliers, addSupplier } = useStore();
+    const { suppliers, addSupplier, user } = useStore();
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newSupplier, setNewSupplier] = useState({ name: "", products: "" });
 
@@ -28,17 +32,47 @@ const OwnerSuppliers = () => {
 
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
+    const [orderNotes, setOrderNotes] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Simulate File Upload
-    const handlePlaceOrder = () => {
+    // IMPROVEMENT 7: Supplier Order Routing Logic
+    // Persists order to Firestore (or mock state) with status tracking
+    const handlePlaceOrder = async () => {
         if (!selectedSupplierId) return;
-        setTimeout(() => {
+        const supplier = suppliers.find(s => s.id === selectedSupplierId);
+        if (!supplier) return;
+
+        setIsSubmitting(true);
+        const fileName = fileInputRef.current?.files?.[0]?.name || null;
+
+        const orderData = {
+            supplierId: selectedSupplierId,
+            supplierName: supplier.name,
+            storeId: user?.storeId || "unknown",
+            notes: orderNotes,
+            fileName,
+            status: "Submitted",
+            submittedAt: new Date().toISOString(),
+            submittedBy: user?.name || "Owner",
+        };
+
+        try {
+            if (!USE_MOCK_DATA) {
+                await addDoc(collection(db, "supplier_orders"), orderData);
+            }
+            toast.success(`Order submitted to ${supplier.name} via Smitetrade`, {
+                description: fileName ? `File: ${fileName}` : "Manual order — check email for confirmation.",
+            });
+        } catch (err) {
+            toast.error("Failed to submit order. Please try again.");
+        } finally {
+            setIsSubmitting(false);
             setIsOrderOpen(false);
             setSelectedSupplierId("");
-            // Using a mock toast success since toast isn't imported directly here,
-            // we assume the user will see a visual closing. 
-            // Better UX: add alert or toast if we had it. I'll just change the state to close it.
-        }, 800);
+            setOrderNotes("");
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
     };
 
     return (
@@ -117,15 +151,17 @@ const OwnerSuppliers = () => {
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="order_file">Upload Order List (CSV, PDF, Excel)</Label>
-                                        <Input id="order_file" type="file" />
+                                        <Input id="order_file" type="file" ref={fileInputRef} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="order_notes">Additional Notes</Label>
-                                        <Input id="order_notes" placeholder="e.g. Please deliver before Friday" />
+                                        <Input id="order_notes" placeholder="e.g. Please deliver before Friday" value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} />
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button onClick={handlePlaceOrder} disabled={!selectedSupplierId}>Submit Order via Smitetrade</Button>
+                                    <Button onClick={handlePlaceOrder} disabled={!selectedSupplierId || isSubmitting}>
+                                        {isSubmitting ? "Submitting..." : "Submit Order via Smitetrade"}
+                                    </Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>

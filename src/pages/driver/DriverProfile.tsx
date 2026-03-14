@@ -4,20 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Phone, Mail, Car, MapPin, ShieldCheck, Camera } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useStore } from "@/context/StoreContext";
 
 const DriverProfile = () => {
-    // Mock user data
+    const { user, updateUser } = useStore();
     const [profile, setProfile] = useState({
-        name: "Thabo Bester",
-        email: "thabo.driver@example.com",
-        phone: "082 123 4567",
-        vehicleType: "Motorcycle - Honda 125cc",
-        licensePlate: "CA 123-456",
-        region: "Cape Town CBD",
+        name: user?.name || "",
+        email: user?.email || "",
+        phone: user?.phone || "",
+        vehicleType: user?.vehicleType || "",
+        licensePlate: user?.licensePlate || "",
+        region: user?.region || "",
     });
+
+    useEffect(() => {
+        if (user) {
+            setProfile({
+                name: user.name || "",
+                email: user.email || "",
+                phone: user.phone || "",
+                vehicleType: user.vehicleType || "",
+                licensePlate: user.licensePlate || "",
+                region: user.region || "",
+            });
+        }
+    }, [user]);
 
     const [isEditing, setIsEditing] = useState(false);
 
@@ -25,10 +39,21 @@ const DriverProfile = () => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
     };
 
-    const handleSave = () => {
-        // Mock save action
-        setIsEditing(false);
-        toast.success("Profile information updated successfully.");
+    const handleSave = async () => {
+        try {
+            await updateUser({
+                name: profile.name,
+                email: profile.email,
+                phone: profile.phone,
+                vehicleType: profile.vehicleType,
+                licensePlate: profile.licensePlate,
+                region: profile.region,
+            });
+            setIsEditing(false);
+            toast.success("Profile information updated successfully.");
+        } catch {
+            toast.error("Failed to update profile. Please try again.");
+        }
     };
 
     return (

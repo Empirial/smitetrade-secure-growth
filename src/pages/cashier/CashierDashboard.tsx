@@ -18,7 +18,8 @@ const CashierDashboard = () => {
 
     const handleReprint = (e: React.MouseEvent, orderId: string) => {
         e.stopPropagation();
-        toast.info(`Reprinting receipt for Order #${orderId}...`);
+        toast.info(`Opening print dialog for Order #${orderId}...`);
+        setTimeout(() => window.print(), 300);
     };
 
     return (
@@ -179,7 +180,7 @@ const CashierDashboard = () => {
                         <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white" onClick={() => setSelectedOrder(null)}>
                             Close
                         </Button>
-                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2" onClick={(e) => selectedOrder && handleReprint(e as any, selectedOrder.id)}>
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2" onClick={(e) => selectedOrder && handleReprint(e, selectedOrder.id)}>
                             <Printer className="h-4 w-4" /> Print Receipt
                         </Button>
                     </DialogFooter>

@@ -107,8 +107,8 @@ const LenderClients = () => {
                                     </div>
                                     <CardTitle className="text-base font-bold">{borrower.name}</CardTitle>
                                 </div>
-                                <Badge variant={borrower.rating === 'Risk' ? 'destructive' : 'outline'}>
-                                    {borrower.rating || 'New'}
+                                <Badge variant={borrower.score >= 70 ? 'default' : borrower.score >= 40 ? 'secondary' : 'destructive'}>
+                                    {borrower.score >= 70 ? 'Pays on time' : borrower.score >= 40 ? 'Delays' : borrower.rating === 'New' ? 'New' : 'Does not pay'}
                                 </Badge>
                             </CardHeader>
                             <CardContent>
@@ -134,14 +134,10 @@ const LenderClients = () => {
                                         <span>{borrower.phone}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Risk Standing:</span>
-                                        <Badge variant={borrower.score >= 70 ? "default" : borrower.score >= 40 ? "secondary" : "destructive"}>
-                                            {borrower.score >= 70 ? "Good" : borrower.score >= 40 ? "Moderate" : "High Risk"}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex justify-between">
                                         <span>Repayment behaviour:</span>
-                                        <span className={borrower.score > 3 ? 'text-green-600 font-bold' : ''}>{borrower.score > 70 ? 'Gold' : borrower.score > 40 ? 'Silver' : 'Bronze'}</span>
+                                        <Badge variant={borrower.score >= 70 ? "default" : borrower.score >= 40 ? "secondary" : "destructive"}>
+                                            {borrower.score >= 70 ? "Pays on time" : borrower.score >= 40 ? "Delays" : "Does not pay"}
+                                        </Badge>
                                     </div>
                                 </div>
                                 {/* Pending Loans Check */}

@@ -12,10 +12,7 @@ import { useStore } from "@/context/StoreContext";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const CashierShift = () => {
-    // Note: StoreContext may not officially support `recordCashDrop` yet, but we will call it if it exists
-    // or simulate it here if it doesn't, to match the UI requirements. 
-    // Since we're in Mock UI building phase, we'll mock the state locally if context doesn't have it.
-    const { startShift, endShift, currentShift, recordCashDrop } = useStore() as any;
+    const { startShift, endShift, currentShift, recordCashDrop } = useStore();
 
     const [openingFloat, setOpeningFloat] = useState("");
     const [closingCash, setClosingCash] = useState("");
@@ -56,13 +53,7 @@ const CashierShift = () => {
             return;
         }
 
-        // If context has it, use it. Otherwise mock.
-        if (recordCashDrop) {
-            recordCashDrop(parseFloat(dropAmount), dropReason || "Owner Collection");
-        } else {
-            // Fallback mock toast if StoreContext isn't updated simultaneously
-            toast.success(`Cash drop of R${parseFloat(dropAmount).toFixed(2)} recorded.`);
-        }
+        recordCashDrop(parseFloat(dropAmount), dropReason || "Owner Collection");
 
         setIsDropOpen(false);
         setDropAmount("");

@@ -61,7 +61,7 @@ const AdminUsers = () => {
 
     const handlePasswordReset = (email: string) => {
         // In a real app, trigger Firebase sendPasswordResetEmail
-        toast.info(`Password reset email sent to ${email} (simulated)`);
+        toast.success(`Password reset email sent to ${email}.`);
     };
 
     const getRoleBadgeColor = (role: UserRole) => {

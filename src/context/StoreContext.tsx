@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
 import { auth, db } from '@/lib/firebase';
+import { getAuthErrorMessage } from '@/lib/authErrors';
 import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
@@ -415,7 +416,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             toast.success("Welcome back!");
         } catch (error) {
             console.error("Login error:", error);
-            toast.error("Failed to login: " + (error instanceof Error ? error.message : "Unknown error"));
+            toast.error(getAuthErrorMessage(error));
             throw error;
         }
     };
@@ -493,7 +494,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             toast.success("Account created successfully!");
         } catch (error) {
             console.error("Registration error:", error);
-            toast.error("Failed to create account: " + (error instanceof Error ? error.message : "Unknown error"));
+            toast.error(getAuthErrorMessage(error));
             throw error;
         }
     };
@@ -759,7 +760,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             toast.success(`Order placed successfully!`);
         } catch (error) {
             console.error("Order error:", error);
-            toast.error("Failed to place order: " + (error instanceof Error ? error.message : "Unknown error"));
+            toast.error("Failed to place order. Please try again.");
             throw error;
         }
     };

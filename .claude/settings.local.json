@@ -4,7 +4,12 @@
       "Bash(npm run:*)",
       "Bash(npx tsc:*)",
       "Bash(grep -E \"\\\\.tsx$\")",
-      "Bash(grep -n \"My Spaza Shop\\\\|PIN code\\\\|1029\\\\|ORD-\\\\|082\\\\|0821234567\\\\|1250\\\\|450\\\\|150\\\\|Thabo Bester\" \"c:\\\\Users\\\\Lufuno Mphela\\\\Desktop\\\\smitetrade-secure-growth\\\\src\\\\pages\\\\driver\"/*.tsx)"
+      "Bash(grep -n \"My Spaza Shop\\\\|PIN code\\\\|1029\\\\|ORD-\\\\|082\\\\|0821234567\\\\|1250\\\\|450\\\\|150\\\\|Thabo Bester\" \"c:\\\\Users\\\\Lufuno Mphela\\\\Desktop\\\\smitetrade-secure-growth\\\\src\\\\pages\\\\driver\"/*.tsx)",
+      "Bash(firebase projects:list)",
+      "Bash(firebase login:*)",
+      "Bash(firebase use:*)",
+      "WebSearch",
+      "WebFetch(domain:firebase.google.com)"
     ]
   }
 }

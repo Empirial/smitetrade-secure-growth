@@ -1,232 +1,330 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions
-    function isSignedIn() {
+
+    // ─────────────────────────────────────────────
+    // HELPERS
+    // Role is stored directly in users/{uid}.role
+    // ─────────────────────────────────────────────
+    function isAuth() {
       return request.auth != null;
     }
-    
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-    
-    function getUserRole() {
-      let roleDoc = get(/databases/$(database)/documents/user_roles/$(request.auth.uid));
-      return roleDoc.data.role;
+
+    function uid() {
+      return request.auth.uid;
     }
 
-    function hasRole(role) {
-      return isSignedIn() && getUserRole() == role;
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(uid())).data;
     }
 
-    function isOwner() {
-      return hasRole('owner');
+    function role() {
+      return userDoc().role;
     }
 
-    function isAdmin() {
-      return hasRole('admin');
-    }
-    
-    function isDriver() {
-      return hasRole('driver');
+    function storeId() {
+      return userDoc().storeId;
     }
 
-    function isCashier() {
-      return hasRole('cashier');
-    }
+    function isAdmin()    { return isAuth() && role() == 'admin'; }
+    function isOwner()    { return isAuth() && role() == 'owner'; }
+    function isCashier()  { return isAuth() && role() == 'cashier'; }
+    function isDriver()   { return isAuth() && role() == 'driver'; }
+    function isLender()   { return isAuth() && role() == 'lender'; }
+    function isCustomer() { return isAuth() && role() == 'customer'; }
 
-    function isLender() {
-      return hasRole('lender');
-    }
-
-    function getUserStoreId() {
-      return getUserData().storeId;
-    }
-
-    function isOwnStore(storeId) {
-      return isSignedIn() && getUserStoreId() == storeId;
-    }
-
-    // --- Validation Functions ---
+    // ─────────────────────────────────────────────
+    // VALIDATION HELPERS
+    // ─────────────────────────────────────────────
     function isValidOrder() {
-      let data = request.resource.data;
-      return data.total is number && 
-             data.total >= 0 &&
-             data.items is list &&
-             data.items.size() > 0 &&
-             data.status in ['Pending', 'Paid', 'Ready', 'Out for Delivery', 'Delivered', 'Cancelled'];
+      let d = request.resource.data;
+      return d.total is number &&
+             d.total >= 0 &&
+             d.items is list &&
+             d.items.size() > 0 &&
+             d.status in ['Pending', 'Paid', 'Ready', 'Out for Delivery', 'Delivered', 'Cancelled'];
     }
 
     function isValidProduct() {
-      let data = request.resource.data;
-      return data.name is string &&
-             data.price is number &&
-             data.price >= 0 &&
-             data.stock is number;
+      let d = request.resource.data;
+      return d.name is string &&
+             d.price is number &&
+             d.price >= 0 &&
+             d.stock is number;
     }
 
-    // --- User Roles Collection (separate from users for security) ---
-    match /user_roles/{userId} {
-      allow read: if request.auth.uid == userId || isAdmin();
-      allow write: if isAdmin();
-      // On registration, the user's role doc is created via a Cloud Function or admin action
-    }
-
-    // --- Users Collection ---
+    // ─────────────────────────────────────────────
+    // USERS
+    // Each user reads/writes their own doc.
+    // Admin reads/writes all.
+    // ─────────────────────────────────────────────
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
-      allow read, write: if isAdmin();
-      allow read: if isOwner(); 
+      allow read:   if isAuth() && (uid() == userId || isAdmin() || isOwner());
+      allow create: if isAuth() && uid() == userId;
+      allow update: if isAuth() && (uid() == userId || isAdmin());
+      allow delete: if isAdmin();
     }
 
-    // --- Stores Collection ---
-    match /stores/{storeId} {
-      // Anyone signed in can read stores (customers browse stores)
-      allow read: if isSignedIn();
-      // Only the owner of the store can write
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      // Admin can manage all stores
-      allow write: if isAdmin();
+    // ─────────────────────────────────────────────
+    // STORES
+    // ─────────────────────────────────────────────
+    match /stores/{docStoreId} {
+      allow read:   if isAuth();
+      allow create: if isAuth() && (isOwner() || isAdmin()) && request.resource.data.ownerId == uid();
+      allow update: if isAuth() && (resource.data.ownerId == uid() || isAdmin());
+      allow delete: if isAdmin();
     }
 
-    // --- Products Collection ---
+    // ─────────────────────────────────────────────
+    // PRODUCTS
+    // ─────────────────────────────────────────────
     match /products/{productId} {
-      // All signed-in users can read products (customers browse all stores)
-      allow read: if isSignedIn();
-      // Owners can only write products for their own store
-      allow create: if (isOwner() || isAdmin()) && isValidProduct();
-      allow update, delete: if (isOwner() || isAdmin());
+      allow read:   if isAuth();
+      allow create: if isAuth() && (isOwner() || isAdmin()) && isValidProduct();
+      allow update: if isAuth() && (
+        isAdmin() ||
+        (isOwner()   && resource.data.storeId == storeId()) ||
+        (isCashier() && resource.data.storeId == storeId())
+      );
+      allow delete: if isAuth() && (
+        isAdmin() ||
+        (isOwner() && resource.data.storeId == storeId())
+      );
     }
 
-    // --- Orders Collection ---
+    // ─────────────────────────────────────────────
+    // ORDERS
+    // ─────────────────────────────────────────────
     match /orders/{orderId} {
-      // Customer reads their own orders
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.userId == 'guest');
-      // Owner/cashier reads orders for their store
-      allow read: if isOwner() || isAdmin() || isCashier();
-      // Driver reads orders assigned to them or unassigned Ready orders
-      allow read: if isDriver();
-
-      allow create: if isSignedIn() && isValidOrder();
-      
-      allow update: if isOwner() || isAdmin() || isCashier() || 
-        (isDriver() && (resource.data.driverId == request.auth.uid || request.resource.data.driverId == request.auth.uid));
+      allow read: if isAuth() && (
+        isAdmin() ||
+        resource.data.storeId == storeId() ||
+        resource.data.userId  == uid() ||
+        resource.data.driverId == uid()
+      );
+      allow create: if isAuth() && isValidOrder();
+      allow update: if isAuth() && (
+        isAdmin() ||
+        resource.data.storeId  == storeId() ||
+        resource.data.driverId == uid()
+      );
+      allow delete: if isAdmin();
     }
 
-    // --- Suppliers Collection ---
+    // ─────────────────────────────────────────────
+    // CUSTOMERS (store tab customers)
+    // ─────────────────────────────────────────────
+    match /customers/{customerId} {
+      allow read: if isAuth() && (
+        isAdmin() ||
+        resource.data.storeId == storeId() ||
+        uid() == customerId
+      );
+      allow create: if isAuth() && (isOwner() || isCashier() || isAdmin());
+      allow update: if isAuth() && (isAdmin() || resource.data.storeId == storeId());
+      allow delete: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
+    }
+
+    // ─────────────────────────────────────────────
+    // EXPENSES
+    // ─────────────────────────────────────────────
+    match /expenses/{expenseId} {
+      allow read:   if isAuth() && (isAdmin() || resource.data.storeId == storeId());
+      allow create: if isAuth() && (isOwner() || isAdmin());
+      allow update: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
+      allow delete: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
+    }
+
+    // ─────────────────────────────────────────────
+    // SUPPLIERS
+    // ─────────────────────────────────────────────
     match /suppliers/{supplierId} {
-      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
-      allow create: if isSignedIn() && (isOwner() || isAdmin());
-      allow update, delete: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+      allow read:   if isAuth() && (isAdmin() || resource.data.storeId == storeId());
+      allow create: if isAuth() && (isOwner() || isAdmin());
+      allow update: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
+      allow delete: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
     }
 
-    // --- Staff Collection ---
+    // ─────────────────────────────────────────────
+    // STAFF
+    // ─────────────────────────────────────────────
     match /staff/{staffId} {
-      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin() || request.auth.uid == resource.data.userId);
-      allow create: if isSignedIn() && (isOwner() || isAdmin());
-      allow update, delete: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
+      allow read: if isAuth() && (
+        isAdmin() ||
+        resource.data.storeId == storeId() ||
+        uid() == staffId
+      );
+      allow create: if isAuth() && (isOwner() || isAdmin());
+      allow update: if isAuth() && (
+        isAdmin() ||
+        (isOwner() && resource.data.storeId == storeId()) ||
+        uid() == staffId
+      );
+      allow delete: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
     }
 
-    // --- Shifts Collection ---
+    // ─────────────────────────────────────────────
+    // SHIFTS
+    // ─────────────────────────────────────────────
     match /shifts/{shiftId} {
-      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin() || resource.data.cashierId == request.auth.uid);
-      allow create: if isSignedIn() && (isCashier() || isOwner() || isAdmin());
-      allow update: if isSignedIn() && (resource.data.cashierId == request.auth.uid || isOwnStore(resource.data.storeId) || isAdmin());
+      allow read: if isAuth() && (
+        isAdmin() ||
+        resource.data.storeId  == storeId() ||
+        resource.data.cashierId == uid()
+      );
+      allow create: if isAuth() && (isCashier() || isOwner() || isAdmin());
+      allow update: if isAuth() && (
+        isAdmin() ||
+        resource.data.cashierId == uid() ||
+        (isOwner() && resource.data.storeId == storeId())
+      );
+      allow delete: if isAdmin();
 
       match /cashDrops/{dropId} {
-        allow read, write: if isSignedIn();
+        allow read, write: if isAuth();
       }
     }
 
-    // --- Customers Collection (store tab customers) ---
-    match /customers/{customerId} {
-      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
-      allow create: if isSignedIn() && (isOwner() || isCashier() || isAdmin());
-      allow update, delete: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
-    }
-
-    // --- Expenses Collection ---
-    match /expenses/{expenseId} {
-      allow read: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
-      allow create: if isSignedIn() && (isOwner() || isAdmin());
-      allow update, delete: if isSignedIn() && (isOwnStore(resource.data.storeId) || isAdmin());
-    }
-
-    // --- Issues Collection ---
+    // ─────────────────────────────────────────────
+    // ISSUES (driver reports)
+    // ─────────────────────────────────────────────
     match /issues/{issueId} {
-      allow read: if isSignedIn() && (isDriver() || isOwner() || isAdmin());
-      allow create: if isSignedIn() && isDriver();
-      allow update: if isSignedIn() && (isOwner() || isAdmin());
+      allow read: if isAuth() && (
+        isAdmin() ||
+        resource.data.driverId == uid() ||
+        resource.data.storeId  == storeId()
+      );
+      allow create: if isAuth() && (isDriver() || isAdmin());
+      allow update: if isAuth() && (
+        isAdmin() ||
+        (isOwner() && resource.data.storeId == storeId()) ||
+        resource.data.driverId == uid()
+      );
+      allow delete: if isAdmin();
     }
 
-    // --- Credit Profiles Collection ---
-    match /credit_profiles/{userId} {
-      allow read: if request.auth.uid == userId || isLender() || isOwner() || isAdmin();
-      allow create, update: if request.auth.uid == userId || isAdmin();
+    // ─────────────────────────────────────────────
+    // CREDIT PROFILES
+    // ─────────────────────────────────────────────
+    match /credit_profiles/{profileId} {
+      allow read: if isAuth() && (
+        isAdmin() ||
+        uid() == profileId ||
+        isLender() ||
+        isOwner()
+      );
+      allow create: if isAuth() && uid() == profileId;
+      allow update: if isAuth() && (uid() == profileId || isAdmin() || isLender());
+      allow delete: if isAdmin();
     }
 
-    // --- Borrowers Collection ---
+    // ─────────────────────────────────────────────
+    // BORROWERS
+    // Lenders see only their own borrowers.
+    // ─────────────────────────────────────────────
     match /borrowers/{borrowerId} {
-      allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin());
-      allow create: if isSignedIn() && (isLender() || isOwner());
-      allow update, delete: if isSignedIn() && (resource.data.lenderId == request.auth.uid || isAdmin());
+      allow read: if isAuth() && (
+        isAdmin() ||
+        resource.data.lenderId == uid()
+      );
+      allow create: if isAuth() && (isLender() || isAdmin());
+      allow update: if isAuth() && (isAdmin() || resource.data.lenderId == uid());
+      allow delete: if isAuth() && (isAdmin() || resource.data.lenderId == uid());
     }
 
-    // --- Loans Collection ---
+    // ─────────────────────────────────────────────
+    // LOANS
+    // ─────────────────────────────────────────────
     match /loans/{loanId} {
-      allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin() || resource.data.borrowerId == request.auth.uid);
-      allow create: if isSignedIn() && (isLender() || isOwner());
-      allow update: if isSignedIn() && (resource.data.lenderId == request.auth.uid || isAdmin());
+      allow read: if isAuth() && (
+        isAdmin() ||
+        resource.data.lenderId   == uid() ||
+        resource.data.borrowerId == uid()
+      );
+      allow create: if isAuth() && (isLender() || isAdmin() || isOwner());
+      allow update: if isAuth() && (isAdmin() || resource.data.lenderId == uid());
+      allow delete: if isAuth() && (isAdmin() || resource.data.lenderId == uid());
     }
 
-    // --- Loan Applications Collection ---
+    // ─────────────────────────────────────────────
+    // APPLICATIONS
+    // ─────────────────────────────────────────────
     match /applications/{appId} {
-      allow read: if isSignedIn() && (isLender() || isOwner() || isAdmin() || resource.data.applicantId == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && (isLender() || isAdmin());
+      allow read: if isAuth() && (
+        isAdmin() ||
+        isLender() ||
+        resource.data.userId == uid()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (isAdmin() || isLender());
+      allow delete: if isAdmin();
     }
 
-    // --- Lender Offers Collection ---
+    // ─────────────────────────────────────────────
+    // LENDER OFFERS
+    // ─────────────────────────────────────────────
     match /lender_offers/{offerId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isSignedIn() && (isLender() || isAdmin());
+      allow read: if isAuth();
+      allow create: if isAuth() && (isLender() || isAdmin());
+      allow update: if isAuth() && (isAdmin() || resource.data.lenderId == uid());
+      allow delete: if isAuth() && (isAdmin() || resource.data.lenderId == uid());
     }
 
-    // --- Audit Logs Collection ---
-    match /audit_logs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn(); // Any action can create a log
+    // ─────────────────────────────────────────────
+    // NOTIFICATIONS
+    // Users read their own. Authenticated users create (system sends to others).
+    // ─────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAuth() && (isAdmin() || resource.data.userId == uid());
+      allow create: if isAuth();
+      allow update: if isAuth() && (isAdmin() || resource.data.userId == uid());
+      allow delete: if isAdmin();
     }
 
-    // --- Disputes Collection ---
-    match /disputes/{disputeId} {
-      allow read: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update: if isAdmin();
-    }
-
-    // --- Support Tickets Collection ---
-    match /support_tickets/{ticketId} {
-      allow read: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isAdmin();
-    }
-
-    // --- Notifications Collection ---
-    match /notifications/{notificationId} {
-      // All signed-in users can read notifications targeted to their role or "all"
-      allow read: if isSignedIn();
-      // Admin can create/update/delete notifications
-      allow create, update, delete: if isAdmin();
-    }
-
-    // --- User Notification State (read/dismissed tracking) ---
+    // ─────────────────────────────────────────────
+    // USER NOTIFICATIONS (read/dismissed tracking)
+    // ─────────────────────────────────────────────
     match /user_notifications/{docId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read, write: if isAuth() && uid() == docId;
+    }
+
+    // ─────────────────────────────────────────────
+    // TRANSACTIONS (Paystack payment records)
+    // ─────────────────────────────────────────────
+    match /transactions/{txId} {
+      allow read: if isAuth() && (isAdmin() || resource.data.userId == uid());
+      allow create: if isAuth();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────
+    // DISPUTES
+    // ─────────────────────────────────────────────
+    match /disputes/{disputeId} {
+      allow read: if isAuth() && (isAdmin() || resource.data.userId == uid());
+      allow create: if isAuth();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────
+    // SUPPORT TICKETS
+    // ─────────────────────────────────────────────
+    match /support_tickets/{ticketId} {
+      allow read: if isAuth() && (isAdmin() || resource.data.userId == uid());
+      allow create: if isAuth() && request.resource.data.userId == uid();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────
+    // AUDIT LOGS (admin read-only, anyone can create)
+    // ─────────────────────────────────────────────
+    match /audit_logs/{logId} {
+      allow read:          if isAdmin();
+      allow create:        if isAuth();
+      allow update, delete: if false;
     }
   }
 }

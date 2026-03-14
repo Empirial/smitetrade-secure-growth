@@ -1,6 +1,6 @@
 import { Product, User, Order, StaffMember } from "@/types";
 
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
 
 export const MOCK_STORE_ID = "mock-store-001";
 export const MOCK_STORE_NAME = "Soweto Central Spaza";

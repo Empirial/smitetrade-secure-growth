@@ -98,6 +98,7 @@ import AdminRevenue from "./pages/admin/AdminRevenue";
 import AdminCreditOverview from "./pages/admin/AdminCreditOverview";
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminAlerts from "./pages/admin/AdminAlerts";
+import AdminSetup from "./pages/AdminSetup";
 
 // Lender
 import LenderLogin from "./pages/lender/LenderLogin";
@@ -132,6 +133,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/session-expired" element={<SessionExpired />} />
               <Route path="/portals" element={<Portals />} />
+              <Route path="/setup-admin" element={<AdminSetup />} />
 
               {/* Owner Portal — Login/Register are public */}
               <Route path="/owner/login" element={<OwnerLogin />} />

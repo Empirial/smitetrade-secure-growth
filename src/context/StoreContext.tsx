@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { toast } from 'sonner';
 import { auth, db } from '@/lib/firebase';
 import { getAuthErrorMessage } from '@/lib/authErrors';
@@ -125,6 +125,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         return saved ? JSON.parse(saved) : [];
     });
     const [isLoading, setIsLoading] = useState(true);
+    const isRegistering = useRef(false);
 
     // --- Snag List State ---
     const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
@@ -165,27 +166,42 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-                if (userDoc.exists()) {
-                    const userData = { ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User;
-                    setUser(userData);
+            try {
+                if (firebaseUser) {
+                    const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+                    if (userDoc.exists()) {
+                        const userData = { ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User;
+                        setUser(userData);
 
-                    // If user has a storeId, fetch that store
-                    if (userData.storeId) {
-                        const storeDoc = await getDoc(doc(db, "stores", userData.storeId));
-                        if (storeDoc.exists()) {
-                            setCurrentStore({ id: storeDoc.id, ...storeDoc.data() } as Store);
+                        // If user has a storeId, fetch that store
+                        if (userData.storeId) {
+                            try {
+                                const storeDoc = await getDoc(doc(db, "stores", userData.storeId));
+                                if (storeDoc.exists()) {
+                                    setCurrentStore({ id: storeDoc.id, ...storeDoc.data() } as Store);
+                                }
+                            } catch {
+                                // store fetch failed — non-critical, continue
+                            }
                         }
+                    } else if (!isRegistering.current) {
+                        // Auth succeeded but no Firestore profile — sign out to avoid stuck state
+                        await signOut(auth);
+                        toast.error("Account setup incomplete. Please register again.");
                     }
                 } else {
-                    console.error("User profile not found");
+                    setUser(null);
+                    setCurrentStore(null);
                 }
-            } else {
+            } catch (err) {
+                // Firestore read blocked (rules not deployed) — sign out cleanly
+                console.error("Auth state error:", err);
+                await signOut(auth);
+                toast.error("Unable to load your account. Please check your connection and try again.");
                 setUser(null);
-                setCurrentStore(null);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         });
         return () => unsubscribe();
     }, []);
@@ -457,6 +473,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
+            isRegistering.current = true;
             const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
 
             const userData: Omit<User, 'id' | 'uid'> = {
@@ -490,9 +507,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             // Create user role entry
             await setDoc(doc(db, "user_roles", firebaseUser.uid), { role });
 
+            isRegistering.current = false;
             setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
             toast.success("Account created successfully!");
         } catch (error) {
+            isRegistering.current = false;
             console.error("Registration error:", error);
             toast.error(getAuthErrorMessage(error));
             throw error;

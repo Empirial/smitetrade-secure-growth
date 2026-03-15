@@ -174,6 +174,10 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             try {
                 if (firebaseUser) {
+                    if (isRegistering.current) {
+                        setIsLoading(false);
+                        return;
+                    }
                     const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
                     if (userDoc.exists()) {
                         const userData = { ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User;
@@ -462,24 +466,45 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     const loginWithGoogle = async (role: UserRole) => {
         try {
+            isRegistering.current = true;
             const result = await signInWithPopup(auth, googleProvider);
             const firebaseUser = result.user;
             const userRef = doc(db, "users", firebaseUser.uid);
             const userSnap = await getDoc(userRef);
+
             if (!userSnap.exists()) {
-                // First time Google sign-in — create user profile
-                const userData = {
+                // New Google user — create profile
+                const userData: any = {
                     name: firebaseUser.displayName || "Google User",
                     email: firebaseUser.email || "",
                     role,
+                    roles: [role],
                 };
                 await setDoc(userRef, userData);
-                await setDoc(doc(db, "user_roles", firebaseUser.uid), { role });
+                await setDoc(doc(db, "user_roles", firebaseUser.uid), { role, roles: [role] });
+                isRegistering.current = false;
+                setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
+                toast.success("Account created with Google!");
+            } else {
+                // Existing user — add role if needed
+                const existingData = userSnap.data();
+                const existingRoles: UserRole[] = existingData.roles || [existingData.role];
+                const updates: any = {};
+                if (!existingRoles.includes(role)) {
+                    existingRoles.push(role);
+                    updates.roles = existingRoles;
+                    await updateDoc(userRef, updates);
+                }
+                isRegistering.current = false;
+                setUser({ ...existingData, ...updates, id: firebaseUser.uid, uid: firebaseUser.uid, role, roles: existingRoles } as User);
+                toast.success("Signed in with Google!");
             }
-            toast.success("Signed in with Google!");
-        } catch (error) {
-            console.error("Google sign-in error:", error);
-            toast.error(getAuthErrorMessage(error));
+        } catch (error: any) {
+            isRegistering.current = false;
+            if (error.code !== 'auth/popup-closed-by-user') {
+                console.error("Google sign-in error:", error);
+                toast.error(getAuthErrorMessage(error));
+            }
             throw error;
         }
     };

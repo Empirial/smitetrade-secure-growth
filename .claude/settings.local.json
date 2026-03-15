@@ -42,7 +42,8 @@
       "Bash(npm list:*)",
       "Bash(firebase apps:sdkconfig --project smitetrade-40643)",
       "Bash(taskoutput b8prz4p2q:*)",
-      "Bash(node -e \"require\\(''firebase-admin''\\); console.log\\(''ok''\\)\")"
+      "Bash(node -e \"require\\(''firebase-admin''\\); console.log\\(''ok''\\)\")",
+      "Bash(firebase auth:print-access-token)"
     ]
   }
 }

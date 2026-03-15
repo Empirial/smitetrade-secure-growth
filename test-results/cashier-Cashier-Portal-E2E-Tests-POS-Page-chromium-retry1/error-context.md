@@ -1,0 +1,37 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - heading "Cashier Portal" [level=2] [ref=e12]
+      - paragraph [ref=e13]: Login with your credentials
+    - generic [ref=e14]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - img [ref=e18]
+          - text: Incorrect email or password. Please try again.
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - text: Email
+            - textbox "Email" [ref=e22]:
+              - /placeholder: cashier@smitetrade.com
+              - text: cashier@test.smitetrade.co.za
+          - generic [ref=e23]:
+            - generic [ref=e24]:
+              - generic [ref=e25]: Password
+              - link "Forgot password?" [ref=e26] [cursor=pointer]:
+                - /url: /forgot-password
+            - textbox "Password" [ref=e27]:
+              - /placeholder: ••••
+              - text: Test1234!
+        - button "Login" [ref=e28] [cursor=pointer]
+      - link "Register New Cashier" [ref=e31] [cursor=pointer]:
+        - /url: /cashier/register
+    - link "← Back to Main Site" [ref=e33] [cursor=pointer]:
+      - /url: /
+```

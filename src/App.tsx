@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import TestSetup from "./pages/TestSetup";
 import { StoreProvider } from "./context/StoreContext";
 import { CreditProvider } from "./context/CreditContext";
 import AuthGuard from "./components/AuthGuard";
@@ -232,6 +233,7 @@ const App = () => (
               <Route path="/lender/support" element={<AuthGuard role="lender"><LenderSupport /></AuthGuard>} />
               <Route path="/lender/alerts" element={<AuthGuard role="lender"><LenderAlerts /></AuthGuard>} />
 
+              <Route path="/test-setup" element={<TestSetup />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

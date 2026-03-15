@@ -1,13 +1,16 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { toast } from 'sonner';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, firebaseConfig } from '@/lib/firebase';
+import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuthErrorMessage } from '@/lib/authErrors';
 import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
+    signInWithPopup,
     signOut,
     createUserWithEmailAndPassword,
+    getAuth,
     User as FirebaseUser
 } from 'firebase/auth';
 import {
@@ -25,6 +28,7 @@ import {
     where
 } from 'firebase/firestore';
 import { OrderSchema } from '@/lib/schemas';
+import { googleProvider } from '@/lib/firebase';
 
 import { MOCK_USER, MOCK_LENDER, MOCK_PRODUCTS, MOCK_ORDERS, USE_MOCK_DATA, MOCK_STORES, MOCK_STORE_ID, MOCK_STAFF } from '@/lib/constants';
 
@@ -38,6 +42,7 @@ interface StoreContextType {
     // Auth
     user: User | null;
     login: (email: string, password: string, roleFallback?: UserRole) => Promise<void>;
+    loginWithGoogle: (role: UserRole) => Promise<void>;
     register: (email: string, password: string, name: string, role: UserRole, storeName?: string) => Promise<void>;
     logout: () => Promise<void>;
     updateUser: (updates: Partial<User>) => Promise<void>;
@@ -432,6 +437,30 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             toast.success("Welcome back!");
         } catch (error) {
             console.error("Login error:", error);
+            toast.error(getAuthErrorMessage(error));
+            throw error;
+        }
+    };
+
+    const loginWithGoogle = async (role: UserRole) => {
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const firebaseUser = result.user;
+            const userRef = doc(db, "users", firebaseUser.uid);
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) {
+                // First time Google sign-in — create user profile
+                const userData = {
+                    name: firebaseUser.displayName || "Google User",
+                    email: firebaseUser.email || "",
+                    role,
+                };
+                await setDoc(userRef, userData);
+                await setDoc(doc(db, "user_roles", firebaseUser.uid), { role });
+            }
+            toast.success("Signed in with Google!");
+        } catch (error) {
+            console.error("Google sign-in error:", error);
             toast.error(getAuthErrorMessage(error));
             throw error;
         }
@@ -888,14 +917,47 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
-            await addDoc(collection(db, "staff"), {
-                ...staffData,
-                storeId,
-                createdAt: new Date().toISOString()
-            });
-            toast.success("Staff member added successfully");
-        } catch (error) {
-            toast.error("Failed to add staff");
+            const { email, password, role: staffRole, name } = staffData as any;
+
+            if (!email || !password) {
+                toast.error("Email and password are required to create a staff account");
+                return;
+            }
+
+            // Use a secondary app instance so the owner stays signed in
+            const secondaryApp = initializeApp(firebaseConfig, `staff-create-${Date.now()}`);
+            const secondaryAuth = getAuth(secondaryApp);
+
+            try {
+                const { user: newUser } = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+
+                // Create Firestore profile for the staff member
+                await setDoc(doc(db, "users", newUser.uid), {
+                    name: name || staffData.name,
+                    email,
+                    role: staffRole || staffData.role || 'cashier',
+                    storeId,
+                    createdAt: new Date().toISOString()
+                });
+
+                // Save to staff collection
+                await addDoc(collection(db, "staff"), {
+                    ...staffData,
+                    uid: newUser.uid,
+                    storeId,
+                    createdAt: new Date().toISOString()
+                });
+
+                await signOut(secondaryAuth);
+                toast.success("Staff account created — they can now log in");
+            } finally {
+                await deleteApp(secondaryApp);
+            }
+        } catch (error: any) {
+            const msg = error?.code === 'auth/email-already-in-use'
+                ? "An account with this email already exists"
+                : "Failed to create staff account";
+            toast.error(msg);
             throw error;
         }
     };
@@ -1177,7 +1239,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <StoreContext.Provider value={{
-            user, login, register, logout, updateUser,
+            user, login, loginWithGoogle, register, logout, updateUser,
             stores, currentStore, switchStore,
             products, allProducts, addProduct, updateProduct, deleteProduct,
             cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,

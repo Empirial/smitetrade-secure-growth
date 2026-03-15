@@ -9,7 +9,20 @@
       "Bash(firebase login:*)",
       "Bash(firebase use:*)",
       "WebSearch",
-      "WebFetch(domain:firebase.google.com)"
+      "WebFetch(domain:firebase.google.com)",
+      "Bash(grep -n \"from ''firebase/auth''\" src/context/StoreContext.tsx)",
+      "Bash(claude mcp:*)",
+      "Bash(firebase --version)",
+      "Bash(firebase mcp:*)",
+      "Bash(firebase --help)",
+      "Bash(firebase experimental:mcp --help)",
+      "Bash(node -e \"require\\(''''@playwright/test''''\\)\")",
+      "Bash(npx playwright:*)",
+      "Bash(firebase auth:export /dev/null --project smitetrade-40643)",
+      "Bash(firebase login:list)",
+      "Bash(gcloud auth:*)",
+      "Bash(firebase login:ci --no-localhost)",
+      "Bash(node -e \":*)"
     ]
   }
 }

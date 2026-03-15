@@ -26,12 +26,17 @@ service cloud.firestore {
       return userDoc().storeId;
     }
 
-    function isAdmin()    { return isAuth() && role() == 'admin'; }
-    function isOwner()    { return isAuth() && role() == 'owner'; }
-    function isCashier()  { return isAuth() && role() == 'cashier'; }
-    function isDriver()   { return isAuth() && role() == 'driver'; }
-    function isLender()   { return isAuth() && role() == 'lender'; }
-    function isCustomer() { return isAuth() && role() == 'customer'; }
+    function hasRole(r) {
+      let d = userDoc();
+      return d.role == r || d.get('roles', []).hasAny([r]);
+    }
+
+    function isAdmin()    { return isAuth() && hasRole('admin'); }
+    function isOwner()    { return isAuth() && hasRole('owner'); }
+    function isCashier()  { return isAuth() && hasRole('cashier'); }
+    function isDriver()   { return isAuth() && hasRole('driver'); }
+    function isLender()   { return isAuth() && hasRole('lender'); }
+    function isCustomer() { return isAuth() && hasRole('customer'); }
 
     // ─────────────────────────────────────────────
     // VALIDATION HELPERS

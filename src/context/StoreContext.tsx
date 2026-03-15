@@ -131,6 +131,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const isRegistering = useRef(false);
+    const loginRoleRef = useRef<UserRole | null>(null);
 
     // --- Snag List State ---
     const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
@@ -176,6 +177,22 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
                     if (userDoc.exists()) {
                         const userData = { ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User;
+
+                        // Apply active role from the portal the user logged into
+                        const intendedRole = loginRoleRef.current;
+                        loginRoleRef.current = null;
+                        if (intendedRole) {
+                            const userRoles: UserRole[] = userData.roles || [userData.role];
+                            if (userRoles.includes(intendedRole)) {
+                                userData.role = intendedRole;
+                            } else {
+                                await signOut(auth);
+                                toast.error(`You don't have ${intendedRole} access. Please register for this portal first.`);
+                                setIsLoading(false);
+                                return;
+                            }
+                        }
+
                         setUser(userData);
 
                         // If user has a storeId, fetch that store
@@ -433,6 +450,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
+            loginRoleRef.current = roleFallback || null;
             await signInWithEmailAndPassword(auth, email, password);
             toast.success("Welcome back!");
         } catch (error) {
@@ -503,41 +521,75 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             isRegistering.current = true;
-            const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
+            let firebaseUser: import('firebase/auth').User;
+            let isExistingUser = false;
 
-            // Create user doc FIRST (store creation rule reads this doc to check role)
-            const userData: Omit<User, 'id' | 'uid'> = {
-                name,
-                email,
-                role,
-                ...(storeName && { storeName })
-            };
-            await setDoc(doc(db, "users", firebaseUser.uid), userData);
-            await setDoc(doc(db, "user_roles", firebaseUser.uid), { role });
+            try {
+                const result = await createUserWithEmailAndPassword(auth, email, password);
+                firebaseUser = result.user;
+            } catch (createError: any) {
+                if (createError.code === 'auth/email-already-in-use') {
+                    // Sign in to existing account and add the new role
+                    const result = await signInWithEmailAndPassword(auth, email, password);
+                    firebaseUser = result.user;
+                    isExistingUser = true;
+                } else {
+                    throw createError;
+                }
+            }
 
-            // Now create store document if owner (isOwner() rule will pass now)
-            let storeId: string | undefined;
+            if (isExistingUser) {
+                // Add new role to existing account
+                const userRef = doc(db, "users", firebaseUser!.uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const existingData = userSnap.data();
+                    const existingRoles: UserRole[] = existingData.roles || [existingData.role];
+                    if (!existingRoles.includes(role)) existingRoles.push(role);
+                    const updates: any = { roles: existingRoles };
+
+                    // Create store if adding owner role and no store yet
+                    let storeId = existingData.storeId;
+                    if (role === 'owner' && storeName && !storeId) {
+                        const storeRef = doc(collection(db, "stores"));
+                        storeId = storeRef.id;
+                        await setDoc(storeRef, {
+                            ownerId: firebaseUser!.uid, name: storeName,
+                            address: "", suburb: "", city: "", province: "",
+                            status: "Active", createdAt: new Date().toISOString()
+                        });
+                        updates.storeId = storeId;
+                        updates.storeName = storeName;
+                    }
+
+                    await updateDoc(userRef, updates);
+                    isRegistering.current = false;
+                    setUser({ ...existingData, ...updates, id: firebaseUser!.uid, uid: firebaseUser!.uid, role, roles: existingRoles } as User);
+                    toast.success(`${role.charAt(0).toUpperCase() + role.slice(1)} role added to your account!`);
+                    return;
+                }
+            }
+
+            // New account — create user doc FIRST (store creation rule reads this)
+            const userData: any = { name, email, role, roles: [role], ...(storeName && { storeName }) };
+            await setDoc(doc(db, "users", firebaseUser!.uid), userData);
+            await setDoc(doc(db, "user_roles", firebaseUser!.uid), { role, roles: [role] });
+
+            // Create store if owner
             if (role === 'owner' && storeName) {
                 const storeRef = doc(collection(db, "stores"));
-                storeId = storeRef.id;
-                const storeData = {
-                    ownerId: firebaseUser.uid,
-                    name: storeName,
-                    address: "",
-                    suburb: "",
-                    city: "",
-                    province: "",
-                    status: "Active",
-                    createdAt: new Date().toISOString()
-                };
-                await setDoc(storeRef, storeData);
-                // Update user doc with storeId
-                await updateDoc(doc(db, "users", firebaseUser.uid), { storeId });
-                (userData as any).storeId = storeId;
+                const storeId = storeRef.id;
+                await setDoc(storeRef, {
+                    ownerId: firebaseUser!.uid, name: storeName,
+                    address: "", suburb: "", city: "", province: "",
+                    status: "Active", createdAt: new Date().toISOString()
+                });
+                await updateDoc(doc(db, "users", firebaseUser!.uid), { storeId });
+                userData.storeId = storeId;
             }
 
             isRegistering.current = false;
-            setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
+            setUser({ ...userData, id: firebaseUser!.uid, uid: firebaseUser!.uid });
             toast.success("Account created successfully!");
         } catch (error) {
             isRegistering.current = false;

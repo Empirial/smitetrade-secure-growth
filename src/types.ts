@@ -7,6 +7,7 @@ export interface User {
     email: string;
     phone?: string;
     role: UserRole;
+    roles?: UserRole[]; // All roles this account has (multi-portal support)
     storeName?: string; // For Owners
     storeId?: string; // Links user to their store
     storeDetails?: {

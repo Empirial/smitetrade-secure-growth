@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Store, CreditCard, ShoppingBag, Truck, ShieldCheck, ArrowLeft, User } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
 import { UserRole } from "@/types";
+import { toast } from "sonner";
 
 const Login = () => {
     const { login } = useStore();
@@ -16,7 +17,6 @@ const Login = () => {
 
     const handleSeed = async () => {
         const { seedDatabase } = await import('@/lib/seed');
-        const { toast } = await import('sonner');
         const success = await seedDatabase();
         if (success) {
             toast.success("Database seeded successfully!");

@@ -12,7 +12,7 @@
  */
 
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, addDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 export const seedAdminUser = async (
@@ -72,8 +72,6 @@ export const seedAdminUser = async (
  * Seed initial lender offers into Firestore (safe to run multiple times — skips if exists).
  */
 export const seedLenderOffers = async (): Promise<void> => {
-  const { collection, getDocs, addDoc } = await import('firebase/firestore');
-
   const offersRef = collection(db, 'lender_offers');
   const existing = await getDocs(offersRef);
   if (!existing.empty) {

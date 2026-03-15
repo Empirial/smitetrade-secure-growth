@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "@/context/StoreContext";
 import { User, AlertCircle } from "lucide-react";
 
@@ -20,12 +20,16 @@ import { validateEmail, validatePassword, hasErrors } from "@/utils/validation";
 
 const CustomerLogin = () => {
     const navigate = useNavigate();
-    const { login, loginWithGoogle } = useStore();
+    const { login, loginWithGoogle, user } = useStore();
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [errors, setErrors] = useState({ email: null as string | null, password: null as string | null });
     const [authError, setAuthError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user?.role === "customer") navigate("/customer/products", { replace: true });
+    }, [user, navigate]);
 
     const validate = () => {
         const newErrors = {
@@ -43,7 +47,6 @@ const CustomerLogin = () => {
         setLoading(true);
         try {
             await login(formData.email, formData.password, "customer");
-            navigate("/customer/products");
         } catch (error) {
             setAuthError("Incorrect email or password. Please try again.");
         } finally {
@@ -55,7 +58,6 @@ const CustomerLogin = () => {
         setGoogleLoading(true);
         try {
             await loginWithGoogle("customer");
-            navigate("/customer/products");
         } catch {
             // error already toasted in context
         } finally {

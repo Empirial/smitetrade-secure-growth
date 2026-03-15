@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { Building2, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "@/context/StoreContext";
 import FieldError from "@/components/ui/FieldError";
 import { validateEmail, validatePassword, hasErrors } from "@/utils/validation";
@@ -20,12 +20,16 @@ const GoogleIcon = () => (
 
 const LenderLogin = () => {
     const navigate = useNavigate();
-    const { login, loginWithGoogle } = useStore();
+    const { login, loginWithGoogle, user } = useStore();
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [errors, setErrors] = useState({ email: null as string | null, password: null as string | null });
     const [authError, setAuthError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user?.role === "lender") navigate("/lender/dashboard", { replace: true });
+    }, [user, navigate]);
 
     const validate = () => {
         const newErrors = {
@@ -43,7 +47,6 @@ const LenderLogin = () => {
         setLoading(true);
         try {
             await login(formData.email, formData.password, "lender");
-            navigate("/lender/dashboard");
         } catch (error) {
             setAuthError("Incorrect email or password. Please try again.");
         } finally {
@@ -55,7 +58,6 @@ const LenderLogin = () => {
         setGoogleLoading(true);
         try {
             await loginWithGoogle("lender");
-            navigate("/lender/dashboard");
         } catch {
             // error already toasted in context
         } finally {

@@ -22,7 +22,27 @@
       "Bash(firebase login:list)",
       "Bash(gcloud auth:*)",
       "Bash(firebase login:ci --no-localhost)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(npx firebase-tools:*)",
+      "Bash(npm --version)",
+      "Bash(node node_modules/firebase-tools/lib/bin/firebase.js auth:print-access-token)",
+      "Bash(where firebase:*)",
+      "Bash(npx --yes firebase-tools@latest auth:print-access-token)",
+      "Read(//c/Users/Lufuno Mphela/AppData/Roaming/nvm/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"const fs=require\\(''fs''\\);const c=JSON.parse\\(fs.readFileSync\\(require\\(''os''\\).homedir\\(\\)+''/.config/configstore/firebase-tools.json'',''utf8''\\)\\);console.log\\(JSON.stringify\\(Object.keys\\(c.tokens||{}\\)\\)\\)\")",
+      "Bash(node -e \"const fs=require\\(''fs''\\);const c=JSON.parse\\(fs.readFileSync\\(require\\(''os''\\).homedir\\(\\)+''/.config/configstore/firebase-tools.json'',''utf8''\\)\\);console.log\\(JSON.stringify\\(Object.keys\\(c\\)\\)\\)\")",
+      "Bash(node -e \"const fs=require\\(''fs''\\);const c=JSON.parse\\(fs.readFileSync\\(require\\(''os''\\).homedir\\(\\)+''/.config/configstore/firebase-tools.json'',''utf8''\\)\\);const at=c.tokens.access_token;const exp=c.tokens.expires_at;console.log\\(''expires_at:''+exp+'' now:''+Date.now\\(\\)+''ms expired:''+\\(Date.now\\(\\)>exp\\)\\)\")",
+      "Bash(firebase auth:export --project smitetrade-40643)",
+      "Bash(firebase auth:export --format=json)",
+      "Bash(firebase auth:export /tmp/auth_export.json --format=json)",
+      "Bash(python3 -c \":*)",
+      "Bash(node -e \"require\\(''''firebase-admin''''\\)\")",
+      "Bash(npm list:*)",
+      "Bash(firebase apps:sdkconfig --project smitetrade-40643)",
+      "Bash(taskoutput b8prz4p2q:*)",
+      "Bash(node -e \"require\\(''firebase-admin''\\); console.log\\(''ok''\\)\")"
     ]
   }
 }

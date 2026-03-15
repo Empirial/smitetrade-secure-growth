@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { Store, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "@/context/StoreContext";
 
 const GoogleIcon = () => (
@@ -20,12 +20,16 @@ import { validateEmail, validatePassword, hasErrors } from "@/utils/validation";
 
 const CashierLogin = () => {
     const navigate = useNavigate();
-    const { login, loginWithGoogle } = useStore();
+    const { login, loginWithGoogle, user } = useStore();
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [errors, setErrors] = useState({ email: null as string | null, password: null as string | null });
     const [authError, setAuthError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user?.role === "cashier") navigate("/cashier/dashboard", { replace: true });
+    }, [user, navigate]);
 
     const validate = () => {
         const newErrors = {
@@ -43,7 +47,6 @@ const CashierLogin = () => {
         setLoading(true);
         try {
             await login(formData.email, formData.password, "cashier");
-            navigate("/cashier/dashboard");
         } catch (error) {
             setAuthError("Incorrect email or password. Please try again.");
         } finally {
@@ -55,7 +58,6 @@ const CashierLogin = () => {
         setGoogleLoading(true);
         try {
             await loginWithGoogle("cashier");
-            navigate("/cashier/dashboard");
         } catch {
             // error already toasted in context
         } finally {

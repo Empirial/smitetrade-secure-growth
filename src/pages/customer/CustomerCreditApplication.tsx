@@ -108,11 +108,11 @@ const CustomerCreditApplication = () => {
                 </Card>
 
                 {/* Lender Offers List */}
-                <div className="flex gap-6 overflow-x-auto pb-4 snap-x">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {lenderOffers.map((offer) => (
                         <Card
                             key={offer.id}
-                            className={`min-w-[300px] md:min-w-[320px] shrink-0 snap-start cursor-pointer transition-all border-2 relative ${selectedLender === offer.id ? "border-emerald-500 shadow-md bg-emerald-950/20" : "border-transparent hover:border-slate-700"}`}
+                            className={`cursor-pointer transition-all border-2 relative ${selectedLender === offer.id ? "border-emerald-500 shadow-md bg-emerald-950/20" : "border-transparent hover:border-slate-700"}`}
                             onClick={() => setViewLender(offer)}
                         >
                             {selectedLender === offer.id && (

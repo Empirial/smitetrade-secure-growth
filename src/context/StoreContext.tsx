@@ -505,14 +505,17 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             isRegistering.current = true;
             const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
 
+            // Create user doc FIRST (store creation rule reads this doc to check role)
             const userData: Omit<User, 'id' | 'uid'> = {
                 name,
                 email,
                 role,
                 ...(storeName && { storeName })
             };
+            await setDoc(doc(db, "users", firebaseUser.uid), userData);
+            await setDoc(doc(db, "user_roles", firebaseUser.uid), { role });
 
-            // Create store document if owner
+            // Now create store document if owner (isOwner() rule will pass now)
             let storeId: string | undefined;
             if (role === 'owner' && storeName) {
                 const storeRef = doc(collection(db, "stores"));
@@ -528,13 +531,10 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     createdAt: new Date().toISOString()
                 };
                 await setDoc(storeRef, storeData);
+                // Update user doc with storeId
+                await updateDoc(doc(db, "users", firebaseUser.uid), { storeId });
                 (userData as any).storeId = storeId;
             }
-
-            await setDoc(doc(db, "users", firebaseUser.uid), userData);
-
-            // Create user role entry
-            await setDoc(doc(db, "user_roles", firebaseUser.uid), { role });
 
             isRegistering.current = false;
             setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });

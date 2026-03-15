@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Trophy, Medal, Award, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -32,14 +31,9 @@ const GamificationStatus = ({ tier, score }: GamificationStatusProps) => {
                 <div className="space-y-1">
                     <h3 className="text-xl font-bold font-[Orbitron]">{details.label}</h3>
                 </div>
-                <motion.div
-                    initial={{ scale: 0.8, rotate: -10 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 10 }}
-                    className={`p-4 rounded-full bg-white shadow-lg border-2 ${details.color.replace('text', 'border')}`}
-                >
+                <div className={`p-4 rounded-full bg-white shadow-lg border-2 ${details.color.replace('text', 'border')}`}>
                     <Icon className={`h-8 w-8 ${details.color}`} />
-                </motion.div>
+                </div>
             </div>
 
             <div className="space-y-2">

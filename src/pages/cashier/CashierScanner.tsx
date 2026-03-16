@@ -23,20 +23,27 @@ const CashierScanner = () => {
     const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
     const [barcodeInput, setBarcodeInput] = useState("");
     const [matchedProduct, setMatchedProduct] = useState<Product | null>(null);
+    const [barcodeNotFound, setBarcodeNotFound] = useState(false);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [newProductForm, setNewProductForm] = useState({ name: "", price: "", category: "", stock: "1" });
+    const [addingToInventory, setAddingToInventory] = useState(false);
 
-    const { products, addToCart } = useStore();
+    const { products, addToCart, addProduct, updateProduct } = useStore();
 
     const codeReader = useRef(new BrowserMultiFormatReader());
     const lastScannedTime = useRef<number>(0);
 
     const handleBarcodeLookup = useCallback((barcode: string) => {
-        // For test use, assume barcode '6001234567890' exists if mock is used
         const found = products.find(p => p.barcode === barcode || p.id === barcode);
         if (found) {
             setMatchedProduct(found);
+            setBarcodeNotFound(false);
+            setShowAddForm(false);
             toast.success(`Found: ${found.name}`);
         } else {
             setMatchedProduct(null);
+            setBarcodeNotFound(true);
+            setNewProductForm(prev => ({ ...prev }));
             toast.error(`Product not found for barcode: ${barcode}`);
         }
     }, [products]);
@@ -44,21 +51,26 @@ const CashierScanner = () => {
     const scanForBarcode = useCallback(() => {
         if (webcamRef.current && webcamRef.current.video) {
             const video = webcamRef.current.video;
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                codeReader.current.decodeFromVideoElement(video).then(result => {
-                    if (result) {
-                        const text = result.getText();
-                        const now = Date.now();
-                        // Prevent repeated scans of the same barcode too quickly (every 3 seconds)
-                        if (now - lastScannedTime.current > 3000) {
-                            setBarcodeInput(text);
-                            lastScannedTime.current = now;
-                            handleBarcodeLookup(text);
-                        }
+            if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                try {
+                    const result = codeReader.current.decodeFromCanvas(canvas);
+                    const text = result.getText();
+                    const now = Date.now();
+                    // Prevent repeated scans of the same barcode too quickly (every 3 seconds)
+                    if (now - lastScannedTime.current > 3000) {
+                        setBarcodeInput(text);
+                        lastScannedTime.current = now;
+                        handleBarcodeLookup(text);
                     }
-                }).catch(err => {
+                } catch {
                     // Ignore NotFoundException, it happens constantly when no barcode is in view
-                });
+                }
             }
         }
     }, [handleBarcodeLookup]);
@@ -67,6 +79,67 @@ const CashierScanner = () => {
         const interval = setInterval(scanForBarcode, 500); // Check for barcodes twice a second
         return () => clearInterval(interval);
     }, [scanForBarcode]);
+
+    const captureBarcode = useCallback(() => {
+        if (webcamRef.current && webcamRef.current.video) {
+            const video = webcamRef.current.video;
+            if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                try {
+                    const result = codeReader.current.decodeFromCanvas(canvas);
+                    const text = result.getText();
+                    setBarcodeInput(text);
+                    lastScannedTime.current = Date.now();
+                    handleBarcodeLookup(text);
+                } catch {
+                    toast.error("No barcode detected. Hold the barcode steady and try again.");
+                }
+            }
+        }
+    }, [handleBarcodeLookup]);
+
+    const handleAddStock = async () => {
+        if (!matchedProduct) return;
+        setAddingToInventory(true);
+        try {
+            await updateProduct(matchedProduct.id, { stock: matchedProduct.stock + 1 });
+            toast.success(`Stock updated: ${matchedProduct.name} (+1)`);
+        } catch {
+            toast.error("Failed to update stock");
+        } finally {
+            setAddingToInventory(false);
+        }
+    };
+
+    const handleAddNewProduct = async () => {
+        if (!newProductForm.name || !newProductForm.price || !newProductForm.category) {
+            toast.error("Please fill in name, price and category");
+            return;
+        }
+        setAddingToInventory(true);
+        try {
+            await addProduct({
+                name: newProductForm.name,
+                price: parseFloat(newProductForm.price),
+                category: newProductForm.category,
+                stock: parseInt(newProductForm.stock) || 1,
+                barcode: barcodeInput,
+            });
+            toast.success(`${newProductForm.name} added to inventory!`);
+            setShowAddForm(false);
+            setBarcodeNotFound(false);
+            handleBarcodeLookup(barcodeInput);
+        } catch {
+            toast.error("Failed to add product");
+        } finally {
+            setAddingToInventory(false);
+        }
+    };
 
     const capture = useCallback(() => {
         if (webcamRef.current) {
@@ -143,6 +216,7 @@ const CashierScanner = () => {
                 </div>
 
                 {/* Camera Feed */}
+                <p className="text-sm text-muted-foreground -mt-2">Point camera at a barcode and press the <span className="text-emerald-600 font-medium">green scan button</span>, or wait for auto-detection.</p>
                 <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
                     {cameraError ? (
                         <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -167,6 +241,11 @@ const CashierScanner = () => {
                                 className="w-full h-full object-cover"
                             />
 
+                            {/* Scan guide overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-64 h-32 border-2 border-emerald-400/70 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                            </div>
+
                             {/* Camera Controls Overlay */}
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
                                 <Button
@@ -174,19 +253,29 @@ const CashierScanner = () => {
                                     size="icon"
                                     onClick={toggleCamera}
                                     className="bg-background/80 backdrop-blur-sm hover:bg-background"
+                                    title="Flip camera"
                                 >
                                     <RotateCcw className="h-5 w-5" />
                                 </Button>
 
                                 <Button
                                     size="lg"
-                                    onClick={capture}
+                                    onClick={captureBarcode}
                                     className="h-16 w-16 rounded-full shadow-lg bg-emerald-600 hover:bg-emerald-700 hover:-translate-y-1 transition-transform"
+                                    title="Scan barcode"
                                 >
-                                    <Camera className="h-8 w-8 text-white" />
+                                    <Scan className="h-8 w-8 text-white" />
                                 </Button>
 
-                                <div className="w-10" />
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={capture}
+                                    className="bg-background/80 backdrop-blur-sm hover:bg-background"
+                                    title="Capture photo"
+                                >
+                                    <Camera className="h-5 w-5" />
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -273,7 +362,7 @@ const CashierScanner = () => {
 
                 {/* Product Lookup Result */}
                 {matchedProduct && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 mt-4">
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
                         <Card className="border-2 border-emerald-500/20 bg-slate-900 text-white">
                             <CardContent className="p-6">
                                 <div className="flex items-start justify-between">
@@ -289,16 +378,93 @@ const CashierScanner = () => {
                                     <div className="text-right">
                                         <p className="text-sm text-slate-400">Price</p>
                                         <p className="font-bold text-xl text-emerald-500">R {matchedProduct.price.toFixed(2)}</p>
+                                        <p className="text-xs text-slate-400 mt-1">Stock: {matchedProduct.stock}</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-3 mt-6">
                                     <Button
-                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
                                         onClick={() => addToCart(matchedProduct)}
                                     >
-                                        Add to Cart
+                                        Add to POS
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 border-slate-600 text-white hover:bg-slate-800"
+                                        onClick={handleAddStock}
+                                        disabled={addingToInventory}
+                                    >
+                                        {addingToInventory ? "Updating..." : "Add Stock (+1)"}
                                     </Button>
                                 </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {/* Quick-add form when barcode not found in inventory */}
+                {barcodeNotFound && !matchedProduct && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                        <Card className="border-2 border-amber-500/30">
+                            <CardContent className="p-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="font-semibold text-base">Product Not Found</h3>
+                                        <p className="text-sm text-muted-foreground">Barcode: <span className="font-mono text-foreground">{barcodeInput}</span></p>
+                                    </div>
+                                    {!showAddForm && (
+                                        <Button size="sm" onClick={() => setShowAddForm(true)} className="bg-amber-600 hover:bg-amber-700 text-white">
+                                            + Add to Inventory
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {showAddForm && (
+                                    <div className="space-y-3 border-t border-border pt-4">
+                                        <p className="text-sm font-medium text-muted-foreground">Add as new product</p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="col-span-2">
+                                                <Input
+                                                    placeholder="Product name *"
+                                                    value={newProductForm.name}
+                                                    onChange={e => setNewProductForm(p => ({ ...p, name: e.target.value }))}
+                                                />
+                                            </div>
+                                            <Input
+                                                placeholder="Price (R) *"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={newProductForm.price}
+                                                onChange={e => setNewProductForm(p => ({ ...p, price: e.target.value }))}
+                                            />
+                                            <Input
+                                                placeholder="Category *"
+                                                value={newProductForm.category}
+                                                onChange={e => setNewProductForm(p => ({ ...p, category: e.target.value }))}
+                                            />
+                                            <Input
+                                                placeholder="Initial stock"
+                                                type="number"
+                                                min="0"
+                                                value={newProductForm.stock}
+                                                onChange={e => setNewProductForm(p => ({ ...p, stock: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div className="flex gap-3 pt-1">
+                                            <Button
+                                                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                                                onClick={handleAddNewProduct}
+                                                disabled={addingToInventory}
+                                            >
+                                                {addingToInventory ? "Adding..." : "Save to Inventory"}
+                                            </Button>
+                                            <Button variant="outline" onClick={() => { setShowAddForm(false); setBarcodeNotFound(false); }}>
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>

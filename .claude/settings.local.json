@@ -43,7 +43,9 @@
       "Bash(firebase apps:sdkconfig --project smitetrade-40643)",
       "Bash(taskoutput b8prz4p2q:*)",
       "Bash(node -e \"require\\(''firebase-admin''\\); console.log\\(''ok''\\)\")",
-      "Bash(firebase auth:print-access-token)"
+      "Bash(firebase auth:print-access-token)",
+      "Bash(node create-admin.js)",
+      "Bash(ls \"c:\\\\Users\\\\Lufuno Mphela\\\\Desktop\\\\smitetrade-secure-growth\\\\create-admin\"*)"
     ]
   }
 }

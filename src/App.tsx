@@ -18,7 +18,6 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const SessionExpired = lazy(() => import("./pages/SessionExpired"));
 const Portals = lazy(() => import("./pages/Portals"));
-const AdminSetup = lazy(() => import("./pages/AdminSetup"));
 
 // Owner
 const OwnerLogin = lazy(() => import("./pages/owner/OwnerLogin"));
@@ -137,7 +136,6 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/session-expired" element={<SessionExpired />} />
                 <Route path="/portals" element={<Portals />} />
-                <Route path="/setup-admin" element={<AdminSetup />} />
 
                 {/* Owner Portal — Login/Register are public */}
                 <Route path="/owner/login" element={<OwnerLogin />} />

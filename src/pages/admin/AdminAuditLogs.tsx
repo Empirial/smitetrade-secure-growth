@@ -48,7 +48,7 @@ const AdminAuditLogs = () => {
                                         </TableCell>
                                         <TableCell className="font-medium">{log.user}</TableCell>
                                         <TableCell>
-                                            <span className="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-xs font-semibold">
+                                            <span className="inline-flex items-center px-2 py-1 rounded bg-slate-700 text-slate-100 text-xs font-semibold">
                                                 {log.action}
                                             </span>
                                         </TableCell>

@@ -24,6 +24,7 @@ export interface User {
         lastName: string;
         phone: string;
         defaultAddress: string;
+        addresses?: { label: string; address: string }[];
     };
     stores?: {
         id: string;
@@ -61,6 +62,8 @@ export interface Store {
     logo?: string;
     status: 'Active' | 'Inactive' | 'Pending';
     createdAt: string;
+    lat?: number;
+    lng?: number;
 }
 
 export interface Product {
@@ -72,8 +75,10 @@ export interface Product {
     status: 'In Stock' | 'Low Stock' | 'Critical' | 'Out of Stock';
     image?: string;
     barcode?: string;
+    description?: string;
     storeId?: string;
     storeName?: string;
+    fulfillmentOptions?: ('pep_courier' | 'courier' | 'instore_delivery' | 'pickup')[];
 }
 
 export interface CartItem extends Product {
@@ -93,13 +98,16 @@ export interface Order {
     customerAddress: string;
     items: OrderItem[];
     total: number;
-    status: 'Pending' | 'Paid' | 'Ready' | 'Out for Delivery' | 'Delivered';
+    status: 'Pending' | 'Paid' | 'Ready' | 'Out for Delivery' | 'Delivered' | 'Pre-order';
     date: string;
     driverId?: string;
     userId?: string; // Link to customer
     type?: 'instore' | 'online' | 'delivery';
     storeId?: string;
     storeName?: string;
+    isPreorder?: boolean;
+    requestedDate?: string;
+    paymentMethod?: string;
 }
 
 // Credit / Lending Types
@@ -156,6 +164,13 @@ export interface Supplier {
     products: string;
     status: 'Active' | 'Inactive';
     storeId?: string;
+}
+
+export interface PlatformSupplier {
+    id: string;
+    name: string;
+    status: 'Active' | 'Inactive';
+    createdAt: string;
 }
 
 export interface StaffMember {

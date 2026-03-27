@@ -2,9 +2,10 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Crown, Zap, Check, Star, ShieldCheck, Headphones, BarChart3, Users, Package, Store, Megaphone, CreditCard } from "lucide-react";
+import { Crown, Zap, Check, Star, ShieldCheck, Headphones, BarChart3, Users, Package, Store, Megaphone, CreditCard, Loader2 } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
-import { toast } from "sonner";
+import { usePayfast } from "@/hooks/usePayfast";
+import { useStore } from "@/context/StoreContext";
 
 const PLANS = [
     {
@@ -49,9 +50,23 @@ const PLANS = [
 
 const OwnerSubscription = () => {
     const { isPremium, plan } = useSubscription();
+    const { subscribe, loading } = usePayfast();
+    const { user, currentStore } = useStore();
 
     const handleActivate = (planKey: string) => {
-        toast.info(`Payment gateway integration coming soon. Selected: ${planKey} plan.`);
+        const planDef = PLANS.find(p => p.key === planKey);
+        if (!planDef) return;
+        const planAmount = planDef.price;
+        subscribe({
+            emailAddress: user?.email || '',
+            amount: planAmount,
+            itemName: `SmiteTrade ${planDef.name} Plan`,
+            customStr1: 'subscription',
+            customStr2: currentStore?.id || '',
+            frequency: 3,
+            cycles: 0,
+            recurringAmount: planAmount,
+        });
     };
 
     return (
@@ -141,9 +156,14 @@ const OwnerSubscription = () => {
                                                 : ""
                                         }`}
                                         onClick={() => handleActivate(p.key)}
+                                        disabled={loading}
                                     >
-                                        <Zap className="h-4 w-4" />
-                                        Activate {p.name} Plan
+                                        {loading ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Zap className="h-4 w-4" />
+                                        )}
+                                        {loading ? "Redirecting..." : `Activate ${p.name} Plan`}
                                     </Button>
                                 )}
                             </CardFooter>

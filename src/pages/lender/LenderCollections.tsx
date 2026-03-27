@@ -8,8 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCredit } from "@/context/CreditContext";
 import { Loan } from "@/types";
+import { usePayfast } from "@/hooks/usePayfast";
+import { useStore } from "@/context/StoreContext";
 const LenderCollections = () => {
     const { loans, sendReminder, recordPayment } = useCredit();
+    const { user } = useStore();
+    const { pay, loading: payfastLoading } = usePayfast();
 
     // Active overdue loans
     const overdueLoans = loans.filter(l => l.status === 'overdue' || (new Date(l.dueDate) < new Date() && l.status === 'active'));
@@ -167,10 +171,25 @@ const LenderCollections = () => {
                                                     </PopoverContent>
                                                 </Popover>
                                                 <Button
-                                                    className="w-full sm:w-auto ml-auto bg-emerald-600 hover:bg-emerald-700"
+                                                    variant="outline"
+                                                    className="w-full sm:w-auto border-slate-600/30 hover:bg-slate-950/20 text-slate-400"
                                                     onClick={() => recordPayment(loan.id)}
                                                 >
                                                     Mark Paid
+                                                </Button>
+                                                <Button
+                                                    className="w-full sm:w-auto ml-auto bg-emerald-600 hover:bg-emerald-700"
+                                                    disabled={payfastLoading}
+                                                    onClick={() => pay({
+                                                        emailAddress: user?.email || '',
+                                                        amount: loan.amount,
+                                                        itemName: 'Loan Repayment - ' + loan.borrowerName,
+                                                        customStr1: 'lender_repayment',
+                                                        customStr2: user?.storeId,
+                                                        customStr3: loan.id,
+                                                    })}
+                                                >
+                                                    Collect Payment
                                                 </Button>
                                             </DialogFooter>
                                         </DialogContent>

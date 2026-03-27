@@ -8,7 +8,7 @@ import { ArrowRight, MapPin, Store as StoreIcon, CreditCard, Banknote, Wallet } 
 import { useStore } from "@/context/StoreContext";
 import { useCredit } from "@/context/CreditContext";
 import { useState, useCallback } from "react";
-import { usePaystack } from "@/hooks/usePaystack";
+import { usePayfast } from "@/hooks/usePayfast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,6 +22,19 @@ const CustomerCheckout = () => {
 
     const [step, setStep] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState("card");
+    const [deliveryMethod, setDeliveryMethod] = useState("pickup");
+
+    const FULFILLMENT_LABELS: Record<string, string> = {
+        pep_courier: "Pep Courier",
+        courier: "Courier (Standard)",
+        instore_delivery: "In-Store Delivery",
+        pickup: "Pickup",
+    };
+
+    // Collect all fulfillment options from cart items (union)
+    const availableDeliveryMethods = [...new Set(
+        cart.flatMap(item => (item as any).fulfillmentOptions || [])
+    )] as string[];
     const cartStoreId = cart.length > 0 ? cart[0].storeId : undefined;
     const [selectedStore, setSelectedStore] = useState(cartStoreId || (activeStores.length > 0 ? activeStores[0].id : ""));
     const [allowSubstitutions, setAllowSubstitutions] = useState(false);
@@ -63,19 +76,14 @@ const CustomerCheckout = () => {
             address: `${address.street}, ${address.city}`,
             paymentMethod,
             storeId: selectedStore,
-            allowSubstitutions: allowSubstitutions as boolean
-        });
+            allowSubstitutions: allowSubstitutions as boolean,
+            deliveryMethod,
+        } as any);
         navigate("/customer/payment", { state: { total: cartTotal + 20, paymentMethod, orderPlaced: true } });
         toast.success("Order Placed Successfully!");
     }, [placeOrder, address, paymentMethod, selectedStore, allowSubstitutions, navigate]);
 
-    const { pay: payWithPaystack, processing: paystackProcessing } = usePaystack({
-        amount: cartTotal + 20,
-        email: 'customer@smitetrade.co.za',
-        onSuccess: () => {
-            completeOrder();
-        },
-    });
+    const { pay: payWithPayfast, loading: payfastLoading } = usePayfast();
 
     const handleCheckout = async () => {
         const total = cartTotal + 20;
@@ -92,8 +100,14 @@ const CustomerCheckout = () => {
             toast.success(`R ${total.toFixed(2)} deducted from Spaza Wallet.`);
             await completeOrder();
         } else {
-            // Card — use PayStack
-            payWithPaystack();
+            // Card — use PayFast (redirects to PayFast secure payment page)
+            payWithPayfast({
+                emailAddress: 'customer@smitetrade.co.za',
+                amount: total,
+                itemName: 'SmiteTrade Order',
+                customStr1: 'customer',
+                customStr2: selectedStore,
+            });
         }
     };
 
@@ -190,6 +204,24 @@ const CustomerCheckout = () => {
                                                 </SelectContent>
                                             </Select>
                                         </div>
+                                        {availableDeliveryMethods.length > 0 && (
+                                            <div className="grid gap-2">
+                                                <Label>Delivery Method</Label>
+                                                <RadioGroup value={deliveryMethod} onValueChange={setDeliveryMethod} className="grid grid-cols-2 gap-2">
+                                                    {availableDeliveryMethods.map(method => (
+                                                        <div key={method}>
+                                                            <RadioGroupItem value={method} id={`dm-${method}`} className="peer sr-only" />
+                                                            <Label
+                                                                htmlFor={`dm-${method}`}
+                                                                className="flex items-center gap-2 rounded-md border-2 border-muted bg-popover p-3 text-sm cursor-pointer hover:bg-accent peer-data-[state=checked]:border-primary"
+                                                            >
+                                                                {FULFILLMENT_LABELS[method] || method}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </RadioGroup>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </form>
                             </Card>
@@ -265,7 +297,7 @@ const CustomerCheckout = () => {
                                                     <span className="text-xs text-muted-foreground">Instant</span>
                                                 </div>
                                                 <div className="w-full text-xs text-muted-foreground mt-2">
-                                                    Pay securely with your bank card.
+                                                    Pay securely via PayFast with your bank card.
                                                 </div>
                                             </Label>
                                         </div>
@@ -359,8 +391,8 @@ const CustomerCheckout = () => {
                                         Proceed to Payment <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
                                 ) : (
-                                    <Button onClick={handleCheckout} className="flex-1 btn-scale bg-emerald-600 hover:bg-emerald-700">
-                                        Pay R {(cartTotal + 20).toFixed(2)}
+                                    <Button onClick={handleCheckout} disabled={payfastLoading} className="flex-1 btn-scale bg-emerald-600 hover:bg-emerald-700">
+                                        {payfastLoading ? "Redirecting..." : `Pay R ${(cartTotal + 20).toFixed(2)}`}
                                     </Button>
                                 )}
                             </CardFooter>

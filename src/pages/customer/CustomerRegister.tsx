@@ -36,6 +36,7 @@ const CustomerRegister = () => {
         firstName: "",
         lastName: "",
         phone: "",
+        city: "",
         email: "",
         password: ""
     });
@@ -43,6 +44,7 @@ const CustomerRegister = () => {
         firstName: null as string | null,
         lastName: null as string | null,
         phone: null as string | null,
+        city: null as string | null,
         email: null as string | null,
         password: null as string | null,
     });
@@ -129,6 +131,16 @@ const CustomerRegister = () => {
                                 onChange={(e) => setField("phone", e.target.value)}
                             />
                             <FieldError message={errors.phone} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="city">City / Township</Label>
+                            <Input
+                                id="city"
+                                placeholder="e.g. Soweto, Polokwane"
+                                value={formData.city}
+                                onChange={(e) => setField("city", e.target.value)}
+                            />
+                            <p className="text-[11px] text-muted-foreground">Used to show products from nearby stores</p>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email</Label>

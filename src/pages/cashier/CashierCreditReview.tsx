@@ -15,7 +15,7 @@ const CashierCreditReview = () => {
     const [isScanning, setIsScanning] = useState(false);
 
     const handleSearch = () => {
-        // Search by Phone or ID (SS-ID)
+        // Search by Phone or ID (ST-ID)
         const hit = borrowers?.find((b: Borrower) => b.id === query || b.phone === query || b.name.toLowerCase().includes(query.toLowerCase()));
         if (hit) {
             setResult(hit);
@@ -40,13 +40,13 @@ const CashierCreditReview = () => {
             <div className="max-w-2xl mx-auto space-y-6">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold">Customer Credit Lookup</h1>
-                    <p className="text-muted-foreground">Verify SS-ID and Repayment behaviour Tier before authorizing credit.</p>
+                    <p className="text-muted-foreground">Verify ST-ID and Repayment behaviour Tier before authorizing credit.</p>
                 </div>
 
                 <Card className="border-t-4 border-t-amber-500 shadow-lg bg-slate-900 border-slate-800 text-white">
                     <CardHeader>
                         <CardTitle>Search Customer</CardTitle>
-                        <CardDescription className="text-slate-400">Enter SS-ID Number or Name</CardDescription>
+                        <CardDescription className="text-slate-400">Enter ST-ID Number or Name</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex gap-2">
@@ -155,10 +155,7 @@ const CashierCreditReview = () => {
             </div>
 
             <div className="text-xs text-muted-foreground text-center max-w-2xl mx-auto space-y-1 pt-8 mt-8 border-t">
-                <p className="font-semibold">Smitetrade provides scoring and risk-assessment insights for decision-support purposes only.</p>
-                <p>The platform does not provide credit, approve or decline loans, extend goods on credit, or make tenancy decisions.</p>
-                <p>All lending, goods-on-credit, and rental decisions remain the sole responsibility of the lender, spaza shop owner, or landlord.</p>
-                <p>Smitetrade does not act as a credit provider, financial adviser, or credit bureau.</p>
+                <p className="font-semibold">Smitetrade provides Behavioural Reliability Index insights for decision-support purposes only.</p>
             </div>
         </DashboardLayout>
     );

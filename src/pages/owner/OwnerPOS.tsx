@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import Webcam from "react-webcam";
 import { BrowserMultiFormatReader } from "@zxing/library";
 import { useStore } from "@/context/StoreContext";
-import { usePaystack } from "@/hooks/usePaystack";
+import { usePayfast } from "@/hooks/usePayfast";
 
 interface POSProduct {
     id: string;
@@ -24,12 +24,14 @@ interface POSProduct {
 }
 
 const OwnerPOS = () => {
-    const { products, placeOrder } = useStore();
+    const { products, placeOrder, user, currentStore } = useStore();
+    const { pay, loading: payfastLoading } = usePayfast();
     const [cart, setCart] = useState<{ id: string; name: string; price: number; quantity: number }[]>([]);
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const { toast } = useToast();
     const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const storeId = currentStore?.id || '';
 
     const categories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
 
@@ -359,45 +361,19 @@ const OwnerPOS = () => {
                                 <Button
                                     variant="outline"
                                     className="flex-1 border-blue-500 text-blue-400 hover:bg-blue-500/10"
-                                    disabled={cart.length === 0 || isCheckingOut}
+                                    disabled={cart.length === 0 || isCheckingOut || payfastLoading}
                                     onClick={() => {
-                                        // PayStack card payment handled inline
-                                        const PaystackPop = (window as any).PaystackPop;
-                                        if (!PaystackPop) {
-                                            toast({ title: "Payment Error", description: "Card payment service unavailable. Loading...", variant: "destructive" });
-                                            // Load script
-                                            const s = document.createElement('script');
-                                            s.src = 'https://js.paystack.co/v1/inline.js';
-                                            s.async = true;
-                                            document.head.appendChild(s);
-                                            return;
-                                        }
-                                        setIsCheckingOut(true);
-                                        const handler = PaystackPop.setup({
-                                            key: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-                                            email: 'pos@smitetrade.co.za',
-                                            amount: Math.round(total * 100),
-                                            currency: 'ZAR',
-                                            ref: `SMITE-POS-${Date.now()}`,
-                                            callback: async () => {
-                                                await placeOrder({
-                                                    name: "In-Store Walk-in",
-                                                    address: "In-Store",
-                                                    items: cart as any[],
-                                                    paymentMethod: "Card"
-                                                });
-                                                setCart([]);
-                                                setIsCheckingOut(false);
-                                            },
-                                            onClose: () => {
-                                                setIsCheckingOut(false);
-                                            }
+                                        pay({
+                                            emailAddress: user?.email || 'pos@smitetrade.co.za',
+                                            amount: total,
+                                            itemName: 'POS Sale',
+                                            customStr1: 'owner_pos',
+                                            customStr2: storeId,
                                         });
-                                        handler.openIframe();
                                     }}
                                 >
                                     <CreditCard className="h-4 w-4 mr-1" />
-                                    Card
+                                    {payfastLoading ? "Redirecting..." : "Card"}
                                 </Button>
                             </div>
                         </div>

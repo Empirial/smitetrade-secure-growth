@@ -1,49 +1,71 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wallet, ArrowUpRight, ArrowDownRight, Smartphone, CheckCircle2, Clock } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Wallet, ArrowUpRight, ArrowDownRight, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useStore } from "@/context/StoreContext";
+import { usePayfast } from "@/hooks/usePayfast";
 
 const DriverWallet = () => {
-    // Mock Data
-    const [availableBalance, setAvailableBalance] = useState(450.00);
-    const [pendingPayouts, setPendingPayouts] = useState(150.00);
-    const [totalEarned, setTotalEarned] = useState(1250.00);
+    const { user } = useStore();
+    const { pay, loading } = usePayfast();
 
-    const [isPayoutOpen, setIsPayoutOpen] = useState(false);
-    const [payoutAmount, setPayoutAmount] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState("082 123 4567"); // Mock predefined number
+    const [availableBalance, setAvailableBalance] = useState(0);
+    const [pendingPayouts, setPendingPayouts] = useState(0);
+    const [totalEarned, setTotalEarned] = useState(0);
+    const [transactions, setTransactions] = useState<{ id: string; type: string; amount: number; date: string; description: string }[]>([]);
 
-    const transactions = [
-        { id: "TX-991", type: "earned", amount: 25.00, date: "Today, 14:30", description: "Delivery Fee: Order #1042" },
-        { id: "TX-990", type: "earned", amount: 25.00, date: "Today, 13:15", description: "Delivery Fee: Order #1041" },
-        { id: "TX-989", type: "earned", amount: 35.00, date: "Today, 12:00", description: "Delivery Fee (Long Distance): Order #1040" },
-        { id: "TX-988", type: "payout", amount: 300.00, date: "Yesterday, 18:00", description: "CashSend Payout Processing" },
-        { id: "TX-987", type: "earned", amount: 25.00, date: "Yesterday, 14:10", description: "Delivery Fee: Order #1039" },
-    ];
+    useEffect(() => {
+        if (!user?.uid) return;
+
+        const q = query(collection(db, "driver_payouts"), where("driverId", "==", user.uid));
+        const unsub = onSnapshot(q, (snapshot) => {
+            let earned = 0;
+            let pending = 0;
+            const txList: typeof transactions = [];
+
+            snapshot.forEach((docSnap) => {
+                const d = docSnap.data();
+                const amount = d.amount ?? 0;
+                const status = d.status ?? "pending";
+                const type = d.type ?? "earned";
+
+                if (type === "earned") earned += amount;
+                if (status === "pending" && type === "payout") pending += amount;
+
+                txList.push({
+                    id: docSnap.id,
+                    type,
+                    amount,
+                    date: d.createdAt
+                        ? new Date(d.createdAt).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })
+                        : "—",
+                    description: d.description ?? (type === "earned" ? "Delivery Fee" : "Payout"),
+                });
+            });
+
+            txList.sort((a, b) => b.id.localeCompare(a.id));
+
+            setTotalEarned(earned);
+            setPendingPayouts(pending);
+            setAvailableBalance(Math.max(0, earned - pending));
+            setTransactions(txList);
+        });
+
+        return () => unsub();
+    }, [user?.uid]);
 
     const handleRequestPayout = () => {
-        const amount = parseFloat(payoutAmount);
-        if (isNaN(amount) || amount <= 0) {
-            toast.error("Please enter a valid amount.");
-            return;
-        }
-        if (amount > availableBalance) {
-            toast.error("Insufficient funds in available balance.");
-            return;
-        }
-
-        // Simulate Request
-        setAvailableBalance(prev => prev - amount);
-        setPendingPayouts(prev => prev + amount);
-        setIsPayoutOpen(false);
-        setPayoutAmount("");
-
-        toast.success(`Payout of R${amount.toFixed(2)} requested via CashSend to ${phoneNumber}.`);
+        if (!user) return;
+        pay({
+            emailAddress: user.email,
+            amount: availableBalance,
+            itemName: "Driver Earnings Payout",
+            customStr1: "driver_payout",
+            customStr2: user.uid,
+        });
     };
 
     return (
@@ -88,52 +110,16 @@ const DriverWallet = () => {
                     </Card>
                 </div>
 
-                <div className="flex justify-start">
-                    <Dialog open={isPayoutOpen} onOpenChange={setIsPayoutOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="bg-emerald-600 hover:bg-emerald-700 h-12 px-8">
-                                <Smartphone className="mr-2 h-5 w-5" />
-                                Request CashSend Payout
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Request Payout</DialogTitle>
-                                <DialogDescription>
-                                    Withdraw your earnings to your registered phone number via instant CashSend.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                    <Label>Available Balance</Label>
-                                    <div className="text-xl font-bold text-emerald-600">R {availableBalance.toFixed(2)}</div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="amount">Withdrawal Amount (R)</Label>
-                                    <Input
-                                        id="amount"
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={payoutAmount}
-                                        onChange={(e) => setPayoutAmount(e.target.value)}
-                                        autoFocus
-                                    />
-                                </div>
-                                <div className="space-y-2 border-t pt-4">
-                                    <Label>Receiving Phone Number</Label>
-                                    <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border rounded-md text-slate-500">
-                                        <Smartphone className="h-4 w-4" />
-                                        <span>{phoneNumber}</span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">To change your registered number, please contact Owner Support.</p>
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsPayoutOpen(false)}>Cancel</Button>
-                                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleRequestPayout}>Confirm Payout</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                <div className="flex flex-col items-start gap-2">
+                    <Button
+                        className="bg-emerald-600 hover:bg-emerald-700 h-12 px-8"
+                        onClick={handleRequestPayout}
+                        disabled={availableBalance <= 0 || loading}
+                    >
+                        <Wallet className="mr-2 h-5 w-5" />
+                        {loading ? "Redirecting..." : "Request Payout via PayFast"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">Payouts are processed within 1-2 business days</p>
                 </div>
 
                 <Card>
@@ -143,26 +129,30 @@ const DriverWallet = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {transactions.map((tx) => (
-                                <div key={tx.id} className="flex justify-between items-center p-3 border rounded-lg bg-card hover:bg-muted/50 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-2 rounded-full ${tx.type === 'earned' ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
-                                            {tx.type === 'earned' ? (
-                                                <ArrowDownRight className={`h-4 w-4 text-emerald-500`} />
-                                            ) : (
-                                                <ArrowUpRight className={`h-4 w-4 text-amber-500`} />
-                                            )}
+                            {transactions.length === 0 ? (
+                                <p className="text-sm text-muted-foreground text-center py-6">No transactions yet.</p>
+                            ) : (
+                                transactions.map((tx) => (
+                                    <div key={tx.id} className="flex justify-between items-center p-3 border rounded-lg bg-card hover:bg-muted/50 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-2 rounded-full ${tx.type === 'earned' ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+                                                {tx.type === 'earned' ? (
+                                                    <ArrowDownRight className="h-4 w-4 text-emerald-500" />
+                                                ) : (
+                                                    <ArrowUpRight className="h-4 w-4 text-amber-500" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-sm">{tx.description}</p>
+                                                <p className="text-xs text-muted-foreground">{tx.date} • {tx.id}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-sm">{tx.description}</p>
-                                            <p className="text-xs text-muted-foreground">{tx.date} • {tx.id}</p>
+                                        <div className={`font-bold ${tx.type === 'earned' ? 'text-emerald-500' : ''}`}>
+                                            {tx.type === 'earned' ? '+' : '-'} R{tx.amount.toFixed(2)}
                                         </div>
                                     </div>
-                                    <div className={`font-bold ${tx.type === 'earned' ? 'text-emerald-500' : ''}`}>
-                                        {tx.type === 'earned' ? '+' : '-'} R{tx.amount.toFixed(2)}
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </CardContent>
                 </Card>

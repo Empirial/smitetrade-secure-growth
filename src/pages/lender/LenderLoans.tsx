@@ -14,9 +14,13 @@ import { maskIdNumber } from "@/lib/utils";
 import { Borrower } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePayfast } from "@/hooks/usePayfast";
+import { useStore } from "@/context/StoreContext";
 
 const LenderLoans = () => {
     const { loans, borrowers, recordPayment, restructureLoan } = useCredit();
+    const { user } = useStore();
+    const { pay, loading: payfastLoading } = usePayfast();
     const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isRestructureOpen, setIsRestructureOpen] = useState(false);
@@ -32,6 +36,18 @@ const LenderLoans = () => {
     const handleMarkPaid = async (loanId: string) => {
         await recordPayment(loanId);
         // Note: CreditContext handles the toast
+    };
+
+    const handleDisburse = (loan: Loan) => {
+        const borrower = borrowers.find(b => b.id === loan.borrowerId);
+        pay({
+            emailAddress: user?.email || '',
+            amount: loan.amount,
+            itemName: 'Loan Disbursement - ' + (borrower?.name || loan.borrowerName),
+            customStr1: 'lender_disburse',
+            customStr2: user?.storeId,
+            customStr3: loan.id,
+        });
     };
 
     const getStatusBadge = (status: string) => {
@@ -83,19 +99,35 @@ const LenderLoans = () => {
                                         <TableCell>{loan.dueDate}</TableCell>
                                         <TableCell>{getStatusBadge(loan.status)}</TableCell>
                                         <TableCell>
-                                            {loan.status === 'active' && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-8 rounded-full border-emerald-500 text-emerald-500 hover:bg-emerald-900/30 hover:text-emerald-400"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleMarkPaid(loan.id);
-                                                    }}
-                                                >
-                                                    <CheckCircle2 className="mr-1 h-3 w-3" /> Mark Paid
-                                                </Button>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                {loan.status === 'active' && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="h-8 rounded-full border-emerald-500 text-emerald-500 hover:bg-emerald-900/30 hover:text-emerald-400"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleMarkPaid(loan.id);
+                                                        }}
+                                                    >
+                                                        <CheckCircle2 className="mr-1 h-3 w-3" /> Mark Paid
+                                                    </Button>
+                                                )}
+                                                {loan.status === 'approved' && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="h-8 rounded-full border-blue-500 text-blue-400 hover:bg-blue-900/30 hover:text-blue-300"
+                                                        disabled={payfastLoading}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDisburse(loan);
+                                                        }}
+                                                    >
+                                                        Disburse via PayFast
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}

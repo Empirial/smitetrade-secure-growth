@@ -98,6 +98,7 @@ const getLinks = (role: string) => {
         { href: "/admin/pos-monitor", label: "POS Monitor", icon: LayoutDashboard },
         { href: "/admin/audit-logs", label: "Audit Logs", icon: ShieldCheck },
         { href: "/admin/disputes", label: "Disputes", icon: AlertTriangle },
+        { href: "/admin/suppliers", label: "Suppliers", icon: Briefcase },
         { href: "/admin/alerts", label: "Alerts", icon: Bell },
     ];
 

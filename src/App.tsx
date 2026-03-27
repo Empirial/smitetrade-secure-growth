@@ -18,6 +18,8 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const SessionExpired = lazy(() => import("./pages/SessionExpired"));
 const Portals = lazy(() => import("./pages/Portals"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 
 // Owner
 const OwnerLogin = lazy(() => import("./pages/owner/OwnerLogin"));
@@ -101,6 +103,7 @@ const AdminRevenue = lazy(() => import("./pages/admin/AdminRevenue"));
 const AdminCreditOverview = lazy(() => import("./pages/admin/AdminCreditOverview"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
 const AdminAlerts = lazy(() => import("./pages/admin/AdminAlerts"));
+const AdminSuppliers = lazy(() => import("./pages/admin/AdminSuppliers"));
 
 // Lender
 const LenderLogin = lazy(() => import("./pages/lender/LenderLogin"));
@@ -219,6 +222,7 @@ const App = () => (
                 <Route path="/admin/credit-overview" element={<AuthGuard role="admin"><AdminCreditOverview /></AuthGuard>} />
                 <Route path="/admin/support" element={<AuthGuard role="admin"><AdminSupport /></AuthGuard>} />
                 <Route path="/admin/alerts" element={<AuthGuard role="admin"><AdminAlerts /></AuthGuard>} />
+                <Route path="/admin/suppliers" element={<AuthGuard role="admin"><AdminSuppliers /></AuthGuard>} />
 
                 {/* Lender Portal */}
                 <Route path="/lender/login" element={<LenderLogin />} />
@@ -234,6 +238,8 @@ const App = () => (
                 <Route path="/lender/support" element={<AuthGuard role="lender"><LenderSupport /></AuthGuard>} />
                 <Route path="/lender/alerts" element={<AuthGuard role="lender"><LenderAlerts /></AuthGuard>} />
 
+                <Route path="/payment/success" element={<PaymentSuccess />} />
+                <Route path="/payment/cancel" element={<PaymentCancel />} />
                 <Route path="/test-setup" element={<TestSetup />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

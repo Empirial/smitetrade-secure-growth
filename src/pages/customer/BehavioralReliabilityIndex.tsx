@@ -40,9 +40,9 @@ const BehavioralReliabilityIndex = () => {
                 {/* Header */}
                 <div className="space-y-2">
                     <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-cyan-600">
-                        Repayment behaviour
+                        BRI
                     </h1>
-                    <p className="text-muted-foreground">Your Repayment behaviour category unlocks future purchasing power.</p>
+                    <p className="text-muted-foreground">Your BRI category unlocks future purchasing power.</p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
@@ -128,40 +128,6 @@ const BehavioralReliabilityIndex = () => {
                 </div>
 
 
-
-                {/* Educational Content */}
-                <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="md:col-span-1 bg-emerald-50 border-emerald-100">
-                        <CardHeader>
-                            <CardTitle className="text-lg text-emerald-800">1. Reliability</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-emerald-700">
-                                Measures how often you pay on time. Calculate: <span className="font-mono bg-white px-1 rounded">Missed Payments / Total Cycles</span>. Lower is better!
-                            </p>
-                        </CardContent>
-                    </Card>
-                    <Card className="md:col-span-1 bg-blue-50 border-blue-100">
-                        <CardHeader>
-                            <CardTitle className="text-lg text-blue-800">2. Frequency</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-blue-700">
-                                Rewards regular engagement. Making at least 2 purchases a week boosts your score and unlocks higher tiers.
-                            </p>
-                        </CardContent>
-                    </Card>
-                    <Card className="md:col-span-1 bg-purple-50 border-purple-100">
-                        <CardHeader>
-                            <CardTitle className="text-lg text-purple-800">3. Volume</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-purple-700">
-                                Higher monthly spend demonstrates capacity. Growing your basket size helps increase your credit limit.
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
 
                 {/* Payment Simulation (For Demo) */}
                 <Card className="border-dashed border-2">

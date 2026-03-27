@@ -9,13 +9,13 @@ import { useCredit } from "@/context/CreditContext";
 import { Borrower } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { usePaystack } from "@/hooks/usePaystack";
+import { usePayfast } from "@/hooks/usePayfast";
 import { toast } from "sonner";
 
 const CashierCheckout = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { placeOrder } = useStore();
+    const { placeOrder, currentStore, user } = useStore();
     const { borrowers } = useCredit();
     const { cart, total } = location.state || { cart: [], total: 0 };
     const [success, setSuccess] = useState(false);
@@ -56,13 +56,7 @@ const CashierCheckout = () => {
         setSuccess(true);
     }, [placeOrder, cart, isSplitPayment, paymentMethod, ssidCustomer]);
 
-    const { pay: payWithCard, processing: cardProcessing } = usePaystack({
-        amount: total,
-        email: 'pos@smitetrade.co.za',
-        onSuccess: () => {
-            completeTransaction();
-        },
-    });
+    const { pay: payWithCard, loading: cardProcessing } = usePayfast();
 
     const handleSsidSearch = () => {
         setSsidError("");
@@ -127,7 +121,13 @@ const CashierCheckout = () => {
         }
 
         if (paymentMethod === "Card" && !isSplitPayment) {
-            payWithCard();
+            payWithCard({
+                emailAddress: user?.email || 'cashier@smitetrade.co.za',
+                amount: total,
+                itemName: 'In-Store Purchase',
+                customStr1: 'cashier',
+                customStr2: currentStore?.id || '',
+            });
             return;
         }
 
@@ -176,7 +176,7 @@ const CashierCheckout = () => {
                                     </div>
                                 </CardHeader>
                             </Card>
-                            <Card className="cursor-pointer hover:border-blue-500 transition-all border-2 border-transparent" onClick={() => { setPaymentMethod("Card"); handlePay(); }}>
+                            <Card className={`cursor-pointer hover:border-blue-500 transition-all border-2 border-transparent ${cardProcessing ? 'opacity-60 pointer-events-none' : ''}`} onClick={() => { setPaymentMethod("Card"); payWithCard({ emailAddress: user?.email || 'cashier@smitetrade.co.za', amount: total, itemName: 'In-Store Purchase', customStr1: 'cashier', customStr2: currentStore?.id || '' }); }}>
                                 <CardHeader className="flex flex-row items-center gap-4">
                                     <div className="bg-blue-100 p-3 rounded-lg"><CreditCard className="text-blue-600" /></div>
                                     <div>

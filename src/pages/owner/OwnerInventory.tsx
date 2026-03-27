@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Edit, Trash2, Package, ScanLine, Camera, RotateCcw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useStore } from "@/context/StoreContext";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +23,23 @@ const OwnerInventory = () => {
     const [filterCategory, setFilterCategory] = useState("All");
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
-    const [formData, setFormData] = useState({ name: "", category: "", price: "", stock: "", barcode: "" });
+    const [formData, setFormData] = useState({ name: "", category: "", price: "", stock: "", barcode: "", fulfillmentOptions: [] as string[] });
+
+    const FULFILLMENT_OPTIONS = [
+        { value: 'pep_courier', label: 'Pep Courier' },
+        { value: 'courier', label: 'Courier (Standard)' },
+        { value: 'instore_delivery', label: 'In-Store Delivery' },
+        { value: 'pickup', label: 'Pickup Only' },
+    ];
+
+    const toggleFulfillment = (value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            fulfillmentOptions: prev.fulfillmentOptions.includes(value)
+                ? prev.fulfillmentOptions.filter(v => v !== value)
+                : [...prev.fulfillmentOptions, value]
+        }));
+    };
 
     // Scanner state
     const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -117,7 +134,8 @@ const OwnerInventory = () => {
                 category: formData.category,
                 price: parseFloat(formData.price),
                 stock: parseInt(formData.stock),
-                barcode: formData.barcode
+                barcode: formData.barcode,
+                fulfillmentOptions: formData.fulfillmentOptions as any
             });
         } else {
             addProduct({
@@ -126,12 +144,13 @@ const OwnerInventory = () => {
                 price: parseFloat(formData.price),
                 stock: parseInt(formData.stock),
                 barcode: formData.barcode,
-                image: "📦"
+                image: "📦",
+                fulfillmentOptions: formData.fulfillmentOptions as any
             });
         }
         setIsAddOpen(false);
         setEditId(null);
-        setFormData({ name: "", category: "", price: "", stock: "", barcode: "" });
+        setFormData({ name: "", category: "", price: "", stock: "", barcode: "", fulfillmentOptions: [] });
     };
 
     const openEditForm = (product: any) => {
@@ -141,7 +160,8 @@ const OwnerInventory = () => {
             category: product.category,
             price: product.price.toString(),
             stock: product.stock.toString(),
-            barcode: product.barcode || ""
+            barcode: product.barcode || "",
+            fulfillmentOptions: product.fulfillmentOptions || []
         });
         setIsAddOpen(true);
     };
@@ -150,7 +170,7 @@ const OwnerInventory = () => {
         setIsAddOpen(open);
         if (!open) {
             setEditId(null);
-            setFormData({ name: "", category: "", price: "", stock: "", barcode: "" });
+            setFormData({ name: "", category: "", price: "", stock: "", barcode: "", fulfillmentOptions: [] });
         }
     };
 
@@ -245,6 +265,24 @@ const OwnerInventory = () => {
                                             >
                                                 <ScanLine className="h-4 w-4" />
                                             </Button>
+                                        </div>
+                                    </div>
+                                    {/* Fulfillment Options */}
+                                    <div className="grid grid-cols-4 items-start gap-4">
+                                        <Label className="text-right pt-1">Fulfillment</Label>
+                                        <div className="col-span-3 grid grid-cols-2 gap-2">
+                                            {FULFILLMENT_OPTIONS.map(opt => (
+                                                <div key={opt.value} className="flex items-center gap-2">
+                                                    <Checkbox
+                                                        id={`fulfillment-${opt.value}`}
+                                                        checked={formData.fulfillmentOptions.includes(opt.value)}
+                                                        onCheckedChange={() => toggleFulfillment(opt.value)}
+                                                    />
+                                                    <Label htmlFor={`fulfillment-${opt.value}`} className="font-normal text-sm cursor-pointer">
+                                                        {opt.label}
+                                                    </Label>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>

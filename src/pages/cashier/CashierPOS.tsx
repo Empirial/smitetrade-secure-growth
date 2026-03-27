@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Trash2, ShoppingCart, ArrowRight, Camera, WifiOff, Save, FolderOpen, RotateCcw } from "lucide-react";
+import { Search, Plus, Trash2, ShoppingCart, ArrowRight, Camera, WifiOff, Save, FolderOpen, RotateCcw, CreditCard } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -14,9 +14,11 @@ import { BrowserMultiFormatReader } from "@zxing/library";
 
 import { useStore } from "@/context/StoreContext";
 import { Product } from "@/types";
+import { usePayfast } from "@/hooks/usePayfast";
 
 const CashierPOS = () => {
-    const { products, addToCart: syncGlobalCart, clearCart: clearGlobalCart } = useStore();
+    const { products, addToCart: syncGlobalCart, clearCart: clearGlobalCart, currentStore } = useStore();
+    const { pay: payWithCard, loading: cardProcessing } = usePayfast();
     const [cart, setCart] = useState<{ id: string; name: string; price: number; quantity: number }[]>([]);
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -473,6 +475,13 @@ const CashierPOS = () => {
                                 onClick={handleCheckout}
                             >
                                 Checkout <ArrowRight className="h-5 w-5" />
+                            </Button>
+                            <Button
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 h-10 text-sm mt-2"
+                                disabled={cart.length === 0 || cardProcessing}
+                                onClick={() => payWithCard({ emailAddress: 'pos@smitetrade.co.za', amount: total, itemName: 'POS Sale', customStr1: 'cashier_pos', customStr2: currentStore?.id || '' })}
+                            >
+                                <CreditCard className="h-4 w-4" /> {cardProcessing ? 'Redirecting...' : 'Pay by Card (PayFast)'}
                             </Button>
                         </div>
                     </CardContent>

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { CheckCircle2, CreditCard } from "lucide-react";
-import { usePaystack } from "@/hooks/usePaystack";
+import { usePayfast } from "@/hooks/usePayfast";
 import { useStore } from "@/context/StoreContext";
 
 const CustomerPayment = () => {
@@ -20,15 +20,17 @@ const CustomerPayment = () => {
     const [success, setSuccess] = useState(orderPlaced);
     const [paymentMethod, setPaymentMethod] = useState("card");
 
-    const { pay, processing } = usePaystack({
-        amount: orderTotal,
-        email: user?.email || 'customer@smitetrade.co.za',
-        onSuccess: () => setSuccess(true),
-        onClose: () => {},
-    });
+    const { pay, loading } = usePayfast();
 
     const handlePayment = () => {
-        if (paymentMethod === "card") pay();
+        if (paymentMethod === "card") {
+            pay({
+                emailAddress: user?.email || 'customer@smitetrade.co.za',
+                amount: orderTotal,
+                itemName: 'SmiteTrade Payment',
+                customStr1: 'customer',
+            });
+        }
     };
 
     if (success) {
@@ -76,19 +78,19 @@ const CustomerPayment = () => {
                                         <CreditCard className="h-4 w-4" /> Credit / Debit Card
                                     </Label>
                                 </div>
-                                <span className="text-xs text-muted-foreground">via PayStack</span>
+                                <span className="text-xs text-muted-foreground">via PayFast</span>
                             </div>
                         </RadioGroup>
 
                         {paymentMethod === "card" && (
                             <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-                                <p>You'll be redirected to PayStack's secure payment page to complete your card payment.</p>
+                                <p>You'll be redirected to PayFast's secure payment page to complete your card payment.</p>
                             </div>
                         )}
                     </CardContent>
                     <CardFooter>
-                        <Button className="w-full h-12 text-lg" onClick={handlePayment} disabled={processing || orderTotal === 0}>
-                            {processing ? "Processing..." : orderTotal > 0 ? `Pay R ${orderTotal.toFixed(2)}` : "No amount due"}
+                        <Button className="w-full h-12 text-lg" onClick={handlePayment} disabled={loading || orderTotal === 0}>
+                            {loading ? "Redirecting..." : orderTotal > 0 ? `Pay R ${orderTotal.toFixed(2)}` : "No amount due"}
                         </Button>
                     </CardFooter>
                 </Card>

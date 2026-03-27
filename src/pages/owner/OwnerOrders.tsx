@@ -5,9 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/context/StoreContext";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Calendar } from "lucide-react";
 
 const OwnerOrders = () => {
     const { orders } = useStore();
@@ -15,7 +16,6 @@ const OwnerOrders = () => {
     const [filterType, setFilterType] = useState("all");
     const [filterDate, setFilterDate] = useState("");
 
-    // Details Dialog State
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -24,20 +24,24 @@ const OwnerOrders = () => {
         setIsDialogOpen(true);
     };
 
-    // Filter logic
     const filteredOrders = orders.filter(order => {
-        const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch =
+            order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.id.toString().includes(searchTerm);
 
         let matchesDate = true;
         if (filterDate) {
-            const orderDateStr = new Date(order.date).toISOString().split('T')[0];
+            const orderDateStr = new Date(order.date).toISOString().split("T")[0];
             matchesDate = orderDateStr === filterDate;
         }
 
-        const matchesType = filterType === "all" || (order as any).orderType === filterType;
-        return matchesSearch && matchesDate && matchesType;
+        if (filterType === "preorder") return matchesSearch && matchesDate && (order as any).isPreorder === true;
+        if (filterType === "all") return matchesSearch && matchesDate;
+        const matchesType = (order as any).orderType === filterType;
+        return matchesSearch && matchesDate && matchesType && !(order as any).isPreorder;
     });
+
+    const preorderCount = orders.filter(o => (o as any).isPreorder).length;
 
     return (
         <DashboardLayout role="owner">
@@ -45,8 +49,14 @@ const OwnerOrders = () => {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Orders Management</h1>
-                        <p className="text-muted-foreground">View and manage all in-store and online orders.</p>
+                        <p className="text-muted-foreground">View and manage all in-store, online, and pre-orders.</p>
                     </div>
+                    {preorderCount > 0 && (
+                        <div className="flex items-center gap-2 bg-purple-500/10 border border-purple-200 text-purple-700 rounded-lg px-4 py-2 text-sm">
+                            <Calendar className="h-4 w-4" />
+                            <span><strong>{preorderCount}</strong> pre-order{preorderCount !== 1 ? "s" : ""} pending</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
@@ -71,6 +81,7 @@ const OwnerOrders = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Orders</SelectItem>
+                            <SelectItem value="preorder">Pre-orders</SelectItem>
                             <SelectItem value="instore">In-Store</SelectItem>
                             <SelectItem value="online">Online</SelectItem>
                             <SelectItem value="delivery">Delivery</SelectItem>
@@ -89,7 +100,7 @@ const OwnerOrders = () => {
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
                                     <TableHead>Customer</TableHead>
-                                    <TableHead>Source</TableHead>
+                                    <TableHead>Type</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Total</TableHead>
@@ -103,28 +114,44 @@ const OwnerOrders = () => {
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredOrders.map((order) => (
-                                        <TableRow
-                                            key={order.id}
-                                            className="cursor-pointer hover:bg-muted/50"
-                                            onClick={() => handleRowClick(order)}
-                                        >
-                                            <TableCell className="font-medium">#{order.id}</TableCell>
-                                            <TableCell>{order.customerName}</TableCell>
-                                            <TableCell>
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                                                    Customer Order
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>{new Date(order.date).toLocaleDateString()} {new Date(order.date).toLocaleTimeString()}</TableCell>
-                                            <TableCell>
-                                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800`}>
-                                                    Completed
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="text-right">R {order.total.toFixed(2)}</TableCell>
-                                        </TableRow>
-                                    ))
+                                    filteredOrders.map((order) => {
+                                        const isPreorder = (order as any).isPreorder;
+                                        return (
+                                            <TableRow
+                                                key={order.id}
+                                                className="cursor-pointer hover:bg-muted/50"
+                                                onClick={() => handleRowClick(order)}
+                                            >
+                                                <TableCell className="font-medium">#{order.id}</TableCell>
+                                                <TableCell>{order.customerName}</TableCell>
+                                                <TableCell>
+                                                    {isPreorder ? (
+                                                        <Badge className="bg-purple-500/10 text-purple-700 border border-purple-200 hover:bg-purple-500/20">
+                                                            <Calendar className="h-3 w-3 mr-1" /> Pre-order
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                                            Customer Order
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {new Date(order.date).toLocaleDateString()}{" "}
+                                                    {new Date(order.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                        isPreorder
+                                                            ? "bg-purple-100 text-purple-800"
+                                                            : "bg-gray-100 text-gray-800"
+                                                    }`}>
+                                                        {order.status}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-right">R {order.total.toFixed(2)}</TableCell>
+                                            </TableRow>
+                                        );
+                                    })
                                 )}
                             </TableBody>
                         </Table>
@@ -136,17 +163,41 @@ const OwnerOrders = () => {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Order Details #{selectedOrder?.id}</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2">
+                            {(selectedOrder as any)?.isPreorder && <Calendar className="h-4 w-4 text-purple-600" />}
+                            Order Details #{selectedOrder?.id}
+                        </DialogTitle>
                         <DialogDescription>
                             Placed on {selectedOrder && new Date(selectedOrder.date).toLocaleString()}
                         </DialogDescription>
                     </DialogHeader>
                     {selectedOrder && (
                         <div className="space-y-4 py-4">
+                            {/* Pre-order banner */}
+                            {(selectedOrder as any).isPreorder && (
+                                <div className="flex items-start gap-3 bg-purple-500/10 border border-purple-200 rounded-lg p-3">
+                                    <Calendar className="h-4 w-4 text-purple-600 mt-0.5 shrink-0" />
+                                    <div>
+                                        <p className="text-sm font-semibold text-purple-800">Pre-order — Paid Upfront</p>
+                                        <p className="text-xs text-purple-600 mt-0.5">
+                                            Customer requested: <strong>{new Date((selectedOrder as any).requestedDate + "T00:00:00").toLocaleDateString("en-ZA")}</strong>
+                                        </p>
+                                        <p className="text-xs text-purple-500 mt-0.5">You determine the actual delivery date.</p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex justify-between border-b pb-2">
                                 <span className="font-semibold text-muted-foreground">Customer:</span>
                                 <span className="font-medium">{selectedOrder.customerName}</span>
                             </div>
+
+                            {selectedOrder.paymentMethod && (
+                                <div className="flex justify-between border-b pb-2">
+                                    <span className="font-semibold text-muted-foreground">Payment:</span>
+                                    <span className="font-medium capitalize">{selectedOrder.paymentMethod}</span>
+                                </div>
+                            )}
 
                             <div>
                                 <h4 className="font-semibold text-sm text-muted-foreground mb-3 uppercase tracking-wider">Order Items</h4>

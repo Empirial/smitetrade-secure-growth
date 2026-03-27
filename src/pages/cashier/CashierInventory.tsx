@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,19 +8,43 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Package, AlertTriangle, CheckCircle, ClipboardCheck } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Search, Package, AlertTriangle, CheckCircle, ClipboardCheck, Plus, Camera, X } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
 import { useToast } from "@/hooks/use-toast";
+import { BrowserMultiFormatReader } from "@zxing/library";
 
 const CashierInventory = () => {
-    const { products, updateProduct } = useStore();
+    const { products, addProduct, updateProduct } = useStore();
     const { toast } = useToast();
 
+    // --- existing stock-take state ---
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCategory, setFilterCategory] = useState("All");
     const [stockTakeOpen, setStockTakeOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<typeof products[0] | null>(null);
     const [countedStock, setCountedStock] = useState("");
+
+    // --- product info panel state ---
+    const [infoOpen, setInfoOpen] = useState(false);
+    const [infoProduct, setInfoProduct] = useState<typeof products[0] | null>(null);
+
+    // --- add product form state ---
+    const [addOpen, setAddOpen] = useState(false);
+    const [addForm, setAddForm] = useState({
+        name: "",
+        category: "",
+        price: "",
+        stock: "",
+        description: "",
+        barcode: "",
+    });
+    const [addLoading, setAddLoading] = useState(false);
+
+    // --- barcode scanner state ---
+    const [scannerActive, setScannerActive] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const readerRef = useRef<BrowserMultiFormatReader | null>(null);
 
     const categories = ["All", ...Array.from(new Set(products.map((p) => p.category)))];
 
@@ -40,7 +64,9 @@ const CashierInventory = () => {
         }
     };
 
-    const openStockTake = (product: typeof products[0]) => {
+    // ---- stock-take handlers (unchanged) ----
+    const openStockTake = (product: typeof products[0], e: React.MouseEvent) => {
+        e.stopPropagation();
         setSelectedProduct(product);
         setCountedStock(product.stock.toString());
         setStockTakeOpen(true);
@@ -53,19 +79,96 @@ const CashierInventory = () => {
             toast({ title: "Invalid count", description: "Please enter a valid number.", variant: "destructive" });
             return;
         }
-
         const newStatus = counted === 0 ? "Out of Stock" : counted <= 5 ? "Critical" : counted <= 15 ? "Low Stock" : "In Stock";
-
         updateProduct(selectedProduct.id, { stock: counted, status: newStatus as any });
-
         const diff = counted - selectedProduct.stock;
         toast({
             title: "Stock Updated",
             description: `${selectedProduct.name}: ${selectedProduct.stock} → ${counted} (${diff >= 0 ? "+" : ""}${diff})`,
         });
-
         setStockTakeOpen(false);
         setSelectedProduct(null);
+    };
+
+    // ---- product info panel ----
+    const openInfo = (product: typeof products[0]) => {
+        setInfoProduct(product);
+        setInfoOpen(true);
+    };
+
+    // ---- barcode scanner ----
+    const startScanner = async () => {
+        setScannerActive(true);
+    };
+
+    const stopScanner = () => {
+        if (readerRef.current) {
+            readerRef.current.reset();
+            readerRef.current = null;
+        }
+        setScannerActive(false);
+    };
+
+    useEffect(() => {
+        if (!scannerActive || !videoRef.current) return;
+        const codeReader = new BrowserMultiFormatReader();
+        readerRef.current = codeReader;
+
+        codeReader.decodeFromVideoDevice(undefined, videoRef.current, (result, err) => {
+            if (result) {
+                setAddForm((prev) => ({ ...prev, barcode: result.getText() }));
+                stopScanner();
+                toast({ title: "Barcode scanned", description: result.getText() });
+            }
+        });
+
+        return () => {
+            codeReader.reset();
+        };
+    }, [scannerActive]);
+
+    // stop scanner when dialog closes
+    useEffect(() => {
+        if (!addOpen) {
+            stopScanner();
+            setAddForm({ name: "", category: "", price: "", stock: "", description: "", barcode: "" });
+        }
+    }, [addOpen]);
+
+    // ---- add product submit ----
+    const handleAddProduct = async () => {
+        const { name, category, price, stock, description, barcode } = addForm;
+        if (!name.trim() || !category.trim() || !price || !stock || !description.trim()) {
+            toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
+            return;
+        }
+        const priceNum = parseFloat(price);
+        const stockNum = parseInt(stock);
+        if (isNaN(priceNum) || priceNum < 0) {
+            toast({ title: "Invalid price", description: "Enter a valid positive number.", variant: "destructive" });
+            return;
+        }
+        if (isNaN(stockNum) || stockNum < 0) {
+            toast({ title: "Invalid stock", description: "Enter a valid non-negative number.", variant: "destructive" });
+            return;
+        }
+        setAddLoading(true);
+        try {
+            await addProduct({
+                name: name.trim(),
+                category: category.trim(),
+                price: priceNum,
+                stock: stockNum,
+                description: description.trim(),
+                barcode: barcode.trim() || undefined,
+            });
+            toast({ title: "Product added", description: `${name} has been added to inventory.` });
+            setAddOpen(false);
+        } catch (err) {
+            toast({ title: "Failed to add product", description: "Please try again.", variant: "destructive" });
+        } finally {
+            setAddLoading(false);
+        }
     };
 
     const lowStockCount = products.filter((p) => p.status === "Low Stock" || p.status === "Critical").length;
@@ -73,7 +176,12 @@ const CashierInventory = () => {
 
     return (
         <DashboardLayout role="cashier">
-            <h1 className="text-3xl font-bold tracking-tight mb-6">Inventory & Stock Take</h1>
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-3xl font-bold tracking-tight">Inventory & Stock Take</h1>
+                <Button onClick={() => setAddOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" /> Add Product
+                </Button>
+            </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <Card>
@@ -149,7 +257,11 @@ const CashierInventory = () => {
                             </TableHeader>
                             <TableBody>
                                 {filtered.map((product) => (
-                                    <TableRow key={product.id}>
+                                    <TableRow
+                                        key={product.id}
+                                        className="cursor-pointer hover:bg-muted/50"
+                                        onClick={() => openInfo(product)}
+                                    >
                                         <TableCell className="font-medium">{product.name}</TableCell>
                                         <TableCell>{product.category}</TableCell>
                                         <TableCell className="text-right">R {product.price.toFixed(2)}</TableCell>
@@ -158,7 +270,7 @@ const CashierInventory = () => {
                                             <Badge variant={statusColor(product.status) as any}>{product.status}</Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button size="sm" variant="outline" onClick={() => openStockTake(product)}>
+                                            <Button size="sm" variant="outline" onClick={(e) => openStockTake(product, e)}>
                                                 <ClipboardCheck className="h-4 w-4 mr-1" /> Count
                                             </Button>
                                         </TableCell>
@@ -175,6 +287,7 @@ const CashierInventory = () => {
                 </CardContent>
             </Card>
 
+            {/* ---- Stock Take Dialog (unchanged logic) ---- */}
             <Dialog open={stockTakeOpen} onOpenChange={setStockTakeOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -201,6 +314,153 @@ const CashierInventory = () => {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setStockTakeOpen(false)}>Cancel</Button>
                         <Button onClick={submitStockTake}>Submit Count</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* ---- Product Info Panel ---- */}
+            <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{infoProduct?.name}</DialogTitle>
+                        <DialogDescription>{infoProduct?.category}</DialogDescription>
+                    </DialogHeader>
+                    {infoProduct && (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Price</p>
+                                    <p className="text-lg font-semibold">R {infoProduct.price.toFixed(2)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Stock</p>
+                                    <p className="text-lg font-semibold">{infoProduct.stock} units</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</p>
+                                <Badge variant={statusColor(infoProduct.status) as any}>{infoProduct.status}</Badge>
+                            </div>
+                            {infoProduct.description && (
+                                <div>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Description</p>
+                                    <p className="text-sm">{infoProduct.description}</p>
+                                </div>
+                            )}
+                            {infoProduct.barcode && (
+                                <div>
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Barcode</p>
+                                    <p className="text-sm font-mono">{infoProduct.barcode}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setInfoOpen(false)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* ---- Add Product Dialog ---- */}
+            <Dialog open={addOpen} onOpenChange={setAddOpen}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Add Product</DialogTitle>
+                        <DialogDescription>Fill in the product details to add it to inventory.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="ap-name">Name <span className="text-destructive">*</span></Label>
+                            <Input
+                                id="ap-name"
+                                placeholder="e.g. Coca-Cola 330ml"
+                                value={addForm.name}
+                                onChange={(e) => setAddForm((p) => ({ ...p, name: e.target.value }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="ap-category">Category <span className="text-destructive">*</span></Label>
+                            <Input
+                                id="ap-category"
+                                placeholder="e.g. Beverages"
+                                value={addForm.category}
+                                onChange={(e) => setAddForm((p) => ({ ...p, category: e.target.value }))}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="ap-price">Price (R) <span className="text-destructive">*</span></Label>
+                                <Input
+                                    id="ap-price"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    value={addForm.price}
+                                    onChange={(e) => setAddForm((p) => ({ ...p, price: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="ap-stock">Stock <span className="text-destructive">*</span></Label>
+                                <Input
+                                    id="ap-stock"
+                                    type="number"
+                                    min="0"
+                                    placeholder="0"
+                                    value={addForm.stock}
+                                    onChange={(e) => setAddForm((p) => ({ ...p, stock: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="ap-description">Description <span className="text-destructive">*</span></Label>
+                            <Textarea
+                                id="ap-description"
+                                placeholder="Describe the product for customers..."
+                                value={addForm.description}
+                                onChange={(e) => setAddForm((p) => ({ ...p, description: e.target.value }))}
+                                rows={3}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="ap-barcode">Barcode</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="ap-barcode"
+                                    placeholder="Scan or type barcode"
+                                    value={addForm.barcode}
+                                    onChange={(e) => setAddForm((p) => ({ ...p, barcode: e.target.value }))}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={scannerActive ? stopScanner : startScanner}
+                                    title={scannerActive ? "Stop scanner" : "Scan barcode"}
+                                >
+                                    {scannerActive ? <X className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                        </div>
+                        {scannerActive && (
+                            <div className="space-y-2">
+                                <p className="text-xs text-muted-foreground">Point camera at barcode…</p>
+                                <video
+                                    ref={videoRef}
+                                    className="w-full rounded-md border border-border bg-black"
+                                    style={{ height: 180 }}
+                                    autoPlay
+                                    muted
+                                    playsInline
+                                />
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter className="mt-2">
+                        <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addLoading}>Cancel</Button>
+                        <Button onClick={handleAddProduct} disabled={addLoading}>
+                            {addLoading ? "Adding…" : "Add Product"}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

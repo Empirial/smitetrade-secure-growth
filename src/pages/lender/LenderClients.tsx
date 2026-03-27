@@ -134,7 +134,7 @@ const LenderClients = () => {
                                         <span>{borrower.phone}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Repayment behaviour:</span>
+                                        <span>BRI Score:</span>
                                         <Badge variant={borrower.score >= 70 ? "default" : borrower.score >= 40 ? "secondary" : "destructive"}>
                                             {borrower.score >= 70 ? "Pays on time" : borrower.score >= 40 ? "Delays" : "Does not pay"}
                                         </Badge>

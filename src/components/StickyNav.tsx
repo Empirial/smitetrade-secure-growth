@@ -15,7 +15,7 @@ import { LogIn, User, Store, Truck, ShoppingBag, ShieldCheck, Briefcase } from "
 
 const navLinks = [
     { name: "Home", href: "#hero" },
-    { name: "Repayment behaviour", href: "#spazascore" },
+    { name: "BRI Score", href: "#bri-score" },
     { name: "Features", href: "#features" },
     { name: "Network", href: "#network" },
 ];

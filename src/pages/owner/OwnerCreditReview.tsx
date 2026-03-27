@@ -38,7 +38,7 @@ const OwnerCreditReview = () => {
             <div className="max-w-2xl mx-auto space-y-6">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold">Customer Credit Lookup</h1>
-                    <p className="text-muted-foreground">Verify SS-ID and Repayment behaviour Tier before authorizing credit.</p>
+                    <p className="text-muted-foreground">Verify SS-ID and BRI Score Tier before authorizing credit.</p>
                 </div>
 
                 <Card className="border-t-4 border-t-amber-500 shadow-lg bg-slate-900 border-slate-800 text-white">
@@ -145,7 +145,7 @@ const OwnerCreditReview = () => {
                             <AlertCircle />
                             <div>
                                 <p className="font-bold">Customer Not Found</p>
-                                <p className="text-sm text-red-300/80">Ask them to register on the Customer App to build their Repayment behaviour profile.</p>
+                                <p className="text-sm text-red-300/80">Ask them to register on the Customer App to build their BRI Score profile.</p>
                             </div>
                         </CardContent>
                     </Card>

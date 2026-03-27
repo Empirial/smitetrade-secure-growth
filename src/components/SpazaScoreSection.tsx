@@ -33,7 +33,7 @@ const SpazaScoreSection = () => {
               <span className="text-gradient-gold">Community Credit.</span>
             </h2>
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Meet Repayment behaviour. We use real data: sales consistency, profit stability, and debt discipline, to give your customers an explicit tier they can finally use. No more paper ledgers; just smart lending.
+              Meet BRI Score. We use real data: sales consistency, profit stability, and debt discipline, to give your customers an explicit tier they can finally use. No more paper ledgers; just smart lending.
             </p>
 
             <div className="space-y-6">
@@ -72,7 +72,7 @@ const SpazaScoreSection = () => {
             className="flex justify-center"
           >
             <div className="glass-card p-10 glow-gold">
-              <p className="text-center text-sm text-muted-foreground mb-4 font-[Orbitron] tracking-wider uppercase">Repayment behaviour</p>
+              <p className="text-center text-sm text-muted-foreground mb-4 font-[Orbitron] tracking-wider uppercase">BRI Score</p>
               <RepaymentBehaviourGauge />
             </div>
           </motion.div>

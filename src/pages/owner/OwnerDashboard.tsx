@@ -113,7 +113,7 @@ const OwnerDashboard = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">Lookup</div>
-                            <p className="text-xs text-muted-foreground">Check Repayment behaviour</p>
+                            <p className="text-xs text-muted-foreground">Check BRI Score</p>
                         </CardContent>
                     </Card>
                 </Link>

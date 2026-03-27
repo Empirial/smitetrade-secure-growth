@@ -1,28 +1,19 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { ArrowRight, AlertCircle, Calendar } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCredit } from "@/context/CreditContext";
 import GamificationStatus from "@/components/credit/GamificationStatus";
-import { useState } from "react";
 import { format } from "date-fns";
 import { useStore } from "@/context/StoreContext";
 import { Loan } from "@/types";
 
 const BehavioralReliabilityIndex = () => {
-    const { profile, simulatePayment, isLoading, loans } = useCredit();
+    const { profile, isLoading, loans } = useCredit();
     const { user } = useStore(); // Get user for filtering loans
-    const [payAmount, setPayAmount] = useState("");
-    const [simDate, setSimDate] = useState(format(new Date(), "yyyy-MM-dd"));
-
-    const handlePay = async () => {
-        if (!payAmount) return;
-        await simulatePayment(Number(payAmount), new Date(simDate));
-        setPayAmount("");
-    };
+    const navigate = useNavigate();
 
     if (isLoading || !profile) {
         return (
@@ -107,8 +98,12 @@ const BehavioralReliabilityIndex = () => {
                                             <p className="text-xs text-muted-foreground">Amount Due</p>
                                             <p className="text-2xl font-bold">R {loan.amount.toFixed(2)}</p>
                                         </div>
-                                        <Button size="sm" variant="outline" asChild>
-                                            <Link to="/customer/payment">Pay Now</Link>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => navigate('/customer/payment', { state: { total: loan.amount, loanId: loan.id } })}
+                                        >
+                                            Pay Now
                                         </Button>
                                     </div>
                                 </CardContent>
@@ -127,43 +122,6 @@ const BehavioralReliabilityIndex = () => {
                     </div>
                 </div>
 
-
-
-                {/* Payment Simulation (For Demo) */}
-                <Card className="border-dashed border-2">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Calendar className="h-5 w-5" /> Simulate Payment
-                        </CardTitle>
-                        <CardDescription>
-                            Test how paying on different dates affects your score.
-                            <br />
-                            <span className="font-medium text-emerald-600">Try setting date to the 1st (Gold) vs 15th (Silver).</span>
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col md:flex-row gap-4">
-                        <div className="space-y-2 flex-1">
-                            <label className="text-xs font-medium">Simulation Date</label>
-                            <Input
-                                type="date"
-                                value={simDate}
-                                onChange={(e) => setSimDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-2 flex-1">
-                            <label className="text-xs font-medium">Amount (R)</label>
-                            <Input
-                                placeholder="Amount"
-                                value={payAmount}
-                                onChange={(e) => setPayAmount(e.target.value)}
-                                type="number"
-                            />
-                        </div>
-                        <Button onClick={handlePay} className="self-end" disabled={!payAmount}>
-                            Pay & Update
-                        </Button>
-                    </CardContent>
-                </Card>
 
                 {/* Compliance Footer */}
                 <div className="text-xs text-muted-foreground text-center max-w-2xl mx-auto space-y-1 pt-8 border-t">

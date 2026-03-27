@@ -45,7 +45,17 @@
       "Bash(node -e \"require\\(''firebase-admin''\\); console.log\\(''ok''\\)\")",
       "Bash(firebase auth:print-access-token)",
       "Bash(node create-admin.js)",
-      "Bash(ls \"c:\\\\Users\\\\Lufuno Mphela\\\\Desktop\\\\smitetrade-secure-growth\\\\create-admin\"*)"
+      "Bash(ls \"c:\\\\Users\\\\Lufuno Mphela\\\\Desktop\\\\smitetrade-secure-growth\\\\create-admin\"*)",
+      "Bash(cd /c/Users/Lufuno Mphela/Desktop/smitetrade-secure-growth/src/pages)",
+      "Bash(for dir:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/Lufuno Mphela/Desktop/smitetrade-secure-growth/$dir/**)",
+      "Bash(done)",
+      "Read(//c/Users/Lufuno Mphela/Desktop/smimetrade-secure-growth/src/**)",
+      "Bash(grep -l \"^import\" owner/*.tsx)",
+      "Bash(xargs -I {} grep \"^import\" {})",
+      "Bash(grep -r \"navigate\\\\|to=\\\\|href=\" src/pages/owner/*.tsx)",
+      "Bash(grep -rh \"useNavigate\\\\|useLocation\" src/pages/owner/*.tsx)"
     ]
   }
 }

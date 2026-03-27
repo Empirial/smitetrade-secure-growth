@@ -45,11 +45,13 @@ const FULFILLMENT_LABELS: Record<string, string> = {
 
 const DELIVERY_OPTIONS = ["pep_courier", "courier", "instore_delivery"];
 
-const MOCK_WALLET_BALANCE = 150.00;
 
 const CustomerProducts = () => {
     const { allProducts, addToCart, isLoading, stores, user } = useStore();
     const { profile } = useCredit();
+
+    // Wallet balance derived from credit profile (available credit = creditLimit - balance)
+    const walletBalance = profile ? (profile.creditLimit - profile.balance) : 0;
 
     const [search, setSearch] = useState("");
     const [activeCategory, setActiveCategory] = useState("All");
@@ -106,9 +108,10 @@ const CustomerProducts = () => {
         const opts = product.fulfillmentOptions;
         const matchesFulfillment =
             fulfillmentFilter === "all" ||
-            !opts?.length ||
-            (fulfillmentFilter === "delivery" && opts.some(o => DELIVERY_OPTIONS.includes(o))) ||
-            (fulfillmentFilter === "pickup" && opts.includes("pickup"));
+            (!!opts?.length && (
+                (fulfillmentFilter === "delivery" && opts.some(o => DELIVERY_OPTIONS.includes(o))) ||
+                (fulfillmentFilter === "pickup" && opts.includes("pickup"))
+            ));
         return matchesSearch && matchesCategory && matchesStore && matchesFulfillment;
     });
 
@@ -140,7 +143,7 @@ const CustomerProducts = () => {
         if (!preorderProduct || !preorderDate) return;
         const total = preorderProduct.price * preorderQty;
 
-        if (preorderPayment === "wallet" && total > MOCK_WALLET_BALANCE) {
+        if (preorderPayment === "wallet" && total > walletBalance) {
             toast.error("Insufficient wallet balance.");
             return;
         }
@@ -480,7 +483,7 @@ const CustomerProducts = () => {
                                         <RadioGroupItem value="wallet" id="po-wallet" />
                                         <Label htmlFor="po-wallet" className="flex items-center gap-2 cursor-pointer font-normal">
                                             <Wallet className="h-4 w-4" /> Spaza Wallet
-                                            <span className="ml-auto text-xs text-muted-foreground">R {MOCK_WALLET_BALANCE.toFixed(2)}</span>
+                                            <span className="ml-auto text-xs text-muted-foreground">R {walletBalance.toFixed(2)}</span>
                                         </Label>
                                     </div>
                                 </RadioGroup>

@@ -59,11 +59,11 @@ const CustomerOrders = () => {
                                         </Badge>
                                     </div>
                                     <CardDescription>{format(new Date(order.date), "PPP")} • {order.items.length} Items</CardDescription>
-                                    <p className="text-xs font-semibold text-emerald-600 mt-1">Estimated: 8am - 6pm</p>
+                                    <p className="text-xs font-semibold text-emerald-600 mt-1">Contact store for ETA</p>
                                 </div>
                                 <div className="text-right">
                                     <span className="font-bold block">R {order.total.toFixed(2)}</span>
-                                    <Button variant="ghost" size="sm" className="h-8 text-xs">
+                                    <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => navigate('/customer/orders/' + order.id)}>
                                         View Details
                                     </Button>
                                 </div>

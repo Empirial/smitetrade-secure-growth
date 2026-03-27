@@ -89,7 +89,7 @@ const CustomerCreditApplication = () => {
                     <p className="text-muted-foreground">Compare rates and apply for credit from our trusted partners.</p>
                 </div>
 
-                {/* Repayment Behaviour Overview */}
+                {/* BRI Score Overview */}
                 <Card className="border-t-4 border-t-indigo-500 shadow-xl overflow-hidden relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent pointer-events-none" />
                     <CardHeader>
@@ -301,7 +301,7 @@ const CustomerCreditApplication = () => {
                                 <ul className="list-disc pl-5 space-y-2">
                                     <li>You are applying for a loan from the selected lender, not Smitetrade directly.</li>
                                     <li>You agree to the interest rate and repayment terms specified in the offer.</li>
-                                    <li>Failure to repay on time may negatively impact your SpazaScore and future borrowing ability.</li>
+                                    <li>Failure to repay on time may negatively impact your BRI Score and future borrowing ability.</li>
                                     <li>Your personal and business information will be shared with the lender for assessment purposes.</li>
                                 </ul>
                                 <div className="bg-yellow-500/10 p-3 rounded border border-yellow-500/20 text-yellow-400 text-xs">

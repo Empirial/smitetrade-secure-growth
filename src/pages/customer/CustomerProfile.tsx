@@ -241,7 +241,7 @@ const CustomerProfile = () => {
                 <div className="grid gap-4 md:grid-cols-4">
                     <Card className="bg-emerald-50 border-emerald-100">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-emerald-800">Repayment behaviour</CardTitle>
+                            <CardTitle className="text-sm font-medium text-emerald-800">BRI Score</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="text-xl font-bold text-emerald-700">

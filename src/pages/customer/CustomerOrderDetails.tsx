@@ -3,7 +3,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Package, Truck, CheckCircle, RefreshCcw } from "lucide-react";
+import { ArrowLeft, Download, Package, Truck, CheckCircle, RefreshCcw, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/context/StoreContext";
 
@@ -28,11 +28,9 @@ const CustomerOrderDetails = () => {
         );
     }
 
-    // Calculate derived values if not in order object (legacy mocked fields)
-    const subtotal = order.total; // Assuming total includes everything for now or is subtotal
-    const deliveryFee = 0; // standard for now or derived
-    // Real order object has `items`, `total`, `status`, `date`, `customerAddress`
-    // We can use those directly.
+    // Calculate derived values
+    const DELIVERY_FEE = (order as any).deliveryFee ?? 15;
+    const subtotal = order.total - DELIVERY_FEE;
 
     const handleDownloadReceipt = () => {
         toast.success("Opening print dialog...");
@@ -96,11 +94,11 @@ const CustomerOrderDetails = () => {
                             <div className="pt-4 space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Subtotal</span>
-                                    <span>R {order.total.toFixed(2)}</span>
+                                    <span>R {subtotal.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Delivery Method</span>
-                                    <span>Standard Delivery (Included)</span>
+                                    <span className="text-muted-foreground">Delivery Fee</span>
+                                    <span>R {DELIVERY_FEE.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
                                     <span>Total</span>
@@ -116,31 +114,33 @@ const CustomerOrderDetails = () => {
                                 <CardTitle>Order Status</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="relative border-l-2 border-slate-200 ml-3 space-y-6 pb-2">
-                                    <div className="flex items-center -ml-[9px] gap-4">
-                                        <div className="h-4 w-4 rounded-full bg-slate-300 ring-4 ring-white" />
-                                        <div className="text-sm text-muted-foreground">Order Placed</div>
+                                {order.status === 'Cancelled' ? (
+                                    <div className="flex items-center gap-3 text-red-600">
+                                        <XCircle className="h-5 w-5" />
+                                        <span className="font-medium">Order Cancelled</span>
                                     </div>
-                                    <div className="flex items-center -ml-[9px] gap-4">
-                                        <div className="h-4 w-4 rounded-full bg-slate-300 ring-4 ring-white" />
-                                        <div className="text-sm text-muted-foreground">Processing</div>
-                                    </div>
-                                    <div className="flex items-center -ml-[9px] gap-4">
-                                        <div className="h-4 w-4 rounded-full bg-blue-500 ring-4 ring-white" />
-                                        <div className="text-sm font-medium flex items-center gap-2">
-                                            <Truck className="h-3 w-3" />
-                                            Out for Delivery
+                                ) : (() => {
+                                    const STATUS_STEPS = ['Pending', 'Processing', 'Out for Delivery', 'Delivered'];
+                                    const activeIndex = STATUS_STEPS.indexOf(order.status);
+                                    return (
+                                        <div className="relative border-l-2 border-slate-200 ml-3 space-y-6 pb-2">
+                                            {STATUS_STEPS.map((step, i) => {
+                                                const isDone = i < activeIndex;
+                                                const isCurrent = i === activeIndex;
+                                                return (
+                                                    <div key={step} className={`flex items-center -ml-[9px] gap-4 ${!isDone && !isCurrent ? 'opacity-40' : ''}`}>
+                                                        <div className={`h-4 w-4 rounded-full ring-4 ring-white ${isDone ? 'bg-emerald-500' : isCurrent ? 'bg-blue-500' : 'bg-slate-200'}`} />
+                                                        <div className={`text-sm flex items-center gap-2 ${isCurrent ? 'font-medium' : 'text-muted-foreground'}`}>
+                                                            {step === 'Out for Delivery' && <Truck className="h-3 w-3" />}
+                                                            {step === 'Delivered' && <CheckCircle className="h-3 w-3" />}
+                                                            {step}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    </div>
-                                    {/* Future status example */}
-                                    <div className="flex items-center -ml-[9px] gap-4 opacity-50">
-                                        <div className="h-4 w-4 rounded-full bg-slate-200 ring-4 ring-white" />
-                                        <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                            <CheckCircle className="h-3 w-3" />
-                                            Delivered
-                                        </div>
-                                    </div>
-                                </div>
+                                    );
+                                })()}
                             </CardContent>
                         </Card>
 

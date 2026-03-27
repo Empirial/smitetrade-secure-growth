@@ -12,7 +12,7 @@ const Index = () => {
       <StickyNav />
       <div id="hero"><HeroSection /></div>
       <StatsSection />
-      <div id="spazascore"><SpazaScoreSection /></div>
+      <div id="bri-score"><SpazaScoreSection /></div>
       <div id="features"><OperationalSection /></div>
       <div id="network"><DiscoveryMapSection /></div>
       <FooterSection />

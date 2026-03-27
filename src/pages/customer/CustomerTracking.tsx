@@ -1,12 +1,21 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Circle, Truck, Package } from "lucide-react";
+import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useStore } from "@/context/StoreContext";
 
 const CustomerTracking = () => {
-    const { orders } = useStore();
-    const latestOrder = orders.length > 0 ? orders[0] : null;
+    const { orders, user } = useStore();
+
+    const activeOrders = orders.filter(o => {
+        const isOwn = !user || o.userId === user.id || o.userId === user.uid || o.customerName === user.name;
+        return isOwn && o.status !== 'Delivered' && o.status !== 'Cancelled';
+    });
+
+    const [selectedId, setSelectedId] = useState<string>(activeOrders[0]?.id ?? '');
+    const latestOrder = activeOrders.find(o => o.id === selectedId) ?? activeOrders[0] ?? null;
 
     if (!latestOrder) {
         return (
@@ -30,7 +39,24 @@ const CustomerTracking = () => {
     return (
         <DashboardLayout role="customer">
             <div className="max-w-2xl mx-auto space-y-8">
-                <h1 className="text-3xl font-bold tracking-tight">Track Order #{latestOrder.id}</h1>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <h1 className="text-3xl font-bold tracking-tight">Track Order</h1>
+                    {activeOrders.length > 1 && (
+                        <Select value={selectedId} onValueChange={setSelectedId}>
+                            <SelectTrigger className="w-full sm:w-64">
+                                <SelectValue placeholder="Select order" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {activeOrders.map(o => (
+                                    <SelectItem key={o.id} value={o.id}>
+                                        #{o.id} — {o.status}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                </div>
+                <p className="text-muted-foreground -mt-4">Order #{latestOrder.id}</p>
 
                 <Card>
                     <CardHeader>

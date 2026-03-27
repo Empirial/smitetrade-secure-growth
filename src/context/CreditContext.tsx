@@ -468,7 +468,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
             setNotifications(prev => [{
                 id: `notif_${Date.now()}`, userId: borrowerId,
-                message: `Payment of R${paymentAmount} received! SpazaScore updated to ${newPaymentScore.toFixed(1)}%.`,
+                message: `Payment of R${paymentAmount} received! BRI Score updated to ${newPaymentScore.toFixed(1)}%.`,
                 date: paymentDate.toISOString(), read: false
             }, ...prev]);
             toast.success("Payment Recorded & Score Updated");
@@ -519,7 +519,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
         await addDoc(collection(db, 'notifications'), {
             userId: loan.borrowerId,
-            message: `Payment of R${loan.amount} received! SpazaScore updated to ${newPaymentScore.toFixed(1)}%.`,
+            message: `Payment of R${loan.amount} received! BRI Score updated to ${newPaymentScore.toFixed(1)}%.`,
             date: paymentDate.toISOString(), read: false
         });
 

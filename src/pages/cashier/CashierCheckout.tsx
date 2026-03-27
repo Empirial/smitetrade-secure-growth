@@ -170,7 +170,7 @@ const CashierCheckout = () => {
                                     <div className="bg-amber-100 p-3 rounded-lg"><Landmark className="text-amber-600" /></div>
                                     <div>
                                         <CardTitle>Store Credit</CardTitle>
-                                        <CardDescription>Pay using customer's Repayment behaviour account</CardDescription>
+                                        <CardDescription>Pay using customer's BRI Score account</CardDescription>
                                     </div>
                                 </CardHeader>
                             </Card>

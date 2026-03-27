@@ -36,14 +36,14 @@ const CustomerCreditReview = () => {
     const balance = profile?.balance ?? 0;
     const available = creditLimit - balance;
 
-    // For progress bar: lower BRI is better. Map inversely (0-100% range for display)
-    const progressValue = Math.max(0, Math.min(100, 100 - briScore));
+    // For progress bar: higher progress = better score (briScore directly represents score quality)
+    const progressValue = Math.max(0, Math.min(100, briScore));
 
     return (
         <DashboardLayout role="customer">
             <div className="max-w-2xl mx-auto space-y-6">
                 <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">My SpazaScore</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">My BRI Score</h1>
                     <p className="text-muted-foreground">Your Behavioral Reliability Index (BRI)</p>
                 </div>
 
@@ -51,7 +51,7 @@ const CustomerCreditReview = () => {
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <div>
-                                <CardTitle>Repayment behaviour</CardTitle>
+                                <CardTitle>BRI Score</CardTitle>
                                 <CardDescription>Updated today</CardDescription>
                             </div>
                             <ShieldCheck className="h-8 w-8 text-primary" />

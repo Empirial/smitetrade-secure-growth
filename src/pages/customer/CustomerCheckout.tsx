@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
+const ALLOWED_POSTAL_CODES = [1818, 1804, 1868];
+
 const CustomerCheckout = () => {
     const navigate = useNavigate();
     const { placeOrder, cartTotal, cart, stores } = useStore();
@@ -39,8 +41,8 @@ const CustomerCheckout = () => {
     const [selectedStore, setSelectedStore] = useState(cartStoreId || (activeStores.length > 0 ? activeStores[0].id : ""));
     const [allowSubstitutions, setAllowSubstitutions] = useState(false);
 
-    // Mock Wallet Balance
-    const [walletBalance] = useState(150.00);
+    // Wallet balance derived from credit profile (available credit = creditLimit - balance)
+    const walletBalance = profile ? (profile.creditLimit - profile.balance) : 0;
 
     const [address, setAddress] = useState({
         street: "",
@@ -53,9 +55,9 @@ const CustomerCheckout = () => {
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Geofencing Validation (Mock 1818 as only serviceable zip for Soweto)
+        // Geofencing Validation — only service allowed postal codes
         if (step === 1) {
-            if (address.zip !== '1818' && address.zip !== '1804' && address.zip !== '1868') {
+            if (!ALLOWED_POSTAL_CODES.includes(Number(address.zip))) {
                 toast.error("Sorry, your area is currently outside our 5km delivery radius.", {
                     description: "We are expanding soon. Try a Soweto postal code (e.g., 1818)."
                 });

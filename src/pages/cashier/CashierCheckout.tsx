@@ -9,7 +9,6 @@ import { useCredit } from "@/context/CreditContext";
 import { Borrower } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { usePayfast } from "@/hooks/usePayfast";
 import { toast } from "sonner";
 
 const CashierCheckout = () => {
@@ -55,8 +54,6 @@ const CashierCheckout = () => {
         });
         setSuccess(true);
     }, [placeOrder, cart, isSplitPayment, paymentMethod, ssidCustomer]);
-
-    const { pay: payWithCard, loading: cardProcessing } = usePayfast();
 
     const handleSsidSearch = () => {
         setSsidError("");
@@ -106,29 +103,12 @@ const CashierCheckout = () => {
         }
 
         if (isSplitPayment) {
-            const splitCard = parseFloat(splitAmounts.card || "0");
             const splitSsid = parseFloat(splitAmounts.ssid || "0");
-
-            if (splitCard > 0) {
-                toast.error("Split payments with a card portion are not supported yet. Please use full Card payment or remove the card amount.");
-                return;
-            }
 
             if (splitSsid > 0 && !ssidCustomer) {
                 toast.error("Please verify the customer SS-ID / phone before including Store Credit in a split payment.");
                 return;
             }
-        }
-
-        if (paymentMethod === "Card" && !isSplitPayment) {
-            payWithCard({
-                emailAddress: user?.email || 'cashier@smitetrade.co.za',
-                amount: total,
-                itemName: 'In-Store Purchase',
-                customStr1: 'cashier',
-                customStr2: currentStore?.id || '',
-            });
-            return;
         }
 
         await completeTransaction();
@@ -176,7 +156,7 @@ const CashierCheckout = () => {
                                     </div>
                                 </CardHeader>
                             </Card>
-                            <Card className={`cursor-pointer hover:border-blue-500 transition-all border-2 border-transparent ${cardProcessing ? 'opacity-60 pointer-events-none' : ''}`} onClick={() => { setPaymentMethod("Card"); payWithCard({ emailAddress: user?.email || 'cashier@smitetrade.co.za', amount: total, itemName: 'In-Store Purchase', customStr1: 'cashier', customStr2: currentStore?.id || '' }); }}>
+                            <Card className="cursor-pointer hover:border-blue-500 transition-all border-2 border-transparent" onClick={() => setPaymentMethod("Card")}>
                                 <CardHeader className="flex flex-row items-center gap-4">
                                     <div className="bg-blue-100 p-3 rounded-lg"><CreditCard className="text-blue-600" /></div>
                                     <div>
@@ -236,6 +216,32 @@ const CashierCheckout = () => {
                                         onClick={handlePay}
                                     >
                                         Confirm & Print Receipt
+                                    </Button>
+                                </div>
+                            </CardHeader>
+                        </Card>
+                    )}
+
+                    {paymentMethod === "Card" && !isSplitPayment && (
+                        <Card className="border-blue-500 border-2">
+                            <CardHeader>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <Button variant="ghost" size="icon" onClick={() => setPaymentMethod("Select")} className="h-8 w-8 -ml-2">
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                    <CardTitle className="text-xl">Card Terminal Payment</CardTitle>
+                                </div>
+                                <div className="space-y-6 pt-2 text-center">
+                                    <div className="p-6 bg-blue-50 rounded-lg border border-blue-100">
+                                        <CreditCard className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+                                        <h3 className="text-3xl font-bold text-blue-900 mb-2">R {total.toFixed(2)}</h3>
+                                        <p className="text-blue-700">Please process this amount on the physical card terminal.</p>
+                                    </div>
+                                    <Button
+                                        className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700"
+                                        onClick={handlePay}
+                                    >
+                                        Transaction Approved on Terminal
                                     </Button>
                                 </div>
                             </CardHeader>
@@ -309,7 +315,7 @@ const CashierCheckout = () => {
                                     <div className="space-y-2">
                                         <Label>Card Amount (R)</Label>
                                         <Input type="number" placeholder="0.00" value={splitAmounts.card} onChange={(e) => handleSplitAmountChange('card', e.target.value)} />
-                                        <p className="text-xs text-muted-foreground">Partial card charges are not supported yet. Use full Card payment instead.</p>
+                                        <p className="text-xs text-muted-foreground">Process this amount on the terminal before completing.</p>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>SS-ID Credit (R)</Label>

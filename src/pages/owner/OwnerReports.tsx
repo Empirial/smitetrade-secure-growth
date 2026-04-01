@@ -47,6 +47,25 @@ const OwnerReports = () => {
         return { revenue, count, avg, transactions: daysOrders };
     }, [orders, date]);
 
+    const handleExportCSV = () => {
+        const rows = dailyStats.transactions;
+        if (rows.length === 0) return;
+        const header = ["id", "date", "customerName", "total", "status"];
+        const csv = [
+            header.join(","),
+            ...rows.map(o =>
+                [o.id, o.date, `"${o.customerName.replace(/"/g, '""')}"`, o.total.toFixed(2), o.status].join(",")
+            ),
+        ].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `smitetrade-report-${date ? format(date, "yyyy-MM-dd") : "export"}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <DashboardLayout role="owner">
             <div className="space-y-6">
@@ -78,7 +97,7 @@ const OwnerReports = () => {
                                 />
                             </PopoverContent>
                         </Popover>
-                        <Button variant="outline">
+                        <Button variant="outline" onClick={handleExportCSV} disabled={dailyStats.transactions.length === 0}>
                             <Download className="mr-2 h-4 w-4" /> Export
                         </Button>
                     </div>

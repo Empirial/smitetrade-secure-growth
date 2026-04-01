@@ -31,7 +31,11 @@ const CashierReceipts = () => {
 
     const handleReprint = (e: React.MouseEvent, orderId: string) => {
         e.stopPropagation();
-        toast.info(`Reprinting receipt for Order #${orderId}...`);
+        const order = orders.find(o => o.id === orderId) || null;
+        setSelectedOrder(order);
+        setTimeout(() => {
+            window.print();
+        }, 300);
     };
 
     return (

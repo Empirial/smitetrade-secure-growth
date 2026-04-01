@@ -51,7 +51,7 @@ const HeroSection = () => {
         >
           <Link to="/customer/login">
             <Button size="lg" className="h-14 px-8 text-lg w-full sm:w-auto bg-foreground text-background hover:bg-foreground/90 rounded-full">
-              Shop Now <ArrowRight className="ml-2 h-5 w-5" />
+              Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
           <Link to="/portals">

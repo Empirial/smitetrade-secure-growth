@@ -65,7 +65,7 @@ const DriverOrders = () => {
                                     {order.items.map(i => i.name).join(", ")}
                                 </div>
                                 <div className="mt-2 pt-2 border-t flex justify-end">
-                                    <Button variant="ghost" size="sm" className="h-8 text-emerald-600 gap-2" onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${"0821234567"}`; }}>
+                                    <Button variant="ghost" size="sm" className="h-8 text-emerald-600 gap-2" onClick={(e) => { e.stopPropagation(); const phone = order.customerPhone; if (phone) window.location.href = `tel:${phone}`; }} disabled={!order.customerPhone}>
                                         <Phone className="h-3 w-3" /> Call Customer
                                     </Button>
                                 </div>

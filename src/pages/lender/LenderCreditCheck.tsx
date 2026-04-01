@@ -14,7 +14,7 @@ import { maskIdNumber } from "@/lib/utils";
 const LenderCreditCheck = () => {
     const { borrowers } = useCredit();
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResult, setSearchResult] = useState<Borrower & { businessName?: string; totalDebt?: number; totalPaid?: number; defaults?: number; limit?: number; status?: string } | null>(null);
+    const [searchResult, setSearchResult] = useState<Borrower | null>(null);
     const [searched, setSearched] = useState(false);
     const [searchParams] = useSearchParams();
 
@@ -138,18 +138,20 @@ const LenderCreditCheck = () => {
                                             <CreditCard className="h-4 w-4 text-blue-500" />
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="text-2xl font-bold">R {searchResult.totalDebt || 0}</div>
-                                            <p className="text-xs text-muted-foreground">Total outstanding debt</p>
+                                            <div className="text-2xl font-bold">
+                                                {searchResult.balance != null ? `R ${searchResult.balance}` : "—"}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">Total outstanding balance</p>
                                         </CardContent>
                                     </Card>
                                     <Card>
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                            <CardTitle className="text-sm font-medium">Repayment History</CardTitle>
+                                            <CardTitle className="text-sm font-medium">BRI Score</CardTitle>
                                             <History className="h-4 w-4 text-purple-500" />
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="text-2xl font-bold">{searchResult.totalPaid || 0} Paid</div>
-                                            <p className="text-xs text-muted-foreground">Loans successfully repaid</p>
+                                            <div className="text-2xl font-bold">{searchResult.score ?? "—"}</div>
+                                            <p className="text-xs text-muted-foreground">Behavioural Reliability Index</p>
                                         </CardContent>
                                     </Card>
                                 </div>
@@ -159,7 +161,7 @@ const LenderCreditCheck = () => {
                                         <div className="flex items-center justify-between">
                                             <CardTitle>Detailed Profile</CardTitle>
                                             <Badge className={getStatusBadge(searchResult.rating)}>
-                                                {searchResult.status || "Active"}
+                                                {searchResult.rating || "Active"}
                                             </Badge>
                                         </div>
                                         <CardDescription>
@@ -172,20 +174,22 @@ const LenderCreditCheck = () => {
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div>
                                                 <Label className="text-muted-foreground">Email</Label>
-                                                <p className="font-medium">{searchResult.email || "N/A"}</p>
+                                                <p className="font-medium">{searchResult.email || "—"}</p>
                                             </div>
                                             <div>
-                                                <Label className="text-muted-foreground">Business Name</Label>
-                                                <p className="font-medium">{searchResult.businessName || "Individual"}</p>
+                                                <Label className="text-muted-foreground">Phone</Label>
+                                                <p className="font-medium">{searchResult.phone || "—"}</p>
                                             </div>
                                             <div>
                                                 <Label className="text-muted-foreground">Approved Limit</Label>
-                                                <p className="font-medium">R {searchResult.limit}</p>
+                                                <p className="font-medium">
+                                                    {searchResult.limit != null ? `R ${searchResult.limit}` : "—"}
+                                                </p>
                                             </div>
                                             <div>
-                                                <Label className="text-muted-foreground">History of Defaults</Label>
-                                                <p className={`font-medium ${searchResult.defaults > 0 ? "text-red-500" : "text-emerald-500"}`}>
-                                                    {searchResult.defaults || "None"}
+                                                <Label className="text-muted-foreground">Outstanding Balance</Label>
+                                                <p className="font-medium">
+                                                    {searchResult.balance != null ? `R ${searchResult.balance}` : "—"}
                                                 </p>
                                             </div>
                                         </div>

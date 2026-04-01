@@ -82,7 +82,14 @@ const DriverRoute = () => {
                             <div>
                                 <Label className="text-muted-foreground text-xs uppercase">Customer Contact</Label>
                                 <p className="font-medium text-lg leading-tight">{order.customerName}</p>
-                                <Button variant="link" className="p-0 h-auto text-blue-600">Call Customer</Button>
+                                <Button
+                                    variant="link"
+                                    className="p-0 h-auto text-blue-600"
+                                    disabled={!order.customerPhone}
+                                    onClick={() => { if (order.customerPhone) window.location.href = `tel:${order.customerPhone}`; }}
+                                >
+                                    Call Customer
+                                </Button>
                             </div>
                         </div>
                     </CardContent>

@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { db, auth } from "@/lib/firebase";
 import { User, UserRole } from "@/types";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, RefreshCw, Mail } from "lucide-react";
@@ -50,6 +51,9 @@ const AdminUsers = () => {
     };
 
     const handleStatusChange = async (userId: string, newStatus: 'active' | 'banned') => {
+        if (newStatus === 'banned') {
+            if (!window.confirm("Are you sure you want to ban this user?")) return;
+        }
         try {
             await updateDoc(doc(db, "users", userId), { status: newStatus });
             setUsers(prev => prev.map(u => u.uid === userId || u.id === userId ? { ...u, status: newStatus } : u));
@@ -59,9 +63,13 @@ const AdminUsers = () => {
         }
     };
 
-    const handlePasswordReset = (email: string) => {
-        // In a real app, trigger Firebase sendPasswordResetEmail
-        toast.success(`Password reset email sent to ${email}.`);
+    const handlePasswordReset = async (email: string) => {
+        try {
+            await sendPasswordResetEmail(auth, email);
+            toast.success(`Password reset email sent to ${email}.`);
+        } catch (error) {
+            toast.error(`Failed to send password reset email to ${email}.`);
+        }
     };
 
     const getRoleBadgeColor = (role: UserRole) => {

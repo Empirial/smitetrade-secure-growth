@@ -7,14 +7,22 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCredit } from "@/context/CreditContext";
+import { useStore } from "@/context/StoreContext";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { USE_MOCK_DATA } from "@/lib/constants";
 
 const LoanQuote = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [accepted, setAccepted] = useState(false);
+    const { borrowers, applications, approveApplication } = useCredit();
+    const { user } = useStore();
 
     // Initial data from URL
     const borrowerName = searchParams.get('borrower') || "Unknown Borrower";
+    const appId = searchParams.get('appId') || null;
     const initialPrincipal = parseFloat(searchParams.get('amount') || "0");
     const initialTermDays = parseInt(searchParams.get('term') || "30", 10);
 
@@ -38,10 +46,51 @@ const LoanQuote = () => {
         }
     }, [principal]);
 
-    const handleSendQuote = () => {
+    const handleSendQuote = async () => {
         setAccepted(true);
-        toast.success(`Custom Quote Sent to ${borrowerName}!`);
-        // In a real app, this would ping the backend to change application status to 'Pending Customer Acceptance'
+
+        const borrower = borrowers.find(b =>
+            b.name.toLowerCase() === borrowerName.toLowerCase()
+        );
+
+        const quoteData = {
+            borrowerName,
+            borrowerId: borrower?.id ?? null,
+            lenderId: user?.uid || user?.id || null,
+            principal,
+            termDays,
+            initiationFee,
+            monthlyServiceFee,
+            interestRate,
+            interestAmount,
+            totalCostOfCredit,
+            status: 'pending_acceptance',
+            createdAt: new Date().toISOString(),
+        };
+
+        try {
+            if (!USE_MOCK_DATA) {
+                await addDoc(collection(db, 'loan_quotes'), quoteData);
+            }
+
+            // If an appId was passed, mark the application as approved
+            if (appId) {
+                const matchingApp = applications.find(a => a.id === appId);
+                if (matchingApp) {
+                    await approveApplication(appId);
+                }
+            }
+
+            toast.success(`Quote sent to ${borrowerName}!`, {
+                description: `Total repayment: R ${totalCostOfCredit.toFixed(2)} over ${termDays} days.`
+            });
+        } catch (err) {
+            console.error("Failed to save quote:", err);
+            toast.error("Failed to send quote. Please try again.");
+            setAccepted(false);
+            return;
+        }
+
         setTimeout(() => {
             navigate('/lender/applications');
         }, 1500);

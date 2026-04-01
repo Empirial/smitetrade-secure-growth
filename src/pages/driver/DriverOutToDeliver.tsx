@@ -6,12 +6,16 @@ import { Progress } from "@/components/ui/progress";
 import { MapPin, Phone, CheckCircle, Navigation, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "@/context/StoreContext";
-import { useState } from "react";
 
 const DriverOutToDeliver = () => {
     const navigate = useNavigate();
     const { orders, updateOrderStatus, user, currentStore } = useStore();
-    const [progress, setProgress] = useState(33);
+    const statusProgressMap: Record<string, number> = {
+        Pending: 0,
+        Processing: 33,
+        'Out for Delivery': 66,
+        Delivered: 100,
+    };
 
     // Find the active order for this driver
     // In a real app, we'd query by driverId and status 'Out for Delivery'
@@ -20,7 +24,7 @@ const DriverOutToDeliver = () => {
     const handleComplete = () => {
         if (currentOrder) {
             updateOrderStatus(currentOrder.id, "Delivered");
-            navigate("/driver/delivered");
+            navigate("/driver/delivered", { state: { orderId: currentOrder.id } });
         }
     };
 
@@ -56,7 +60,7 @@ const DriverOutToDeliver = () => {
                             <div>
                                 <CardTitle className="text-xl">{currentOrder.customerName}</CardTitle>
                                 <div className="flex items-center text-muted-foreground text-sm mt-1">
-                                    <Phone className="h-3 w-3 mr-1" /> +27 82 123 4567
+                                    <Phone className="h-3 w-3 mr-1" /> {currentOrder.customerPhone || "No phone on file"}
                                 </div>
                             </div>
                             <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center border shadow-sm">
@@ -86,9 +90,9 @@ const DriverOutToDeliver = () => {
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span>Delivery Progress</span>
-                                <span>{progress}%</span>
+                                <span>{statusProgressMap[currentOrder.status] ?? 0}%</span>
                             </div>
-                            <Progress value={progress} className="h-2" />
+                            <Progress value={statusProgressMap[currentOrder.status] ?? 0} className="h-2" />
                         </div>
 
                         <div className="bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/20 flex gap-3 text-sm text-yellow-400">

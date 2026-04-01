@@ -1,18 +1,69 @@
 
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ShieldCheck } from "lucide-react";
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
+const FALLBACK_LOGS = [
+    { id: "1", action: "Price Updated", user: "John Owner", details: "Changed 'Bread' price from R15.00 to R16.00", timestamp: "2024-05-15 14:30" },
+    { id: "2", action: "Refund Processed", user: "Sarah Cashier", details: "Refunded Order #1002 (Items Damaged)", timestamp: "2024-05-15 12:45" },
+    { id: "3", action: "User Suspended", user: "System Admin", details: "Suspended user 'Old Employee'", timestamp: "2024-05-14 09:15" },
+    { id: "4", action: "Stock Adjustment", user: "John Owner", details: "Added 50 units to 'Milk 1L'", timestamp: "2024-05-14 08:30" },
+    { id: "5", action: "Credit Limit Increased", user: "Admin", details: "Increased credit limit for 'Tshepo' to R1000", timestamp: "2024-05-13 16:20" },
+];
+
+interface AuditLog {
+    id: string;
+    action: string;
+    user: string;
+    details: string;
+    timestamp: string;
+}
 
 const AdminAuditLogs = () => {
-    // Mock audit logs
-    const logs = [
-        { id: 1, action: "Price Updated", user: "John Owner", details: "Changed 'Bread' price from R15.00 to R16.00", timestamp: "2024-05-15 14:30" },
-        { id: 2, action: "Refund Processed", user: "Sarah Cashier", details: "Refunded Order #1002 (Items Damaged)", timestamp: "2024-05-15 12:45" },
-        { id: 3, action: "User Suspended", user: "System Admin", details: "Suspended user 'Old Employee'", timestamp: "2024-05-14 09:15" },
-        { id: 4, action: "Stock Adjustment", user: "John Owner", details: "Added 50 units to 'Milk 1L'", timestamp: "2024-05-14 08:30" },
-        { id: 5, action: "Credit Limit Increased", user: "Admin", details: "Increased credit limit for 'Tshepo' to R1000", timestamp: "2024-05-13 16:20" },
-    ];
+    const [logs, setLogs] = useState<AuditLog[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchLogs = async () => {
+            setIsLoading(true);
+            try {
+                const q = query(
+                    collection(db, "audit_logs"),
+                    orderBy("timestamp", "desc"),
+                    limit(50)
+                );
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) {
+                    setLogs(FALLBACK_LOGS);
+                } else {
+                    const fetched = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            action: data.action || "",
+                            user: data.user || data.userId || "",
+                            details: data.details || "",
+                            timestamp: data.timestamp?.toDate
+                                ? data.timestamp.toDate().toLocaleString()
+                                : String(data.timestamp || ""),
+                        } as AuditLog;
+                    });
+                    setLogs(fetched);
+                }
+            } catch (error) {
+                console.error("Error fetching audit logs:", error);
+                setLogs(FALLBACK_LOGS);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLogs();
+    }, []);
 
     return (
         <DashboardLayout role="admin">
@@ -41,7 +92,11 @@ const AdminAuditLogs = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {logs.map((log) => (
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center py-8">Loading audit logs...</TableCell>
+                                    </TableRow>
+                                ) : logs.map((log) => (
                                     <TableRow key={log.id}>
                                         <TableCell className="whitespace-nowrap font-mono text-xs text-muted-foreground">
                                             {log.timestamp}

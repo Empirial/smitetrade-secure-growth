@@ -11,7 +11,7 @@ import { Loan } from "@/types";
 import { usePayfast } from "@/hooks/usePayfast";
 import { useStore } from "@/context/StoreContext";
 const LenderCollections = () => {
-    const { loans, sendReminder, recordPayment } = useCredit();
+    const { loans, borrowers, sendReminder, recordPayment } = useCredit();
     const { user } = useStore();
     const { pay, loading: payfastLoading } = usePayfast();
 
@@ -43,7 +43,9 @@ const LenderCollections = () => {
                                     </CardContent>
                                 </Card>
                             ) : (
-                                overdueLoans.map((loan: Loan) => (
+                                overdueLoans.map((loan: Loan) => {
+                                    const borrower = borrowers.find(b => b.id === loan.borrowerId);
+                                    return (
                                     <Dialog key={loan.id}>
                                         <Card className="border-l-4 border-l-red-500 hover:bg-slate-900/50 transition-colors">
                                             <CardHeader className="flex flex-row items-center justify-between py-4">
@@ -87,7 +89,9 @@ const LenderCollections = () => {
                                                             <User className="h-4 w-4 text-emerald-500" />
                                                             <div>
                                                                 <p className="font-medium">Primary Contact</p>
-                                                                <p className="text-muted-foreground">082 123 4567 • {loan.borrowerName.toLowerCase().replace(' ', '.')}@email.com</p>
+                                                                <p className="text-muted-foreground">
+                                                                    {borrower?.phone ?? "—"}{borrower?.email ? ` • ${borrower.email}` : ""}
+                                                                </p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-3">
@@ -101,7 +105,7 @@ const LenderCollections = () => {
                                                             <MapPin className="h-4 w-4 text-emerald-500" />
                                                             <div>
                                                                 <p className="font-medium">Operating Address</p>
-                                                                <p className="text-muted-foreground">45 Zone 6, Diepkloof, Soweto</p>
+                                                                <p className="text-muted-foreground">—</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -185,7 +189,7 @@ const LenderCollections = () => {
                                                         amount: loan.amount,
                                                         itemName: 'Loan Repayment - ' + loan.borrowerName,
                                                         customStr1: 'lender_repayment',
-                                                        customStr2: user?.storeId,
+                                                        customStr2: user?.uid || user?.id,
                                                         customStr3: loan.id,
                                                     })}
                                                 >
@@ -194,7 +198,8 @@ const LenderCollections = () => {
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                     </div>

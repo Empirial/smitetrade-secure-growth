@@ -29,7 +29,7 @@ const OwnerLogin = () => {
     const [authError, setAuthError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (user?.role === "owner" || user?.role === "admin") navigate("/owner/dashboard", { replace: true });
+        if (user?.role === "owner") navigate("/owner/dashboard", { replace: true });
     }, [user, navigate]);
 
     const validate = () => {

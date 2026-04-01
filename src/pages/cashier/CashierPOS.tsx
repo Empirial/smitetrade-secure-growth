@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Trash2, ShoppingCart, ArrowRight, Camera, WifiOff, Save, FolderOpen, RotateCcw, CreditCard } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -445,17 +446,17 @@ const CashierPOS = () => {
                                     <DialogDescription>Please provide a reason for removing this item.</DialogDescription>
                                 </DialogHeader>
                                 <div className="py-4">
-                                    <select
-                                        className="w-full flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                        value={voidReason}
-                                        onChange={(e) => setVoidReason(e.target.value)}
-                                    >
-                                        <option value="" disabled>Select Reason...</option>
-                                        <option value="Customer changed mind">Customer changed mind</option>
-                                        <option value="Incorrect item scanned">Incorrect item scanned</option>
-                                        <option value="Item damaged">Item damaged</option>
-                                        <option value="Customer doesn't have enough money">Customer doesn't have enough money</option>
-                                    </select>
+                                    <Select value={voidReason} onValueChange={setVoidReason}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select Reason..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Customer changed mind">Customer changed mind</SelectItem>
+                                            <SelectItem value="Incorrect item scanned">Incorrect item scanned</SelectItem>
+                                            <SelectItem value="Item damaged">Item damaged</SelectItem>
+                                            <SelectItem value="Customer doesn't have enough money">Customer doesn't have enough money</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <DialogFooter>
                                     <Button variant="outline" onClick={() => setIsVoidOpen(false)}>Cancel</Button>

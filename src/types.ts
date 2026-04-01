@@ -102,6 +102,7 @@ export interface Order {
     date: string;
     driverId?: string;
     userId?: string; // Link to customer
+    customerPhone?: string; // Customer contact number for driver use
     type?: 'instore' | 'online' | 'delivery';
     storeId?: string;
     storeName?: string;

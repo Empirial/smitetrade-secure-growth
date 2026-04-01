@@ -49,7 +49,7 @@ const OwnerCreditReview = () => {
                     <CardContent className="space-y-4">
                         <div className="flex gap-2">
                             <Input
-                                placeholder="e.g. 9001015009087"
+                                placeholder="Enter SS-ID, phone, or name"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -59,7 +59,6 @@ const OwnerCreditReview = () => {
                                 <Search className="mr-2 h-4 w-4" /> Lookup
                             </Button>
                         </div>
-                        <p className="text-xs text-slate-400">Try "9001015009087" (Gold) or "8505055009088" (Bronze)</p>
                     </CardContent>
                 </Card>
 

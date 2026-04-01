@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Activity, CreditCard, DollarSign, Server, MapPin, Clock, ShoppingCart, User } from "lucide-react";
+import { useStore } from "@/context/StoreContext";
 
 const mockTransactions = [
     { id: 1, store: "Thabo's Spaza", terminal: 882, items: 3, amount: 145, time: "Just now", customer: "Sipho Mthembu", phone: "072 345 6789", method: "Cash", address: "12 Vilakazi St, Soweto", products: ["Bread", "Milk", "Sugar"] },
@@ -16,6 +17,14 @@ const mockTransactions = [
 
 const AdminPOSMonitor = () => {
     const [selected, setSelected] = useState<typeof mockTransactions[0] | null>(null);
+    const { stores, orders } = useStore();
+
+    const activeTerminals = stores.length > 0 ? stores.length : "N/A";
+    const recentOrders = orders.filter(o => o.status !== 'Cancelled');
+    const recentOrdersCount = recentOrders.length > 0 ? recentOrders.length : "N/A";
+    const recentVolume = recentOrders.length > 0
+        ? `R ${recentOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString()}`
+        : "N/A";
 
     return (
         <DashboardLayout role="admin">
@@ -28,18 +37,18 @@ const AdminPOSMonitor = () => {
                         <Server className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">142</div>
-                        <p className="text-xs text-muted-foreground">+12 since last hour</p>
+                        <div className="text-2xl font-bold">{activeTerminals}</div>
+                        <p className="text-xs text-muted-foreground">Registered stores</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Transactions (1h)</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">1,893</div>
-                        <p className="text-xs text-muted-foreground">98% Success Rate</p>
+                        <div className="text-2xl font-bold">{recentOrdersCount}</div>
+                        <p className="text-xs text-muted-foreground">Non-cancelled orders</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -48,18 +57,18 @@ const AdminPOSMonitor = () => {
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">6%</div>
-                        <p className="text-xs text-muted-foreground">Healthy</p>
+                        <div className="text-2xl font-bold">N/A</div>
+                        <p className="text-xs text-muted-foreground">No telemetry source</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Volume (1h)</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Volume</CardTitle>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">R 45.2k</div>
-                        <p className="text-xs text-muted-foreground">+18% from yesterday</p>
+                        <div className="text-2xl font-bold">{recentVolume}</div>
+                        <p className="text-xs text-muted-foreground">From all orders</p>
                     </CardContent>
                 </Card>
             </div>

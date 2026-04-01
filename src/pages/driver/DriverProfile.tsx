@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Phone, Mail, Car, MapPin, ShieldCheck, Camera } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/context/StoreContext";
@@ -34,6 +34,17 @@ const DriverProfile = () => {
     }, [user]);
 
     const [isEditing, setIsEditing] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => setAvatarPreview(reader.result as string);
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -70,9 +81,26 @@ const DriverProfile = () => {
                         <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
                             <div className="relative">
                                 <div className="h-24 w-24 rounded-full bg-slate-100 flex items-center justify-center border-4 border-background shadow-sm overflow-hidden">
-                                    <User className="h-12 w-12 text-slate-400" />
+                                    {avatarPreview ? (
+                                        <img src={avatarPreview} alt="Avatar preview" className="h-full w-full object-cover" />
+                                    ) : (
+                                        <User className="h-12 w-12 text-slate-400" />
+                                    )}
                                 </div>
-                                <Button size="icon" variant="outline" className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-sm bg-background">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleAvatarChange}
+                                />
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-sm bg-background"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    type="button"
+                                >
                                     <Camera className="h-4 w-4" />
                                 </Button>
                             </div>

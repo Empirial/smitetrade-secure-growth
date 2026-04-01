@@ -13,7 +13,7 @@ const AdminDashboard = () => {
     const { suppliers, staff, stores, orders, products, customers } = useStore();
     const { borrowers, loans } = useCredit();
 
-    const totalUsers = customers.length + staff.length + borrowers.length + 12; // +12 for owners/drivers/admins
+    const totalUsers = customers.length + staff.length + borrowers.length;
     const activeLoans = loans.filter(l => l.status === 'active').length;
     const totalPortfolio = loans.reduce((sum, l) => sum + l.amount, 0);
     const totalRevenue = orders.filter(o => o.status === 'Delivered' || o.status === 'Paid').reduce((sum, o) => sum + o.total, 0);

@@ -268,9 +268,9 @@ const OwnerStaff = () => {
                                                     <span className="text-muted-foreground">Username:</span>
                                                     <span className="font-mono">{member.username || "-"}</span>
                                                     <span className="text-muted-foreground">Password:</span>
-                                                    <span className="font-mono">{(member as StaffMember).password || "-"}</span>
+                                                    <span className="font-mono">{(member as StaffMember).password ? "••••••••" : "-"}</span>
                                                     <span className="text-muted-foreground">POS PIN:</span>
-                                                    <span className="font-mono">{member.pin || "-"}</span>
+                                                    <span className="font-mono">{member.pin ? "••••" : "-"}</span>
                                                 </div>
                                             </div>
                                             <div className="flex justify-end">

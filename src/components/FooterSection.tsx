@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import logo from "@/assets/smitetrade-logo.jpeg";
 
 const FooterSection = () => {
@@ -16,10 +18,26 @@ const FooterSection = () => {
           Your business is your intellectual property. We protect it with the SMITETRADE Shield.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-muted-foreground mb-8">
-          <span>Founder: <span className="text-foreground font-medium">Clifford Nkanyani</span></span>
+        <div className="mb-8">
+          <Link to="/portals">
+            <Button size="lg" className="h-12 px-8 text-base bg-foreground text-background hover:bg-foreground/90 rounded-full">
+              Get Started
+            </Button>
+          </Link>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-muted-foreground mb-6">
+          <a href="#privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
           <span className="hidden sm:inline text-border">|</span>
-          <span>Lead Developer: <span className="text-foreground font-medium">Lufuno Mphela</span></span>
+          <a href="#terms" className="hover:text-foreground transition-colors">Terms of Service</a>
+          <span className="hidden sm:inline text-border">|</span>
+          <a href="mailto:info@smitetrade.co.za" className="hover:text-foreground transition-colors">Contact / Support</a>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs text-muted-foreground/50 mb-4">
+          <span>Founder: Clifford Nkanyani</span>
+          <span className="hidden sm:inline text-border">|</span>
+          <span>Lead Developer: Lufuno Mphela</span>
         </div>
 
         <p className="text-xs text-muted-foreground/60">

@@ -1,9 +1,16 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { CheckCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const DriverDelivered = () => {
+    const location = useLocation();
+    const state = location.state as { orderId?: string; earnings?: number; distance?: number } | null;
+
+    const orderId = state?.orderId;
+    const earnings = state?.earnings;
+    const distance = state?.distance;
+
     return (
         <DashboardLayout role="driver">
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in zoom-in duration-500">
@@ -12,17 +19,19 @@ const DriverDelivered = () => {
                 </div>
                 <div>
                     <h1 className="text-4xl font-bold">Delivery Complete!</h1>
-                    <p className="text-muted-foreground mt-2">ORD-992 has been closed.</p>
+                    <p className="text-muted-foreground mt-2">
+                        {orderId ? `${orderId} has been closed.` : "Order has been closed."}
+                    </p>
                 </div>
 
                 <div className="p-4 bg-muted rounded-lg w-full max-w-sm">
                     <div className="flex justify-between text-sm mb-2">
                         <span>Earnings</span>
-                        <span className="font-bold">R 45.00</span>
+                        <span className="font-bold">{earnings != null ? `R ${earnings.toFixed(2)}` : "—"}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span>Distance</span>
-                        <span className="font-bold">3.2 km</span>
+                        <span className="font-bold">{distance != null ? `${distance} km` : "—"}</span>
                     </div>
                 </div>
 

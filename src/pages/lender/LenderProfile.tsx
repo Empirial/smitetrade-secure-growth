@@ -17,9 +17,9 @@ const LenderProfile = () => {
     const { addLenderOffer } = useCredit();
 
     // Profile form state
-    const [name, setName] = useState(user?.name || "Lufuno Lender");
-    const [email, setEmail] = useState(user?.email || "lender@smitetrade.com");
-    const [phone, setPhone] = useState("+27 12 345 6789");
+    const [name, setName] = useState(user?.name || "");
+    const [email, setEmail] = useState(user?.email || "");
+    const [phone, setPhone] = useState(user?.phone || "");
 
     // Password form state
     const [currentPassword, setCurrentPassword] = useState("");

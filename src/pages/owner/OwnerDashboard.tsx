@@ -42,7 +42,7 @@ const OwnerDashboard = () => {
     // 1. Total Revenue (Sum of all order totals)
     const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
 
-    // 2. Net Profit (Mock: 30% margin)
+    // 2. Est. Profit (30% assumption)
     const netProfit = totalRevenue * 0.3;
 
     // 3. Low Stock Items
@@ -52,18 +52,19 @@ const OwnerDashboard = () => {
     const uniqueCustomers = new Set(orders.map(o => o.customerName)).size;
 
     // --- Prepare Chart Data ---
-    // Group orders by day (Mocking last 7 days for the chart structure)
-    // In a real app, this would dynamically group the 'orders' array by date.
-    // For now, we will map real revenue into the "today" slot or spread it out mockingly to keep the chart functional visually.
-    const chartData = [
-        { name: 'Mon', sales: 0, profit: 0 },
-        { name: 'Tue', sales: 0, profit: 0 },
-        { name: 'Wed', sales: 0, profit: 0 },
-        { name: 'Thu', sales: 0, profit: 0 },
-        { name: 'Fri', sales: 0, profit: 0 },
-        { name: 'Sat', sales: 0, profit: 0 },
-        { name: 'Sun', sales: totalRevenue, profit: netProfit }, // All current sales shown on Sun for demo
-    ];
+    // Group orders by actual day of week
+    const dayTotals: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+    orders.forEach(order => {
+        const day = new Date(order.date).toLocaleDateString('en-ZA', { weekday: 'short' });
+        if (day in dayTotals) {
+            dayTotals[day] += order.total;
+        }
+    });
+    const chartData = (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const).map(name => ({
+        name,
+        sales: dayTotals[name],
+        profit: dayTotals[name] * 0.3,
+    }));
 
     // --- Recent Activity ---
     // Take the last 5 orders
@@ -85,7 +86,7 @@ const OwnerDashboard = () => {
                     color="text-green-500"
                 />
                 <StatCard
-                    title="Net Profit"
+                    title="Est. Profit (30%)"
                     value={`R ${netProfit.toFixed(2)}`}
                     subtext="estimated 30% margin"
                     icon={TrendingUp}
@@ -137,7 +138,7 @@ const OwnerDashboard = () => {
                                     <Tooltip cursor={{ fill: 'transparent' }} />
                                     <Legend verticalAlign="top" height={36} iconType="circle" />
                                     <Bar dataKey="sales" fill="#10b981" radius={[4, 4, 0, 0]} name="Sales" />
-                                    <Bar dataKey="profit" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Profit" />
+                                    <Bar dataKey="profit" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Est. Profit (30%)" />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>

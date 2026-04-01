@@ -15,9 +15,10 @@ const CashierCheckout = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { placeOrder, currentStore, user } = useStore();
-    const { borrowers } = useCredit();
+    const { borrowers, purchaseOnCredit } = useCredit();
     const { cart, total } = location.state || { cart: [], total: 0 };
     const [success, setSuccess] = useState(false);
+    const [completedOrderId, setCompletedOrderId] = useState<string>("");
 
     // Payment State
     const [paymentMethod, setPaymentMethod] = useState<"Select" | "Cash" | "Card" | "SS-ID">("Select");
@@ -46,6 +47,23 @@ const CashierCheckout = () => {
     }, [amountTendered, total, paymentMethod]);
 
     const completeTransaction = useCallback(async () => {
+        // For SS-ID (Store Credit) payments, deduct from the customer's credit account first.
+        // If deduction fails (e.g. insufficient credit), abort — do not place the order.
+        const ssidAmount = isSplitPayment
+            ? parseFloat(splitAmounts.ssid || "0")
+            : paymentMethod === "SS-ID" ? total : 0;
+
+        if (ssidAmount > 0 && ssidCustomer) {
+            const creditOk = await purchaseOnCredit(ssidAmount);
+            if (!creditOk) {
+                // purchaseOnCredit already shows a toast — just abort
+                return;
+            }
+        }
+
+        const orderId = "ORD-" + Date.now();
+        setCompletedOrderId(orderId);
+
         await placeOrder({
             name: ssidCustomer ? ssidCustomer.name : "Walk-in Customer",
             address: "In-Store",
@@ -53,7 +71,7 @@ const CashierCheckout = () => {
             paymentMethod: isSplitPayment ? "Split" : paymentMethod,
         });
         setSuccess(true);
-    }, [placeOrder, cart, isSplitPayment, paymentMethod, ssidCustomer]);
+    }, [placeOrder, purchaseOnCredit, cart, isSplitPayment, paymentMethod, ssidCustomer, splitAmounts, total]);
 
     const handleSsidSearch = () => {
         setSsidError("");
@@ -129,7 +147,7 @@ const CashierCheckout = () => {
                         <CheckCircle2 className="h-12 w-12 text-green-600" />
                     </div>
                     <h1 className="text-3xl font-bold">Payment Successful!</h1>
-                    <p className="text-muted-foreground">Receipt #TX-882992 sent to system.</p>
+                    <p className="text-muted-foreground">Receipt #{completedOrderId} sent to system.</p>
                     <div className="flex gap-4 mt-8">
                         <Button variant="outline" onClick={() => window.print()}>Print Receipt</Button>
                         <Button className="bg-emerald-600" onClick={() => navigate("/cashier/pos")}>New Sale</Button>
@@ -237,11 +255,12 @@ const CashierCheckout = () => {
                                         <h3 className="text-3xl font-bold text-blue-900 mb-2">R {total.toFixed(2)}</h3>
                                         <p className="text-blue-700">Please process this amount on the physical card terminal.</p>
                                     </div>
+                                    {/* TODO: Integrate with physical card terminal */}
                                     <Button
                                         className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700"
                                         onClick={handlePay}
                                     >
-                                        Transaction Approved on Terminal
+                                        Mark as Card Payment
                                     </Button>
                                 </div>
                             </CardHeader>

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useStore } from "@/context/StoreContext";
 import { Store, Eye, Ban, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const AdminStores = () => {
     const { stores, products, orders } = useStore();
@@ -21,8 +23,8 @@ const AdminStores = () => {
         { id: "s5", name: "Ubuntu Store", ownerId: "u5", address: "3 Hope Rd", suburb: "Alexandra", city: "Johannesburg", province: "Gauteng", status: "Active" },
     ]).map(store => ({
         ...store,
-        productCount: products.filter(p => p.storeId === store.id).length || Math.floor(Math.random() * 30) + 5,
-        totalSales: orders.filter(o => (o as any).storeId === store.id).reduce((sum, o) => sum + o.total, 0) || Math.floor(Math.random() * 25000) + 5000,
+        productCount: products.filter(p => p.storeId === store.id).length || "—",
+        totalSales: orders.filter(o => (o as any).storeId === store.id).reduce((sum, o) => sum + o.total, 0) || 0,
         owner: "Store Owner",
     }));
 
@@ -30,10 +32,16 @@ const AdminStores = () => {
 
     const getStatus = (store: any) => storeStatuses[store.id] || store.status || "Active";
 
-    const toggleStatus = (storeId: string, currentStatus: string) => {
+    const toggleStatus = async (storeId: string, currentStatus: string) => {
         const newStatus = currentStatus === "Active" ? "Suspended" : "Active";
         setStoreStatuses(prev => ({ ...prev, [storeId]: newStatus }));
-        toast.success(`Store ${newStatus === "Active" ? "activated" : "suspended"}`);
+        try {
+            await updateDoc(doc(db, "stores", storeId), { status: newStatus });
+            toast.success(`Store ${newStatus === "Active" ? "activated" : "suspended"}`);
+        } catch (error) {
+            setStoreStatuses(prev => ({ ...prev, [storeId]: currentStatus }));
+            toast.error("Failed to update store status.");
+        }
     };
 
     return (

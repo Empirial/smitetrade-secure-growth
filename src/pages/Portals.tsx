@@ -62,7 +62,7 @@ const Portals = () => {
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
             <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center space-y-8">
-                <div className="text-center space-y-4 max-w-3xl">
+                <div className="text-center space-y-4 max-w-3xl pt-12 sm:pt-0">
                     <Link to="/">
                         <Button variant="ghost" className="absolute left-4 top-4 md:left-8 md:top-8 text-muted-foreground hover:text-foreground">
                             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home

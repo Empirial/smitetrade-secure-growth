@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import Webcam from "react-webcam";
-import { BrowserMultiFormatReader } from "@zxing/library";
+import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
+import { DecodeHintType } from "@zxing/library";
 
 import { useStore } from "@/context/StoreContext";
 import { Product } from "@/types";
@@ -145,61 +145,55 @@ const CashierPOS = () => {
     const [customFile, setCustomFile] = useState<File | undefined>(undefined);
 
     // Scanner Logic
-    const webcamRef = useRef<Webcam>(null);
-    const codeReader = useRef(new BrowserMultiFormatReader());
-    const lastScannedTime = useRef<number>(0);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const controlsRef = useRef<IScannerControls | null>(null);
+    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+    const [deviceIndex, setDeviceIndex] = useState(0);
     const [cameraError, setCameraError] = useState<string | null>(null);
-    const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+
+    const codeReader = useRef((() => {
+        const hints = new Map();
+        hints.set(DecodeHintType.TRY_HARDER, true);
+        return new BrowserMultiFormatReader(hints);
+    })());
 
     const handleBarcodeLookup = useCallback((barcode: string) => {
         const found = products.find(p => p.barcode === barcode || p.id === barcode);
         if (found) {
             addToCart(found);
             toast({ title: "Product Added", description: `${found.name} added to cart from scan.` });
-            setIsCustomOpen(false); // Close dialog on success
+            setIsCustomOpen(false);
         } else {
             toast({ title: "Not Found", description: `Product not found for barcode: ${barcode}`, variant: "destructive" });
         }
     }, [products]);
 
-    const scanForBarcode = useCallback(() => {
-        if (!isCustomOpen) return; // Only scan when dialog is open
-
-        if (webcamRef.current && webcamRef.current.video) {
-            const video = webcamRef.current.video;
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                codeReader.current.decodeFromVideoElement(video).then(result => {
-                    if (result) {
-                        const text = result.getText();
-                        const now = Date.now();
-                        if (now - lastScannedTime.current > 3000) {
-                            lastScannedTime.current = now;
-                            handleBarcodeLookup(text);
-                        }
-                    }
-                }).catch(err => {
-                    // Ignore NotFoundException
-                });
-            }
+    const startScanning = useCallback(async () => {
+        if (!videoRef.current) return;
+        setCameraError(null);
+        try {
+            const deviceList = await BrowserMultiFormatReader.listVideoInputDevices();
+            setDevices(deviceList);
+            const deviceId = deviceList[deviceIndex]?.deviceId;
+            controlsRef.current = await codeReader.current.decodeFromVideoDevice(
+                deviceId,
+                videoRef.current,
+                (result) => { if (result) handleBarcodeLookup(result.getText()); }
+            );
+        } catch {
+            setCameraError("Unable to access camera. Please check permissions.");
         }
-    }, [handleBarcodeLookup, isCustomOpen]);
+    }, [deviceIndex, handleBarcodeLookup]);
 
     useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isCustomOpen) {
-            interval = setInterval(scanForBarcode, 500);
-        }
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-    }, [scanForBarcode, isCustomOpen]);
+        if (isCustomOpen) startScanning();
+        else controlsRef.current?.stop();
+        return () => { controlsRef.current?.stop(); };
+    }, [isCustomOpen, deviceIndex]);
 
     const toggleCamera = () => {
-        setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
-    };
-
-    const handleCameraError = () => {
-        setCameraError("Unable to access camera. Please check permissions.");
+        controlsRef.current?.stop();
+        setDeviceIndex(prev => (prev + 1) % Math.max(devices.length, 1));
     };
 
     const handleAddCustomItem = () => {
@@ -263,37 +257,25 @@ const CashierPOS = () => {
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
                                     {/* Live Camera View */}
-                                    <div className="aspect-video bg-black rounded-lg relative overflow-hidden flex items-center justify-center">
+                                    <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
                                         {cameraError ? (
-                                            <div className="flex flex-col items-center p-4 text-center">
+                                            <div className="flex flex-col items-center justify-center h-full p-4 text-center">
                                                 <Camera className="h-8 w-8 text-muted-foreground mb-2" />
                                                 <p className="text-white text-sm">{cameraError}</p>
-                                                <Button variant="outline" size="sm" className="mt-2" onClick={() => setCameraError(null)}>Retry</Button>
+                                                <Button variant="outline" size="sm" className="mt-2" onClick={startScanning}>Retry</Button>
                                             </div>
                                         ) : (
                                             <>
-                                                <Webcam
-                                                    ref={webcamRef}
-                                                    audio={false}
-                                                    screenshotFormat="image/jpeg"
-                                                    videoConstraints={{ width: 640, height: 480, facingMode }}
-                                                    onUserMediaError={handleCameraError}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <div className="absolute inset-0 border-2 border-emerald-500/50 rounded-lg z-10 animate-pulse m-8 pointer-events-none"></div>
-                                                <div className="absolute bottom-2 left-2 text-white text-xs bg-black/60 px-2 py-1 rounded backdrop-blur-sm">Scanning...</div>
-                                                <Button
-                                                    variant="secondary"
-                                                    size="icon"
-                                                    onClick={toggleCamera}
-                                                    className="absolute bottom-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
-                                                >
+                                                <video ref={videoRef} className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                    <div className="w-48 h-24 border-2 border-emerald-400/70 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                                                </div>
+                                                <Button variant="secondary" size="icon" onClick={toggleCamera} className="absolute bottom-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm">
                                                     <RotateCcw className="h-4 w-4" />
                                                 </Button>
                                             </>
                                         )}
                                     </div>
-
                                     <div className="text-center text-xs text-slate-400 -mt-2">
                                         Align barcode within frame to auto-add item.
                                     </div>
@@ -392,14 +374,14 @@ const CashierPOS = () => {
                 {/* Cart */}
                 <Card className="w-full lg:w-[350px] flex flex-col h-full shadow-lg border-slate-800 bg-slate-900">
                     <CardContent className="p-0 flex flex-col h-full text-white">
-                        <div className="p-4 border-b border-slate-800 bg-slate-950">
+                        <div className="p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between gap-2">
                             <h2 className="font-semibold flex items-center gap-2">
                                 <ShoppingCart size={18} /> Cart ({cart.length})
                             </h2>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 absolute right-4 top-3 text-amber-600 border-amber-200 hover:bg-amber-50"
+                                className="h-8 shrink-0 text-amber-600 border-amber-200 hover:bg-amber-50"
                                 onClick={holdCart}
                                 disabled={cart.length === 0}
                             >

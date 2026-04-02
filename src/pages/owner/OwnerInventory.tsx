@@ -7,13 +7,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, Package, ScanLine, Camera, RotateCcw } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Package, ScanLine, Camera, RotateCcw, Layers } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useStore } from "@/context/StoreContext";
 import { useToast } from "@/hooks/use-toast";
-import Webcam from "react-webcam";
-import { BrowserMultiFormatReader } from "@zxing/library";
+import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
+import { DecodeHintType } from "@zxing/library";
 
 const OwnerInventory = () => {
     const { products, addProduct, deleteProduct, updateProduct } = useStore();
@@ -43,14 +43,19 @@ const OwnerInventory = () => {
 
     // Scanner state
     const [isScannerOpen, setIsScannerOpen] = useState(false);
-    const webcamRef = useRef<Webcam>(null);
-    const codeReader = useRef(new BrowserMultiFormatReader());
-    const lastScannedTime = useRef<number>(0);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const controlsRef = useRef<IScannerControls | null>(null);
+    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+    const [deviceIndex, setDeviceIndex] = useState(0);
     const [cameraError, setCameraError] = useState<string | null>(null);
-    const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+
+    const codeReader = useRef((() => {
+        const hints = new Map();
+        hints.set(DecodeHintType.TRY_HARDER, true);
+        return new BrowserMultiFormatReader(hints);
+    })());
 
     const handleBarcodeDetected = useCallback((barcode: string) => {
-        // Look up existing product by barcode
         const found = products.find(p => p.barcode === barcode);
         if (found) {
             setFormData({
@@ -58,54 +63,44 @@ const OwnerInventory = () => {
                 category: found.category,
                 price: found.price.toString(),
                 stock: found.stock.toString(),
-                barcode: found.barcode || barcode
+                barcode: found.barcode || barcode,
+                fulfillmentOptions: found.fulfillmentOptions || []
             });
             setIsScannerOpen(false);
             toast({ title: "Product Found", description: `Auto-filled details for "${found.name}"` });
         } else {
             setFormData(prev => ({ ...prev, barcode }));
             setIsScannerOpen(false);
-            toast({ title: "Barcode Scanned", description: `No matching product found. Barcode: ${barcode}` });
+            toast({ title: "Barcode Scanned", description: `No matching product. Barcode: ${barcode}` });
         }
     }, [toast, products]);
 
-    const scanForBarcode = useCallback(() => {
-        if (!isScannerOpen) return;
-        if (webcamRef.current && webcamRef.current.video) {
-            const video = webcamRef.current.video;
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                codeReader.current.decodeFromVideoElement(video).then(result => {
-                    if (result) {
-                        const text = result.getText();
-                        const now = Date.now();
-                        if (now - lastScannedTime.current > 3000) {
-                            lastScannedTime.current = now;
-                            handleBarcodeDetected(text);
-                        }
-                    }
-                }).catch(() => {
-                    // Ignore NotFoundException
-                });
-            }
+    const startScanning = useCallback(async () => {
+        if (!videoRef.current) return;
+        setCameraError(null);
+        try {
+            const deviceList = await BrowserMultiFormatReader.listVideoInputDevices();
+            setDevices(deviceList);
+            const deviceId = deviceList[deviceIndex]?.deviceId;
+            controlsRef.current = await codeReader.current.decodeFromVideoDevice(
+                deviceId,
+                videoRef.current,
+                (result) => { if (result) handleBarcodeDetected(result.getText()); }
+            );
+        } catch {
+            setCameraError("Unable to access camera. Please check permissions.");
         }
-    }, [handleBarcodeDetected, isScannerOpen]);
+    }, [deviceIndex, handleBarcodeDetected]);
 
     useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isScannerOpen) {
-            interval = setInterval(scanForBarcode, 500);
-        }
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-    }, [scanForBarcode, isScannerOpen]);
+        if (isScannerOpen) startScanning();
+        else controlsRef.current?.stop();
+        return () => { controlsRef.current?.stop(); };
+    }, [isScannerOpen, deviceIndex]);
 
     const toggleCamera = () => {
-        setFacingMode(prev => (prev === "user" ? "environment" : "user"));
-    };
-
-    const handleCameraError = () => {
-        setCameraError("Unable to access camera. Please check permissions.");
+        controlsRef.current?.stop();
+        setDeviceIndex(prev => (prev + 1) % Math.max(devices.length, 1));
     };
 
     const uniqueCategories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
@@ -177,10 +172,15 @@ const OwnerInventory = () => {
     return (
         <DashboardLayout role="owner">
             <div className="flex flex-col gap-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
-                        <p className="text-muted-foreground">Manage your products, stock levels, and pricing.</p>
+                <div className="flex items-center justify-between border-b border-border pb-6">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-emerald-500/15">
+                            <Layers className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold">Inventory</h1>
+                            <p className="text-muted-foreground">Manage your products, stock levels, and pricing.</p>
+                        </div>
                     </div>
                     <div className="flex gap-2 w-full md:w-auto">
                         <Dialog open={isAddOpen} onOpenChange={handleOpenChange}>
@@ -196,60 +196,59 @@ const OwnerInventory = () => {
                                         {editId ? "Update the details for this inventory item." : "Enter the details of the new item to add to your shop's inventory."}
                                     </DialogDescription>
                                 </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="name" className="text-right">Name</Label>
+                                <div className="space-y-4 py-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name">Name</Label>
                                         <Input
                                             id="name"
-                                            className="col-span-3"
+                                            placeholder="e.g. Coca-Cola 330ml"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         />
                                     </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="category" className="text-right">Category</Label>
-                                        <div className="col-span-3">
-                                            <Select value={formData.category} onValueChange={(val) => setFormData({ ...formData, category: val })}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a category" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Bakery">Bakery</SelectItem>
-                                                    <SelectItem value="Beverages">Beverages</SelectItem>
-                                                    <SelectItem value="Dairy">Dairy</SelectItem>
-                                                    <SelectItem value="Pantry">Pantry</SelectItem>
-                                                    <SelectItem value="Snacks">Snacks</SelectItem>
-                                                    <SelectItem value="Staples">Staples</SelectItem>
-                                                    <SelectItem value="Services">Services</SelectItem>
-                                                    <SelectItem value="Custom">Custom</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="category">Category</Label>
+                                        <Select value={formData.category} onValueChange={(val) => setFormData({ ...formData, category: val })}>
+                                            <SelectTrigger id="category">
+                                                <SelectValue placeholder="Select a category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Bakery">Bakery</SelectItem>
+                                                <SelectItem value="Beverages">Beverages</SelectItem>
+                                                <SelectItem value="Dairy">Dairy</SelectItem>
+                                                <SelectItem value="Pantry">Pantry</SelectItem>
+                                                <SelectItem value="Snacks">Snacks</SelectItem>
+                                                <SelectItem value="Staples">Staples</SelectItem>
+                                                <SelectItem value="Services">Services</SelectItem>
+                                                <SelectItem value="Custom">Custom</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="price">Price (R)</Label>
+                                            <Input
+                                                id="price"
+                                                type="number"
+                                                placeholder="0.00"
+                                                value={formData.price}
+                                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="stock">Stock</Label>
+                                            <Input
+                                                id="stock"
+                                                type="number"
+                                                placeholder="0"
+                                                value={formData.stock}
+                                                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                                            />
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="price" className="text-right">Price (R)</Label>
-                                        <Input
-                                            id="price"
-                                            type="number"
-                                            className="col-span-3"
-                                            value={formData.price}
-                                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="stock" className="text-right">Stock</Label>
-                                        <Input
-                                            id="stock"
-                                            type="number"
-                                            className="col-span-3"
-                                            value={formData.stock}
-                                            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                                        />
-                                    </div>
-                                    {/* Barcode field with scan button */}
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="barcode" className="text-right">Barcode</Label>
-                                        <div className="col-span-3 flex gap-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="barcode">Barcode</Label>
+                                        <div className="flex gap-2">
                                             <Input
                                                 id="barcode"
                                                 className="flex-1"
@@ -267,10 +266,9 @@ const OwnerInventory = () => {
                                             </Button>
                                         </div>
                                     </div>
-                                    {/* Fulfillment Options */}
-                                    <div className="grid grid-cols-4 items-start gap-4">
-                                        <Label className="text-right pt-1">Fulfillment</Label>
-                                        <div className="col-span-3 grid grid-cols-2 gap-2">
+                                    <div className="space-y-2">
+                                        <Label>Fulfillment Options</Label>
+                                        <div className="grid grid-cols-2 gap-2">
                                             {FULFILLMENT_OPTIONS.map(opt => (
                                                 <div key={opt.value} className="flex items-center gap-2">
                                                     <Checkbox
@@ -301,38 +299,27 @@ const OwnerInventory = () => {
                             <DialogTitle>Scan Barcode</DialogTitle>
                             <DialogDescription>Point the camera at a barcode to auto-detect it.</DialogDescription>
                         </DialogHeader>
-                        <div className="aspect-video bg-black rounded-lg relative overflow-hidden flex items-center justify-center">
+                        <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
                             {cameraError ? (
-                                <div className="flex flex-col items-center p-4 text-center">
+                                <div className="flex flex-col items-center justify-center h-full p-4 text-center">
                                     <Camera className="h-8 w-8 text-muted-foreground mb-2" />
                                     <p className="text-white text-sm">{cameraError}</p>
-                                    <Button variant="outline" size="sm" className="mt-2" onClick={() => setCameraError(null)}>Retry</Button>
+                                    <Button variant="outline" size="sm" className="mt-2" onClick={startScanning}>Retry</Button>
                                 </div>
                             ) : (
                                 <>
-                                    <Webcam
-                                        ref={webcamRef}
-                                        audio={false}
-                                        screenshotFormat="image/jpeg"
-                                        videoConstraints={{ width: 640, height: 480, facingMode }}
-                                        onUserMediaError={handleCameraError}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 border-2 border-primary/50 rounded-lg z-10 animate-pulse m-8 pointer-events-none"></div>
-                                    <div className="absolute bottom-2 left-2 text-white text-xs bg-black/60 px-2 py-1 rounded backdrop-blur-sm">Scanning...</div>
-                                    <Button
-                                        variant="secondary"
-                                        size="icon"
-                                        onClick={toggleCamera}
-                                        className="absolute bottom-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
-                                    >
+                                    <video ref={videoRef} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div className="w-48 h-24 border-2 border-emerald-400/70 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                                    </div>
+                                    <Button variant="secondary" size="icon" onClick={toggleCamera} className="absolute bottom-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm">
                                         <RotateCcw className="h-4 w-4" />
                                     </Button>
                                 </>
                             )}
                         </div>
                         <p className="text-center text-xs text-muted-foreground">
-                            Align barcode within frame to auto-detect. Supports EAN-13, UPC, Code 128, QR codes.
+                            Align barcode within the frame — detects automatically. Supports EAN-13, UPC, Code 128, QR.
                         </p>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsScannerOpen(false)}>Cancel</Button>

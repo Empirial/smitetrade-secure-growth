@@ -58,7 +58,8 @@
       "Bash(grep -rh \"useNavigate\\\\|useLocation\" src/pages/owner/*.tsx)",
       "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\\\\|BUG\" /c/Users/Lufuno Mphela/Desktop/smitetrade-secure-growth/src/components/*.tsx)",
       "Bash(grep -n \"overflow-x\\\\|TableHeader\\\\|<Table\" pages/**/*.tsx)",
-      "Bash(grep -n \"grid.*cols\" src/pages/**/*.tsx)"
+      "Bash(grep -n \"grid.*cols\" src/pages/**/*.tsx)",
+      "Bash(grep -v \"^ui$\")"
     ]
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Package, AlertTriangle, CheckCircle, ClipboardCheck, Plus, Camera, X } from "lucide-react";
+import { Search, Package, AlertTriangle, CheckCircle, ClipboardCheck, Plus, Camera, X, Layers, RotateCcw } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
 import { useToast } from "@/hooks/use-toast";
-import { BrowserMultiFormatReader } from "@zxing/library";
+import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
+import { DecodeHintType } from "@zxing/library";
 
 const CashierInventory = () => {
     const { products, addProduct, updateProduct } = useStore();
@@ -43,8 +44,16 @@ const CashierInventory = () => {
 
     // --- barcode scanner state ---
     const [scannerActive, setScannerActive] = useState(false);
+    const [cameraError, setCameraError] = useState<string | null>(null);
+    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+    const [deviceIndex, setDeviceIndex] = useState(0);
     const videoRef = useRef<HTMLVideoElement>(null);
-    const readerRef = useRef<BrowserMultiFormatReader | null>(null);
+    const controlsRef = useRef<IScannerControls | null>(null);
+    const codeReader = useRef((() => {
+        const hints = new Map();
+        hints.set(DecodeHintType.TRY_HARDER, true);
+        return new BrowserMultiFormatReader(hints);
+    })());
 
     const categories = ["All", ...Array.from(new Set(products.map((p) => p.category)))];
 
@@ -97,35 +106,45 @@ const CashierInventory = () => {
     };
 
     // ---- barcode scanner ----
-    const startScanner = async () => {
-        setScannerActive(true);
-    };
-
-    const stopScanner = () => {
-        if (readerRef.current) {
-            readerRef.current.reset();
-            readerRef.current = null;
+    const startScanner = useCallback(async () => {
+        if (!videoRef.current) return;
+        setCameraError(null);
+        try {
+            const deviceList = await BrowserMultiFormatReader.listVideoInputDevices();
+            setDevices(deviceList);
+            const deviceId = deviceList[deviceIndex]?.deviceId;
+            controlsRef.current = await codeReader.current.decodeFromVideoDevice(
+                deviceId,
+                videoRef.current,
+                (result) => {
+                    if (result) {
+                        setAddForm(prev => ({ ...prev, barcode: result.getText() }));
+                        controlsRef.current?.stop();
+                        setScannerActive(false);
+                        toast({ title: "Barcode scanned", description: result.getText() });
+                    }
+                }
+            );
+        } catch {
+            setCameraError("Unable to access camera. Please check permissions.");
         }
+    }, [deviceIndex]);
+
+    const stopScanner = useCallback(() => {
+        controlsRef.current?.stop();
+        controlsRef.current = null;
         setScannerActive(false);
+    }, []);
+
+    const toggleCamera = () => {
+        controlsRef.current?.stop();
+        setDeviceIndex(prev => (prev + 1) % Math.max(devices.length, 1));
     };
 
     useEffect(() => {
-        if (!scannerActive || !videoRef.current) return;
-        const codeReader = new BrowserMultiFormatReader();
-        readerRef.current = codeReader;
-
-        codeReader.decodeFromVideoDevice(undefined, videoRef.current, (result, err) => {
-            if (result) {
-                setAddForm((prev) => ({ ...prev, barcode: result.getText() }));
-                stopScanner();
-                toast({ title: "Barcode scanned", description: result.getText() });
-            }
-        });
-
-        return () => {
-            codeReader.reset();
-        };
-    }, [scannerActive]);
+        if (scannerActive) startScanner();
+        else controlsRef.current?.stop();
+    }, [scannerActive, deviceIndex]);
 
     // stop scanner when dialog closes
     useEffect(() => {
@@ -176,8 +195,16 @@ const CashierInventory = () => {
 
     return (
         <DashboardLayout role="cashier">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-                <h1 className="text-3xl font-bold tracking-tight">Inventory & Stock Take</h1>
+            <div className="flex items-center justify-between border-b border-border pb-6 mb-6">
+                <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-emerald-500/15">
+                        <Layers className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold">Inventory & Stock Take</h1>
+                        <p className="text-muted-foreground">View product levels and submit stock counts</p>
+                    </div>
+                </div>
                 <Button onClick={() => setAddOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" /> Add Product
                 </Button>
@@ -435,7 +462,7 @@ const CashierInventory = () => {
                                     type="button"
                                     variant="outline"
                                     size="icon"
-                                    onClick={scannerActive ? stopScanner : startScanner}
+                                    onClick={scannerActive ? stopScanner : () => setScannerActive(true)}
                                     title={scannerActive ? "Stop scanner" : "Scan barcode"}
                                 >
                                     {scannerActive ? <X className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
@@ -444,15 +471,28 @@ const CashierInventory = () => {
                         </div>
                         {scannerActive && (
                             <div className="space-y-2">
-                                <p className="text-xs text-muted-foreground">Point camera at barcode…</p>
-                                <video
-                                    ref={videoRef}
-                                    className="w-full rounded-md border border-border bg-black"
-                                    style={{ height: 180 }}
-                                    autoPlay
-                                    muted
-                                    playsInline
-                                />
+                                <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
+                                    {cameraError ? (
+                                        <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                                            <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                                            <p className="text-white text-sm">{cameraError}</p>
+                                            <Button variant="outline" size="sm" className="mt-2" onClick={startScanner}>Retry</Button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <video ref={videoRef} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <div className="w-48 h-24 border-2 border-emerald-400/70 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                                            </div>
+                                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+                                                <Button variant="secondary" size="icon" onClick={toggleCamera} className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm">
+                                                    <RotateCcw className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <p className="text-center text-xs text-muted-foreground">Align barcode within the frame — it detects automatically.</p>
                             </div>
                         )}
                     </div>

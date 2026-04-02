@@ -151,12 +151,6 @@ const CashierPOS = () => {
     const [deviceIndex, setDeviceIndex] = useState(0);
     const [cameraError, setCameraError] = useState<string | null>(null);
 
-    const codeReader = useRef((() => {
-        const hints = new Map();
-        hints.set(DecodeHintType.TRY_HARDER, true);
-        return new BrowserMultiFormatReader(hints);
-    })());
-
     const handleBarcodeLookup = useCallback((barcode: string) => {
         const found = products.find(p => p.barcode === barcode || p.id === barcode);
         if (found) {
@@ -169,13 +163,25 @@ const CashierPOS = () => {
     }, [products]);
 
     const startScanning = useCallback(async () => {
+        // Stop any previous session first
+        controlsRef.current?.stop();
+        controlsRef.current = null;
+
+        // Wait for the dialog's video element to be in the DOM
+        await new Promise(r => setTimeout(r, 80));
         if (!videoRef.current) return;
+
         setCameraError(null);
         try {
+            // Always create a fresh reader — reusing after stop() fails silently
+            const hints = new Map();
+            hints.set(DecodeHintType.TRY_HARDER, true);
+            const reader = new BrowserMultiFormatReader(hints);
+
             const deviceList = await BrowserMultiFormatReader.listVideoInputDevices();
             setDevices(deviceList);
             const deviceId = deviceList[deviceIndex]?.deviceId;
-            controlsRef.current = await codeReader.current.decodeFromVideoDevice(
+            controlsRef.current = await reader.decodeFromVideoDevice(
                 deviceId,
                 videoRef.current,
                 (result) => { if (result) handleBarcodeLookup(result.getText()); }

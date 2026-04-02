@@ -125,7 +125,7 @@ const LoanQuote = () => {
                         {/* Section 1: Loan Details */}
                         <section className="space-y-3">
                             <h3 className="font-semibold text-sm uppercase text-slate-500 tracking-wider">1. Loan Configuration</h3>
-                            <div className="grid grid-cols-2 gap-6 bg-secondary/20 p-4 rounded-lg">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-secondary/20 p-4 rounded-lg">
                                 <div className="space-y-2">
                                     <Label htmlFor="principal">Principal Amount (R)</Label>
                                     <Input

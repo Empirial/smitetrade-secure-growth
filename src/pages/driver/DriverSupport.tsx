@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const DriverSupport = () => (
   <DashboardLayout role="driver">
-    <Tabs defaultValue="employer" className="max-w-xl mx-auto">
+    <Tabs defaultValue="employer" className="w-full max-w-xl mx-auto">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="employer">Store Owner</TabsTrigger>
         <TabsTrigger value="platform">SmiteTrade Support</TabsTrigger>

@@ -295,7 +295,7 @@ const OwnerPricing = () => {
                                             <Label>{promoType === 'Combo' ? "Combo Price (R)" : "Discount Value"}</Label>
                                             <Input placeholder={promoType === 'Combo' ? "150.00" : "10% off"} value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Start Date</Label>
                                                 <Input type="date" value={promoStartDate} onChange={e => setPromoStartDate(e.target.value)} />
@@ -454,7 +454,7 @@ const OwnerPricing = () => {
                                                 <Label>Event Name</Label>
                                                 <Input placeholder="e.g. Afternoon Rush Special" />
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <Label>Start Time</Label>
                                                     <Input type="time" defaultValue="14:00" />

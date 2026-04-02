@@ -46,7 +46,7 @@ const AdminCreditOverview = () => {
                     <p className="text-muted-foreground">Portfolio health, BRI distribution, and borrower metrics.</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Portfolio</CardTitle>
@@ -87,7 +87,7 @@ const AdminCreditOverview = () => {
                     </Card>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-base">BRI Score Distribution</CardTitle>
@@ -116,6 +116,7 @@ const AdminCreditOverview = () => {
                             <CardDescription>By total loan volume</CardDescription>
                         </CardHeader>
                         <CardContent>
+                            <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -145,6 +146,7 @@ const AdminCreditOverview = () => {
                                     })}
                                 </TableBody>
                             </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

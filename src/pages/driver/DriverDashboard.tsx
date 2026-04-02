@@ -34,7 +34,7 @@ const DriverDashboard = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                     <Card className="bg-emerald-600 text-white">
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium text-emerald-100">Today's Earnings</CardTitle>
@@ -120,7 +120,7 @@ const DriverDashboard = () => {
                 )}
 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Link to="/driver/orders">
                         <Card className="cursor-pointer hover:border-emerald-500 transition-all border-2 border-transparent h-full">
                             <CardHeader className="flex flex-row items-center gap-3 pb-2">

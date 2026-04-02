@@ -235,7 +235,7 @@ const CashierPOS = () => {
                         </div>
                     )}
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2">
                         <div className="relative flex-1">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -371,7 +371,7 @@ const CashierPOS = () => {
                     )}
 
                     <ScrollArea className="flex-1 rounded-xl border border-slate-800 bg-slate-900/50 p-4 shadow-sm text-white">
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {filteredProducts.map(product => (
                                 <button
                                     key={product.id}

@@ -40,12 +40,12 @@ const LenderDashboard = () => {
     return (
         <DashboardLayout role="lender">
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Lender Dashboard</h1>
                         <p className="text-muted-foreground">Welcome back, get an overview of your lending portfolio.</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Link to="/lender/credit-check">
                             <Button variant="outline" size="sm">
                                 <Search className="mr-2 h-4 w-4" /> Check Credit
@@ -59,7 +59,7 @@ const LenderDashboard = () => {
                     </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                     <InfoCard
                         title="Total Active Lent"
                         value={`R ${totalLent.toFixed(2)}`}
@@ -90,7 +90,7 @@ const LenderDashboard = () => {
                     />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     <Card className="col-span-1">
                         <CardHeader>
                             <CardTitle>Recent Activity</CardTitle>

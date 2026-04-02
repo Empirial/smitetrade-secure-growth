@@ -47,7 +47,7 @@ const LenderClients = () => {
     return (
         <DashboardLayout role="lender">
             <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">My Clients</h1>
                         <p className="text-muted-foreground">Manage your borrower relationships.</p>
@@ -92,7 +92,7 @@ const LenderClients = () => {
                     </Dialog>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {borrowers.map((borrower: Borrower) => (
                         <Card key={borrower.id} className="hover:shadow-md transition-shadow">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -175,7 +175,7 @@ const LenderClients = () => {
 
                 {/* Client Profile & Loan Dialog */}
                 <Dialog open={isLoanOpen} onOpenChange={setIsLoanOpen}>
-                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="w-full max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                         {selectedBorrower && (() => {
                             const client = borrowers.find(b => b.id === selectedBorrower);
                             const clientLoans = loans.filter((l: Loan) => l.borrowerId === selectedBorrower);
@@ -204,12 +204,12 @@ const LenderClients = () => {
                                         </div>
                                     </DialogHeader>
 
-                                    <div className="grid md:grid-cols-2 gap-6 py-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                                         {/* Left Col: Profile & History */}
                                         <div className="space-y-6">
                                             <div className="bg-secondary/20 p-4 rounded-lg space-y-3">
                                                 <h3 className="font-semibold border-b border-border pb-2 text-sm uppercase tracking-wider text-muted-foreground">Client Details</h3>
-                                                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 text-sm">
                                                     <span className="text-muted-foreground">ID Number</span>
                                                     <span className="font-mono text-right">{client.nationalId ? maskIdNumber(client.nationalId) : client.id?.substring(0, 8) + '...'}</span>
                                                     <span className="text-muted-foreground">Phone</span>

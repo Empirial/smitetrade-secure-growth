@@ -364,7 +364,7 @@ const OwnerSuppliers = () => {
                                     Request Preorder
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-lg">
+                            <DialogContent className="w-full max-w-[95vw] sm:max-w-lg">
                                 <DialogHeader>
                                     <DialogTitle>Request Preorder</DialogTitle>
                                     <DialogDescription>

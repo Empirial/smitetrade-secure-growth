@@ -37,7 +37,7 @@ const LenderApplications = () => {
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                     <div>
                                         <p className="text-xs text-muted-foreground">Amount</p>
                                         <p className="font-bold">R {app.amount}</p>
@@ -66,7 +66,7 @@ const LenderApplications = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2 justify-end pt-4 border-t">
+                                <div className="flex flex-wrap gap-2 justify-end pt-4 border-t">
                                     <Button variant="outline" size="sm" asChild>
                                         <Link to={`/lender/credit-check?q=${encodeURIComponent(app.borrower)}`}>
                                             <FileText className="mr-2 h-4 w-4" /> View Report

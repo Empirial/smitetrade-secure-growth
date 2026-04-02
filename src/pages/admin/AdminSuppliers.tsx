@@ -143,6 +143,7 @@ const AdminSuppliers = () => {
                                 <p className="text-sm mt-1">Add suppliers above — they'll appear on every owner's Suppliers page.</p>
                             </div>
                         ) : (
+                            <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -185,6 +186,7 @@ const AdminSuppliers = () => {
                                     ))}
                                 </TableBody>
                             </Table>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

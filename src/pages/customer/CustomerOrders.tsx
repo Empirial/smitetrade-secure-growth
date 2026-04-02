@@ -68,7 +68,7 @@ const CustomerOrders = () => {
                                     </Button>
                                 </div>
                             </CardHeader>
-                            <CardContent className="pt-4 border-t flex justify-end gap-2">
+                            <CardContent className="pt-4 border-t flex flex-wrap justify-end gap-2">
                                 <Button variant="outline" size="sm" asChild>
                                     <Link to="/customer/tracking">
                                         <Truck className="mr-2 h-4 w-4" /> Track

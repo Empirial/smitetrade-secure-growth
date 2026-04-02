@@ -75,7 +75,7 @@ const DriverProfile = () => {
                     <p className="text-muted-foreground">Manage your personal information, vehicle details, and account settings.</p>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-3">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
                     {/* Left Column: Avatar & Quick Info */}
                     <Card className="md:col-span-1">
                         <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
@@ -119,7 +119,7 @@ const DriverProfile = () => {
                             <CardDescription>Update your contact and vehicle details.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Full Name</Label>
                                     <div className="relative">
@@ -152,7 +152,7 @@ const DriverProfile = () => {
 
                             <div className="pt-4 border-t mt-6">
                                 <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Vehicle Details</h4>
-                                <div className="grid gap-4 md:grid-cols-2">
+                                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="vehicleType">Vehicle Type & Model</Label>
                                         <div className="relative">

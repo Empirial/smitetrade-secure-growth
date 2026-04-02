@@ -30,7 +30,7 @@ const AdminPOSMonitor = () => {
         <DashboardLayout role="admin">
             <h1 className="text-3xl font-bold tracking-tight mb-6">POS System Monitor</h1>
 
-            <div className="grid md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Active Terminals</CardTitle>
@@ -100,7 +100,7 @@ const AdminPOSMonitor = () => {
             </Card>
 
             <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Transaction Details</DialogTitle>
                         <DialogDescription>Terminal #{selected?.terminal} — {selected?.time}</DialogDescription>

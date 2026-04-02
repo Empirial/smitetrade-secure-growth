@@ -99,7 +99,7 @@ const OwnerRegister = () => {
                 </CardHeader>
                 <form onSubmit={handleRegister} noValidate>
                     <CardContent className="grid gap-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="first-name">First name</Label>
                                 <Input
@@ -141,7 +141,7 @@ const OwnerRegister = () => {
                                 onChange={(e) => setField("storeAddress", e.target.value)}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="store-suburb">Suburb</Label>
                                 <Input

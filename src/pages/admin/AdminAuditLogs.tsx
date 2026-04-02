@@ -82,7 +82,8 @@ const AdminAuditLogs = () => {
                         <CardDescription>All actions are permanently recorded here.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
+                        <div className="overflow-x-auto">
+                        <Table className="min-w-[600px]">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Timestamp</TableHead>
@@ -114,6 +115,7 @@ const AdminAuditLogs = () => {
                                 ))}
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

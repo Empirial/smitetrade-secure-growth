@@ -127,7 +127,7 @@ const AdminSupport = () => {
                     <p className="text-muted-foreground">Manage support requests from all portal users.</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Open</CardTitle>
@@ -166,6 +166,7 @@ const AdminSupport = () => {
                                 <p>No support tickets yet.</p>
                             </div>
                         ) : (
+                            <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -212,6 +213,7 @@ const AdminSupport = () => {
                                     ))}
                                 </TableBody>
                             </Table>
+                            </div>
                         )}
                     </CardContent>
                 </Card>
@@ -219,7 +221,7 @@ const AdminSupport = () => {
 
             {/* Ticket Detail Dialog */}
             <Dialog open={!!selectedTicket} onOpenChange={(open) => { if (!open) { setSelectedTicket(null); setReplyText(""); } }}>
-                <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-lg max-h-[85vh] flex flex-col">
                     {selectedTicket && (
                         <>
                             <DialogHeader>

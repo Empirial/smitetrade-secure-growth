@@ -77,7 +77,7 @@ const OwnerStockAdjustment = () => {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="grid gap-2">
                                         <Label>Quantity Lost</Label>
                                         <Input type="number" value={newAdj.qty} onChange={(e) => setNewAdj({ ...newAdj, qty: e.target.value })} min="1" />
@@ -105,7 +105,7 @@ const OwnerStockAdjustment = () => {
                     </Dialog>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-2">
                     <div className="relative flex-1">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input

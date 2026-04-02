@@ -172,7 +172,7 @@ const OwnerSubscription = () => {
                 </div>
 
                 {/* Trust signals */}
-                <div className="grid grid-cols-3 gap-4 pb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-6">
                     {[
                         { icon: ShieldCheck, label: "Secure Payments", sub: "256-bit SSL encryption" },
                         { icon: Star, label: "Cancel Anytime", sub: "No locked-in contracts" },

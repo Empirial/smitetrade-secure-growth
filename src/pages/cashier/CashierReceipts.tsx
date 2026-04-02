@@ -84,6 +84,7 @@ const CashierReceipts = () => {
                         <CardDescription>Most recent completed sales.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -125,12 +126,13 @@ const CashierReceipts = () => {
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Receipt Details Dialog */}
                 <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-                    <DialogContent className="sm:max-w-md bg-slate-900 border-slate-800 text-white">
+                    <DialogContent className="w-full max-w-[95vw] sm:max-w-md bg-slate-900 border-slate-800 text-white">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2 text-xl">
                                 <Receipt className="h-5 w-5 text-emerald-500" />

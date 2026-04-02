@@ -154,7 +154,7 @@ const CustomerCreditApplication = () => {
                 <div className="flex flex-col gap-6 bg-slate-900 p-6 rounded-lg border border-slate-800 text-slate-100 shadow-xl">
                     <div className="space-y-6">
                         <h3 className="font-semibold text-lg">Loan Details</h3>
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="amount">Loan Amount (R)</Label>
                                 <Input
@@ -228,7 +228,7 @@ const CustomerCreditApplication = () => {
                     <div className="space-y-6 pt-6 border-t border-slate-800">
                         <h3 className="font-semibold text-lg">Banking Details</h3>
                         <p className="text-sm text-slate-400">Where should the approved funds be deposited?</p>
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="bankName">Bank Name</Label>
                                 <Select onValueChange={(v) => { setBankName(v); clearError('bankName'); }} value={bankName}>
@@ -318,14 +318,14 @@ const CustomerCreditApplication = () => {
                     </Dialog>
 
                     <Dialog open={!!viewLender} onOpenChange={(open) => !open && setViewLender(null)}>
-                        <DialogContent className="sm:max-w-[450px]">
+                        <DialogContent className="w-full max-w-[95vw] sm:max-w-[450px]">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl">{viewLender?.name}</DialogTitle>
                                 <DialogDescription>Lender Information & Terms</DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 py-4">
                                 <p className="text-sm text-slate-300">{viewLender?.description}</p>
-                                <div className="grid grid-cols-2 gap-4 mt-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                     <div className="bg-slate-900 border border-slate-800 p-3 rounded-md">
                                         <div className="text-xs text-slate-400">Interest Rate</div>
                                         <div className="font-semibold text-lg text-emerald-400">{viewLender?.rate}</div>

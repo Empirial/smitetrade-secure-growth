@@ -298,7 +298,7 @@ const CustomerProducts = () => {
                 </div>
 
                 {/* Product Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {isLoading ? (
                         Array.from({ length: 8 }).map((_, i) => (
                             <Card key={i} className="overflow-hidden">
@@ -395,7 +395,7 @@ const CustomerProducts = () => {
 
             {/* Pre-order Dialog */}
             <Dialog open={preorderOpen} onOpenChange={(open) => { if (!open) setPreorderOpen(false); }}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Calendar className="h-5 w-5 text-purple-600" />

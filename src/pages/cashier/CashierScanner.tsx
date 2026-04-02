@@ -422,7 +422,7 @@ const CashierScanner = () => {
                                 {showAddForm && (
                                     <div className="space-y-3 border-t border-border pt-4">
                                         <p className="text-sm font-medium text-muted-foreground">Add as new product</p>
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             <div className="col-span-2">
                                                 <Input
                                                     placeholder="Product name *"

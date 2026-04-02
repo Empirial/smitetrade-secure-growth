@@ -168,7 +168,7 @@ const OwnerLending = () => {
                 {/* Borrowers Grid */}
                 <div>
                     <h2 className="text-xl font-semibold mb-4">Registered Borrowers</h2>
-                    <div className="grid md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {borrowers?.map((borrower: Borrower) => (
                             <Card key={borrower.id} className="hover:border-emerald-500 transition-colors cursor-pointer overflow-hidden" onClick={() => { setSelectedBorrower(borrower.id); setIsLoanOpen(true); }}>
                                 <div className="h-24 bg-slate-100 relative">

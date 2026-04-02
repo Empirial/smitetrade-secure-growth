@@ -76,7 +76,7 @@ const DriverWallet = () => {
                     <p className="text-muted-foreground">Track your earnings and request payouts.</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                     <Card className="bg-emerald-600 text-primary-foreground">
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium text-emerald-100">Available to Withdraw</CardTitle>

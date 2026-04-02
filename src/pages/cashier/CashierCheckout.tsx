@@ -159,7 +159,7 @@ const CashierCheckout = () => {
 
     return (
         <DashboardLayout role="cashier">
-            <div className="max-w-3xl mx-auto grid md:grid-cols-2 gap-8">
+            <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                     <h1 className="text-2xl font-bold mb-4">Payment Selection</h1>
 

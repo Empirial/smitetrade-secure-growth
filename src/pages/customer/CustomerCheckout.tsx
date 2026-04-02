@@ -127,7 +127,7 @@ const CustomerCheckout = () => {
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {step === 1 ? (
                         <div className="md:col-span-2 space-y-6 animate-in slide-in-from-left-4 fade-in">
                             <Card className="glass-card">
@@ -209,7 +209,7 @@ const CustomerCheckout = () => {
                                         {availableDeliveryMethods.length > 0 && (
                                             <div className="grid gap-2">
                                                 <Label>Delivery Method</Label>
-                                                <RadioGroup value={deliveryMethod} onValueChange={setDeliveryMethod} className="grid grid-cols-2 gap-2">
+                                                <RadioGroup value={deliveryMethod} onValueChange={setDeliveryMethod} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                     {availableDeliveryMethods.map(method => (
                                                         <div key={method}>
                                                             <RadioGroupItem value={method} id={`dm-${method}`} className="peer sr-only" />

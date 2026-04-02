@@ -67,7 +67,7 @@ const CustomerLenderRegistration = () => {
 
                     <CardContent className="space-y-6">
                         {step === 1 ? (
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="grid gap-2">
                                     <Label htmlFor="tradingMonths">Months in Operation</Label>
                                     <Input id="tradingMonths" type="number" placeholder="e.g. 24" />
@@ -148,7 +148,7 @@ const CustomerLenderRegistration = () => {
                         )}
                     </CardContent>
 
-                    <CardFooter className="flex justify-between border-t border-slate-800 pt-6">
+                    <CardFooter className="flex flex-col sm:flex-row justify-between gap-2 border-t border-slate-800 pt-6">
                         {step === 1 ? (
                             <>
                                 <Button variant="outline" onClick={() => navigate('/customer/apply-credit')}>Cancel Application</Button>

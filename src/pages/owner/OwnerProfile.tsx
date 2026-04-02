@@ -220,7 +220,7 @@ const OwnerProfile = () => {
                 </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3 mb-6">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
                 <Card className="bg-emerald-500/10 border-emerald-500/20">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-emerald-400 flex justify-between">
@@ -372,7 +372,7 @@ const OwnerProfile = () => {
                                                     <Input value={activeStore.name} onChange={(e) => handleUpdateStore(activeStore.id, 'name', e.target.value)} />
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="grid gap-2">
                                                         <Label>Store Phone/Contact</Label>
                                                         <Input placeholder="+27 00..." value={activeStore.phone || ""} onChange={(e) => handleUpdateStore(activeStore.id, 'phone', e.target.value)} />
@@ -403,7 +403,7 @@ const OwnerProfile = () => {
                                                     <Label>Street Address</Label>
                                                     <Input placeholder="123 Main Street" value={activeStore.address} onChange={(e) => handleUpdateStore(activeStore.id, 'address', e.target.value)} />
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="grid gap-2">
                                                         <Label>Suburb</Label>
                                                         <Input placeholder="e.g. Soweto" value={activeStore.suburb} onChange={(e) => handleUpdateStore(activeStore.id, 'suburb', e.target.value)} />
@@ -413,7 +413,7 @@ const OwnerProfile = () => {
                                                         <Input placeholder="e.g. Johannesburg" value={activeStore.city} onChange={(e) => handleUpdateStore(activeStore.id, 'city', e.target.value)} />
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="grid gap-2">
                                                         <Label>Province</Label>
                                                         <Select value={activeStore.province} onValueChange={(val) => handleUpdateStore(activeStore.id, 'province', val)}>
@@ -448,7 +448,7 @@ const OwnerProfile = () => {
                                                     <Label>Description (Visible to customers)</Label>
                                                     <Textarea placeholder="Describe your shop..." value={activeStore.description || ""} onChange={e => handleUpdateStore(activeStore.id, 'description', e.target.value)} />
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="grid gap-2">
                                                         <Label>Shop Contact Email</Label>
                                                         <Input placeholder="contact@store.co.za" value={activeStore.shopEmail || ""} onChange={e => handleUpdateStore(activeStore.id, 'shopEmail', e.target.value)} />
@@ -460,7 +460,7 @@ const OwnerProfile = () => {
 
                                             <div className="space-y-4">
                                                 <h3 className="text-lg font-medium">Operating Hours</h3>
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="grid gap-2">
                                                         <Label>Opening Time</Label>
                                                         <Input type="time" value={activeStore.openingTime || "08:00"} onChange={e => handleUpdateStore(activeStore.id, 'openingTime', e.target.value)} />
@@ -565,7 +565,7 @@ const OwnerProfile = () => {
 
             {/* ── Store Switcher Dialog ── */}
             <Dialog open={storeSwitcherOpen} onOpenChange={setStoreSwitcherOpen}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Building2 className="h-5 w-5 text-sky-500" />

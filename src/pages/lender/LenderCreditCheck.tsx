@@ -76,7 +76,7 @@ const LenderCreditCheck = () => {
                         <CardDescription>Enter name, phone number, or SS:ID to retrieve repayment profile.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex gap-4">
+                        <div className="flex flex-col sm:flex-row gap-2">
                             <div className="flex-1">
                                 <Input
                                     placeholder="Search by name, phone, or SS:ID..."
@@ -117,7 +117,7 @@ const LenderCreditCheck = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid gap-4 md:grid-cols-3">
+                                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                                     <Card className="border-t-4 border-t-emerald-500">
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                             <CardTitle className="text-sm font-medium">Risk Profile</CardTitle>
@@ -171,7 +171,7 @@ const LenderCreditCheck = () => {
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                             <div>
                                                 <Label className="text-muted-foreground">Email</Label>
                                                 <p className="font-medium">{searchResult.email || "—"}</p>

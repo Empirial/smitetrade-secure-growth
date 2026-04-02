@@ -47,8 +47,8 @@ const CustomerPayment = () => {
                     {orderTotal > 0 && (
                         <p className="text-lg font-semibold text-emerald-600">R {orderTotal.toFixed(2)} paid</p>
                     )}
-                    <div className="flex gap-4">
-                        <Button onClick={() => navigate("/customer/tracking")} className="w-40">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <Button onClick={() => navigate("/customer/tracking")} className="w-full sm:w-40">
                             Track Order
                         </Button>
                         <Button variant="outline" onClick={() => navigate("/customer/products")} className="w-40">

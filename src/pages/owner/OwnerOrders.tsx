@@ -161,7 +161,7 @@ const OwnerOrders = () => {
 
             {/* Order Details Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             {(selectedOrder as any)?.isPreorder && <Calendar className="h-4 w-4 text-purple-600" />}

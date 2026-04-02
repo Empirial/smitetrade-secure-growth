@@ -74,6 +74,7 @@ const LenderLoans = () => {
                         <CardDescription>History of all lending activities.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -140,12 +141,13 @@ const LenderLoans = () => {
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Client Profile & Loan Dialog */}
                 <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="w-full max-w-[95vw] sm:max-w-2xl">
                         {selectedLoan && (() => {
                             const client = borrowers.find(b => b.id === selectedLoan.borrowerId);
 
@@ -173,11 +175,11 @@ const LenderLoans = () => {
                                         </div>
                                     </DialogHeader>
 
-                                    <div className="grid md:grid-cols-2 gap-6 py-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                                         <div className="space-y-4">
                                             <h3 className="font-semibold border-b border-border pb-2 text-sm uppercase tracking-wider text-muted-foreground">Client Details</h3>
                                             <div className="bg-secondary/20 p-4 rounded-lg space-y-3">
-                                                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 text-sm">
                                                     <span className="text-muted-foreground">ID Number</span>
                                                     <span className="font-mono text-right">{client.nationalId ? maskIdNumber(client.nationalId) : client.id?.substring(0, 8) + '...'}</span>
                                                     <span className="text-muted-foreground">Phone</span>

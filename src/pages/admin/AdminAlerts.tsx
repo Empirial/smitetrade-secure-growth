@@ -122,7 +122,7 @@ const AdminAlerts = () => {
                                     <Label>Message</Label>
                                     <Textarea value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Describe the notification..." rows={3} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <Label>Type</Label>
                                         <Select value={newType} onValueChange={setNewType}>

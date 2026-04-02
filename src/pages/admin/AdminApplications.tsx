@@ -102,7 +102,7 @@ const AdminApplications = () => {
                 {applications.map((app) => (
                     <Card key={app.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedApp(app)}>
                         <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start">
+                            <div className="flex flex-col sm:flex-row sm:items-start gap-2">
                                 <div className="space-y-1">
                                     <CardTitle className="flex items-center gap-2">
                                         <Store className="h-5 w-5 text-muted-foreground" />
@@ -121,7 +121,7 @@ const AdminApplications = () => {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex justify-between items-center">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                                     <MapPin className="h-4 w-4" /> {app.location} • Applied {app.date}
                                 </div>
@@ -137,7 +137,7 @@ const AdminApplications = () => {
             </div>
 
             <Dialog open={!!selectedApp} onOpenChange={(open) => { if (!open) { setSelectedApp(null); setReplyText(""); } }}>
-                <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-lg max-h-[90vh] flex flex-col">
                     {selectedApp && (
                         <>
                             <DialogHeader>
@@ -235,7 +235,7 @@ const AdminApplications = () => {
                                 </div>
 
                                 {selectedApp.status === "Pending" && (
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2">
                                         <Button
                                             className="flex-1"
                                             variant="outline"

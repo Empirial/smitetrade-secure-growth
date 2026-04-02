@@ -85,7 +85,7 @@ const AdminUsers = () => {
     return (
         <DashboardLayout role="admin">
             <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
                         <p className="text-muted-foreground">Oversee all registered users and their roles.</p>
@@ -100,6 +100,7 @@ const AdminUsers = () => {
                         <CardTitle>All Users ({users.length})</CardTitle>
                     </CardHeader>
                     <CardContent>
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -177,6 +178,7 @@ const AdminUsers = () => {
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

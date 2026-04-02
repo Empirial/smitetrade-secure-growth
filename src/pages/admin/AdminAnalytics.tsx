@@ -59,7 +59,7 @@ const AdminAnalytics = () => {
                     <p className="text-muted-foreground">Deep-dive into growth, revenue, and user engagement.</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     {/* User Growth */}
                     <Card>
                         <CardHeader>

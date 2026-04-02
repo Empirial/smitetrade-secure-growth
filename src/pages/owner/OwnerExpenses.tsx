@@ -56,7 +56,7 @@ const OwnerExpenses = () => {
                     <p className="text-muted-foreground">Log money taken from the till for business expenses.</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
                     <Card className="col-span-1 border-dashed border-2 bg-transparent">
                         <CardHeader>
                             <CardTitle>Log New Expense</CardTitle>
@@ -157,7 +157,7 @@ const OwnerExpenses = () => {
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogContent className="sm:max-w-md">
+                    <DialogContent className="w-full max-w-[95vw] sm:max-w-md">
                         <DialogHeader>
                             <DialogTitle>Expense Details</DialogTitle>
                             <DialogDescription>

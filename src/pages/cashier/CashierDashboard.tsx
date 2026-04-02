@@ -103,7 +103,7 @@ const CashierDashboard = () => {
 
             {/* Receipt Details Dialog */}
             <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-                <DialogContent className="sm:max-w-md bg-slate-900 border-slate-800 text-white">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-md bg-slate-900 border-slate-800 text-white">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl">
                             <Receipt className="h-5 w-5 text-emerald-500" />
@@ -117,7 +117,7 @@ const CashierDashboard = () => {
                     {selectedOrder && (
                         <div className="space-y-6 py-4">
                             {/* Order Metadata */}
-                            <div className="grid grid-cols-2 gap-4 text-sm bg-slate-950/50 p-4 rounded-lg border border-slate-800">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-slate-950/50 p-4 rounded-lg border border-slate-800">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-slate-400">
                                         <Calendar className="h-4 w-4" /> Date

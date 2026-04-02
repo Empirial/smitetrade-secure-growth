@@ -30,7 +30,7 @@ const AdminDisputes = () => {
                     <p className="text-muted-foreground">Manage fraud alerts and customer disputes.</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Active Disputes</CardTitle>
@@ -59,6 +59,7 @@ const AdminDisputes = () => {
                         <CardDescription>Review and resolve open cases.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -103,6 +104,7 @@ const AdminDisputes = () => {
                                 ))}
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

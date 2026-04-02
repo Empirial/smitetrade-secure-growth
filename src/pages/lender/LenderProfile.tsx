@@ -255,7 +255,7 @@ const LenderProfile = () => {
                                         <h3 className="text-lg font-medium">Lending Parameters</h3>
                                         <p className="text-sm text-muted-foreground">Set your default interest rates and loan terms.</p>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="interest">Default Interest Rate (%)</Label>
                                             <Input id="interest" placeholder="e.g. 5.0" value={interest} onChange={e => setInterest(e.target.value)} />

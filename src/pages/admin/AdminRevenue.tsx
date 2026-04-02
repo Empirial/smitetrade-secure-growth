@@ -211,11 +211,11 @@ const AdminRevenue = () => {
 
                 {/* ── Stat Cards ── */}
                 {loading ? (
-                    <div className="grid gap-4 md:grid-cols-4">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                         <StatSkeleton /><StatSkeleton /><StatSkeleton /><StatSkeleton />
                     </div>
                 ) : (
-                    <div className="grid gap-4 md:grid-cols-4">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total GMV</CardTitle>
@@ -261,7 +261,7 @@ const AdminRevenue = () => {
                 )}
 
                 {/* ── Charts ── */}
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-base">Weekly Revenue Trend</CardTitle>
@@ -373,6 +373,7 @@ const AdminRevenue = () => {
                                 <p className="text-xs mt-1">Completed payments will appear here automatically.</p>
                             </div>
                         ) : (
+                            <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -411,6 +412,7 @@ const AdminRevenue = () => {
                                     ))}
                                 </TableBody>
                             </Table>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

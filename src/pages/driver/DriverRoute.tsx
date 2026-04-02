@@ -54,7 +54,7 @@ const DriverRoute = () => {
 
                 {/* Map Placeholder */}
                 <Card className="overflow-hidden">
-                    <div className="bg-slate-200 h-48 w-full flex items-center justify-center text-slate-400 relative">
+                    <div className="bg-slate-200 h-48 sm:h-64 w-full flex items-center justify-center text-slate-400 relative">
                         <MapPin className="h-10 w-10 mb-2" />
                         <span className="absolute bottom-2 right-2 text-xs bg-white/80 px-2 py-1 rounded">
                             Google Maps Integration

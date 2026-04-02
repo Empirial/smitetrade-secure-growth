@@ -71,7 +71,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* KPI Cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -115,7 +115,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Charts Row */}
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-base">Daily Transaction Volume</CardTitle>
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Bottom Row */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
                     {/* Recent Activity */}
                     <Card className="col-span-full md:col-span-4">
                         <CardHeader>

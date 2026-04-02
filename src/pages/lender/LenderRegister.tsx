@@ -103,7 +103,7 @@ const LenderRegister = () => {
                 <Card className="border-border shadow-xl">
                     <CardContent className="pt-8">
                         <form onSubmit={handleRegister} className="space-y-6" noValidate>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="first-name">First name</Label>
                                     <Input

@@ -176,14 +176,14 @@ const CashierInventory = () => {
 
     return (
         <DashboardLayout role="cashier">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 <h1 className="text-3xl font-bold tracking-tight">Inventory & Stock Take</h1>
                 <Button onClick={() => setAddOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" /> Add Product
                 </Button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Products</CardTitle>
@@ -327,7 +327,7 @@ const CashierInventory = () => {
                     </DialogHeader>
                     {infoProduct && (
                         <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Price</p>
                                     <p className="text-lg font-semibold">R {infoProduct.price.toFixed(2)}</p>
@@ -363,7 +363,7 @@ const CashierInventory = () => {
 
             {/* ---- Add Product Dialog ---- */}
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Add Product</DialogTitle>
                         <DialogDescription>Fill in the product details to add it to inventory.</DialogDescription>
@@ -387,7 +387,7 @@ const CashierInventory = () => {
                                 onChange={(e) => setAddForm((p) => ({ ...p, category: e.target.value }))}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="ap-price">Price (R) <span className="text-destructive">*</span></Label>
                                 <Input

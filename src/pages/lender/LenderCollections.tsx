@@ -69,7 +69,7 @@ const LenderCollections = () => {
                                             </CardHeader>
                                         </Card>
 
-                                        <DialogContent className="max-w-2xl">
+                                        <DialogContent className="w-full max-w-[95vw] sm:max-w-2xl">
                                             <DialogHeader>
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -80,7 +80,7 @@ const LenderCollections = () => {
                                                 </div>
                                             </DialogHeader>
 
-                                            <div className="grid md:grid-cols-2 gap-6 py-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                                                 {/* Borrower Details */}
                                                 <div className="space-y-4">
                                                     <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b pb-2">Borrower Profile</h4>
@@ -207,8 +207,8 @@ const LenderCollections = () => {
                     {/* Historical Collections Section */}
                     <div>
                         <h2 className="text-xl font-semibold mb-4">Collection History</h2>
-                        <div className="border rounded-md">
-                            <div className="grid grid-cols-4 p-4 font-medium border-b bg-muted/50">
+                        <div className="border rounded-md overflow-x-auto">
+                            <div className="grid grid-cols-4 p-4 font-medium border-b bg-muted/50 min-w-[480px]">
                                 <div>Borrower</div>
                                 <div>Amount</div>
                                 <div>Date Paid</div>
@@ -218,7 +218,7 @@ const LenderCollections = () => {
                                 <div className="p-8 text-center text-muted-foreground">No collection history available.</div>
                             ) : (
                                 collectedLoans.map((loan: Loan) => (
-                                    <div key={loan.id} className="grid grid-cols-4 p-4 border-b last:border-0 items-center">
+                                    <div key={loan.id} className="grid grid-cols-4 p-4 border-b last:border-0 items-center min-w-[480px]">
                                         <div>{loan.borrowerName}</div>
                                         <div>R {loan.amount}</div>
                                         <div>{loan.dueDate}</div>

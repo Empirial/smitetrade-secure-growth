@@ -238,7 +238,7 @@ const CustomerProfile = () => {
                 </div>
 
                 {/* Dashboard Widgets */}
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
                     <Card className="bg-emerald-50 border-emerald-100">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-emerald-800">BRI Score</CardTitle>
@@ -321,7 +321,7 @@ const CustomerProfile = () => {
                     </Card>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                     <Card className="flex flex-col h-full">
                         <CardHeader className="flex flex-row items-center gap-4">
                             <Avatar className="h-16 w-16">

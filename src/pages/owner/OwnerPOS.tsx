@@ -106,11 +106,12 @@ const OwnerPOS = () => {
         controlsRef.current?.stop();
         controlsRef.current = null;
 
-        // Wait for the dialog's video element to be in the DOM
-        await new Promise(r => setTimeout(r, 80));
-        if (!videoRef.current) return;
-
+        // Clear error BEFORE the wait so the <video> element is rendered during the delay
         setCameraError(null);
+
+        // Wait for the dialog's video element to be in the DOM
+        await new Promise(r => setTimeout(r, 150));
+        if (!videoRef.current) return;
         try {
             // Always create a fresh reader — reusing after stop() fails silently
             const hints = new Map();

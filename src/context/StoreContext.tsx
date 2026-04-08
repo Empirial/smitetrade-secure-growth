@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback, ReactNode } from 'react';
 import { toast } from 'sonner';
 import { auth, db, firebaseConfig } from '@/lib/firebase';
 import { initializeApp, deleteApp } from 'firebase/app';
@@ -1314,21 +1314,29 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         toast.success(`Switched to ${store.name}`);
     };
 
+    const contextValue = useMemo(() => ({
+        user, login, loginWithGoogle, register, logout, updateUser,
+        stores, currentStore, switchStore,
+        products, allProducts, addProduct, updateProduct, deleteProduct,
+        cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
+        orders, placeOrder, updateOrderStatus, assignDriver, isLoading,
+        suppliers, addSupplier,
+        staff, addStaff, updateStaff, deleteStaff,
+        shifts, currentShift, startShift, endShift, recordCashDrop,
+        toggleWishlist,
+        issues, reportIssue,
+        customers, addCustomer, updateCustomer, settleCustomerTab,
+        expenses, addExpense, deleteExpense,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [
+        user, stores, currentStore, products, allProducts,
+        cart, cartTotal, orders, isLoading,
+        suppliers, staff, shifts, currentShift,
+        issues, customers, expenses,
+    ]);
+
     return (
-        <StoreContext.Provider value={{
-            user, login, loginWithGoogle, register, logout, updateUser,
-            stores, currentStore, switchStore,
-            products, allProducts, addProduct, updateProduct, deleteProduct,
-            cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
-            orders, placeOrder, updateOrderStatus, assignDriver, isLoading,
-            suppliers, addSupplier,
-            staff, addStaff, updateStaff, deleteStaff,
-            shifts, currentShift, startShift, endShift, recordCashDrop,
-            toggleWishlist,
-            issues, reportIssue,
-            customers, addCustomer, updateCustomer, settleCustomerTab,
-            expenses, addExpense, deleteExpense
-        }}>
+        <StoreContext.Provider value={contextValue}>
             {children}
         </StoreContext.Provider>
     );

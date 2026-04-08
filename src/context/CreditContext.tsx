@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { useStore } from './StoreContext';
 import { toast } from 'sonner';
 import { db, storage } from '@/lib/firebase';
@@ -654,16 +654,22 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         addDoc(collection(db, 'lender_offers'), { ...offer, createdAt: new Date().toISOString() });
     };
 
+    const creditContextValue = useMemo(() => ({
+        profile, refreshProfile, simulatePayment,
+        calculateProjectedScore: calculateScoreFromDate,
+        isLoading, borrowers, loans, addBorrower, createLoan, recordPayment,
+        applications, approveApplication, rejectApplication,
+        confirmTransfer, restructureLoan, sendReminder,
+        notifications, clearNotifications,
+        purchaseOnCredit, lenderOffers, addLenderOffer,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [
+        profile, isLoading, borrowers, loans,
+        applications, notifications, lenderOffers,
+    ]);
+
     return (
-        <CreditContext.Provider value={{
-            profile, refreshProfile, simulatePayment,
-            calculateProjectedScore: calculateScoreFromDate,
-            isLoading, borrowers, loans, addBorrower, createLoan, recordPayment,
-            applications, approveApplication, rejectApplication,
-            confirmTransfer, restructureLoan, sendReminder,
-            notifications, clearNotifications,
-            purchaseOnCredit, lenderOffers, addLenderOffer
-        }}>
+        <CreditContext.Provider value={creditContextValue}>
             {children}
         </CreditContext.Provider>
     );

@@ -7,13 +7,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, Package, ScanLine, Camera, RotateCcw, Layers } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Package, ScanLine, Layers } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useStore } from "@/context/StoreContext";
 import { useToast } from "@/hooks/use-toast";
-import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
-import { DecodeHintType } from "@zxing/library";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 const OwnerInventory = () => {
     const { products, addProduct, deleteProduct, updateProduct } = useStore();
@@ -43,17 +42,6 @@ const OwnerInventory = () => {
 
     // Scanner state
     const [isScannerOpen, setIsScannerOpen] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const controlsRef = useRef<IScannerControls | null>(null);
-    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-    const [deviceIndex, setDeviceIndex] = useState(0);
-    const [cameraError, setCameraError] = useState<string | null>(null);
-
-    const codeReader = useRef((() => {
-        const hints = new Map();
-        hints.set(DecodeHintType.TRY_HARDER, true);
-        return new BrowserMultiFormatReader(hints);
-    })());
 
     const handleBarcodeDetected = useCallback((barcode: string) => {
         const found = products.find(p => p.barcode === barcode);
@@ -74,34 +62,6 @@ const OwnerInventory = () => {
             toast({ title: "Barcode Scanned", description: `No matching product. Barcode: ${barcode}` });
         }
     }, [toast, products]);
-
-    const startScanning = useCallback(async () => {
-        if (!videoRef.current) return;
-        setCameraError(null);
-        try {
-            const deviceList = await BrowserMultiFormatReader.listVideoInputDevices();
-            setDevices(deviceList);
-            const deviceId = deviceList[deviceIndex]?.deviceId;
-            controlsRef.current = await codeReader.current.decodeFromVideoDevice(
-                deviceId,
-                videoRef.current,
-                (result) => { if (result) handleBarcodeDetected(result.getText()); }
-            );
-        } catch {
-            setCameraError("Unable to access camera. Please check permissions.");
-        }
-    }, [deviceIndex, handleBarcodeDetected]);
-
-    useEffect(() => {
-        if (isScannerOpen) startScanning();
-        else controlsRef.current?.stop();
-        return () => { controlsRef.current?.stop(); };
-    }, [isScannerOpen, deviceIndex]);
-
-    const toggleCamera = () => {
-        controlsRef.current?.stop();
-        setDeviceIndex(prev => (prev + 1) % Math.max(devices.length, 1));
-    };
 
     const uniqueCategories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
 
@@ -299,25 +259,7 @@ const OwnerInventory = () => {
                             <DialogTitle>Scan Barcode</DialogTitle>
                             <DialogDescription>Point the camera at a barcode to auto-detect it.</DialogDescription>
                         </DialogHeader>
-                        <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
-                            {cameraError ? (
-                                <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-                                    <Camera className="h-8 w-8 text-muted-foreground mb-2" />
-                                    <p className="text-white text-sm">{cameraError}</p>
-                                    <Button variant="outline" size="sm" className="mt-2" onClick={startScanning}>Retry</Button>
-                                </div>
-                            ) : (
-                                <>
-                                    <video ref={videoRef} className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div className="w-48 h-24 border-2 border-emerald-400/70 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
-                                    </div>
-                                    <Button variant="secondary" size="icon" onClick={toggleCamera} className="absolute bottom-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm">
-                                        <RotateCcw className="h-4 w-4" />
-                                    </Button>
-                                </>
-                            )}
-                        </div>
+                        <BarcodeScanner isActive={isScannerOpen} onScan={handleBarcodeDetected} />
                         <p className="text-center text-xs text-muted-foreground">
                             Align barcode within the frame — detects automatically. Supports EAN-13, UPC, Code 128, QR.
                         </p>

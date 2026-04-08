@@ -59,7 +59,11 @@
       "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\\\\|BUG\" /c/Users/Lufuno Mphela/Desktop/smitetrade-secure-growth/src/components/*.tsx)",
       "Bash(grep -n \"overflow-x\\\\|TableHeader\\\\|<Table\" pages/**/*.tsx)",
       "Bash(grep -n \"grid.*cols\" src/pages/**/*.tsx)",
-      "Bash(grep -v \"^ui$\")"
+      "Bash(grep -v \"^ui$\")",
+      "Bash(tee /tmp/ts_errors.txt)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(echo \"EXIT_CODE:$?\")",
+      "Bash(node_modules/.bin/tsc -p tsconfig.app.json --noEmit)"
     ]
   }
 }

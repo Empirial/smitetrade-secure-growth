@@ -5,11 +5,10 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Trash2, ShoppingCart, CreditCard, Banknote, Camera, RotateCcw } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { Search, Plus, Trash2, ShoppingCart, CreditCard, Banknote, Camera } from "lucide-react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
-import { DecodeHintType } from "@zxing/library";
+import BarcodeScanner from "@/components/BarcodeScanner";
 import { useStore } from "@/context/StoreContext";
 import { usePayfast } from "@/hooks/usePayfast";
 
@@ -83,13 +82,6 @@ const OwnerPOS = () => {
         }));
     };
 
-    // Scanner Logic
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const controlsRef = useRef<IScannerControls | null>(null);
-    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-    const [deviceIndex, setDeviceIndex] = useState(0);
-    const [cameraError, setCameraError] = useState<string | null>(null);
-
     const handleBarcodeLookup = useCallback((barcode: string) => {
         const found = products.find(p => p.id === barcode || p.barcode === barcode);
         if (found) {
@@ -100,47 +92,6 @@ const OwnerPOS = () => {
             toast({ title: "Not Found", description: `Product not found for barcode: ${barcode}`, variant: "destructive" });
         }
     }, [products]);
-
-    const startScanning = useCallback(async () => {
-        // Stop any previous session first
-        controlsRef.current?.stop();
-        controlsRef.current = null;
-
-        // Clear error BEFORE the wait so the <video> element is rendered during the delay
-        setCameraError(null);
-
-        // Wait for the dialog's video element to be in the DOM
-        await new Promise(r => setTimeout(r, 150));
-        if (!videoRef.current) return;
-        try {
-            // Always create a fresh reader — reusing after stop() fails silently
-            const hints = new Map();
-            hints.set(DecodeHintType.TRY_HARDER, true);
-            const reader = new BrowserMultiFormatReader(hints);
-
-            const deviceList = await BrowserMultiFormatReader.listVideoInputDevices();
-            setDevices(deviceList);
-            const deviceId = deviceList[deviceIndex]?.deviceId;
-            controlsRef.current = await reader.decodeFromVideoDevice(
-                deviceId,
-                videoRef.current,
-                (result) => { if (result) handleBarcodeLookup(result.getText()); }
-            );
-        } catch {
-            setCameraError("Unable to access camera. Please check permissions.");
-        }
-    }, [deviceIndex, handleBarcodeLookup]);
-
-    useEffect(() => {
-        if (isCustomOpen) startScanning();
-        else controlsRef.current?.stop();
-        return () => { controlsRef.current?.stop(); };
-    }, [isCustomOpen, deviceIndex]);
-
-    const toggleCamera = () => {
-        controlsRef.current?.stop();
-        setDeviceIndex(prev => (prev + 1) % Math.max(devices.length, 1));
-    };
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const filteredProducts = products.filter(p => {
@@ -180,25 +131,7 @@ const OwnerPOS = () => {
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
                                     {/* Live Camera View */}
-                                    <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
-                                        {cameraError ? (
-                                            <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-                                                <Camera className="h-8 w-8 text-muted-foreground mb-2" />
-                                                <p className="text-white text-sm">{cameraError}</p>
-                                                <Button variant="outline" size="sm" className="mt-2" onClick={startScanning}>Retry</Button>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <video ref={videoRef} className="w-full h-full object-cover" />
-                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                    <div className="w-48 h-24 border-2 border-emerald-400/70 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
-                                                </div>
-                                                <Button variant="secondary" size="icon" onClick={toggleCamera} className="absolute bottom-2 right-2 h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm">
-                                                    <RotateCcw className="h-4 w-4" />
-                                                </Button>
-                                            </>
-                                        )}
-                                    </div>
+                                    <BarcodeScanner onScan={handleBarcodeLookup} isActive={isCustomOpen} />
 
                                     <div className="text-center text-xs text-slate-400 -mt-2">
                                         Align barcode within frame to auto-add item.

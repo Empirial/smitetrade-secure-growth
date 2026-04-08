@@ -78,7 +78,7 @@ const CustomerOrders = () => {
                                     size="sm"
                                     className="bg-emerald-600 hover:bg-emerald-700"
                                     onClick={() => {
-                                        order.items.forEach(item => addToCart({ ...item, storeId: order.storeId || '' }));
+                                        order.items.forEach(item => addToCart({ ...item, storeId: order.storeId || '', category: '', stock: item.quantity, status: 'In Stock' } as unknown as Parameters<typeof addToCart>[0]));
                                         toast.success(`${order.items.length} item${order.items.length > 1 ? 's' : ''} added to cart`);
                                         navigate("/customer/cart");
                                     }}

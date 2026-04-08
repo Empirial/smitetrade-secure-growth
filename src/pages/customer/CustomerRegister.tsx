@@ -54,6 +54,7 @@ const CustomerRegister = () => {
             firstName: validateRequired(formData.firstName, "First name"),
             lastName: validateRequired(formData.lastName, "Last name"),
             phone: validatePhone(formData.phone),
+            city: null as string | null,
             email: validateEmail(formData.email),
             password: validatePassword(formData.password),
         };

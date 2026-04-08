@@ -1,28 +1,23 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
-import { DecodeHintType } from "@zxing/library";
-import { Camera, Trash2, FileDown, RotateCcw, X, Scan, Search, ArrowRight, Package } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { Camera, Trash2, FileDown, X, Scan, Search, ArrowRight, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import DownloadDialog from "@/components/DownloadDialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card"; // Card still used for product result panels
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { imagesToPDF, downloadPDF } from "@/utils/pdfUtils";
 import { toast } from "sonner";
 import { useStore } from "@/context/StoreContext";
 import { Product } from "@/types";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 const CashierScanner = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const controlsRef = useRef<IScannerControls | null>(null);
-    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-    const [deviceIndex, setDeviceIndex] = useState(0);
     const [captures, setCaptures] = useState<string[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showDownloadDialog, setShowDownloadDialog] = useState(false);
     const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
-    const [cameraError, setCameraError] = useState<string | null>(null);
     const [barcodeInput, setBarcodeInput] = useState("");
     const [matchedProduct, setMatchedProduct] = useState<Product | null>(null);
     const [barcodeNotFound, setBarcodeNotFound] = useState(false);
@@ -31,12 +26,6 @@ const CashierScanner = () => {
     const [addingToInventory, setAddingToInventory] = useState(false);
 
     const { products, addToCart, addProduct, updateProduct } = useStore();
-
-    const codeReader = useRef((() => {
-        const hints = new Map();
-        hints.set(DecodeHintType.TRY_HARDER, true);
-        return new BrowserMultiFormatReader(hints);
-    })());
 
     const handleBarcodeLookup = useCallback((barcode: string) => {
         const found = products.find(p => p.barcode === barcode || p.id === barcode);
@@ -53,33 +42,10 @@ const CashierScanner = () => {
         }
     }, [products]);
 
-    const startScanning = useCallback(async () => {
-        if (!videoRef.current) return;
-        setCameraError(null);
-        try {
-            const deviceList = await BrowserMultiFormatReader.listVideoInputDevices();
-            setDevices(deviceList);
-            const deviceId = deviceList[deviceIndex]?.deviceId;
-            controlsRef.current = await codeReader.current.decodeFromVideoDevice(
-                deviceId,
-                videoRef.current,
-                (result) => {
-                    if (result) {
-                        const text = result.getText();
-                        setBarcodeInput(text);
-                        handleBarcodeLookup(text);
-                    }
-                }
-            );
-        } catch {
-            setCameraError("Unable to access camera. Please ensure you have granted camera permissions.");
-        }
-    }, [deviceIndex, handleBarcodeLookup]);
-
-    useEffect(() => {
-        startScanning();
-        return () => { controlsRef.current?.stop(); };
-    }, [deviceIndex]);
+    const handleScan = useCallback((barcode: string) => {
+        setBarcodeInput(barcode);
+        handleBarcodeLookup(barcode);
+    }, [handleBarcodeLookup]);
 
     const handleAddStock = async () => {
         if (!matchedProduct) return;
@@ -142,10 +108,7 @@ const CashierScanner = () => {
         toast.success("All photos cleared");
     };
 
-    const toggleCamera = () => {
-        controlsRef.current?.stop();
-        setDeviceIndex(prev => (prev + 1) % Math.max(devices.length, 1));
-    };
+
 
     const handleSaveAsPDF = async () => {
         if (captures.length === 0) {
@@ -189,53 +152,25 @@ const CashierScanner = () => {
 
                 {/* Camera Feed */}
                 <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
-                    {cameraError ? (
-                        <div className="flex flex-col items-center justify-center p-12 text-center">
-                            <Camera className="h-16 w-16 text-muted-foreground mb-4" />
-                            <p className="text-muted-foreground">{cameraError}</p>
-                            <Button variant="outline" className="mt-4" onClick={startScanning}>
-                                Try Again
+                    <BarcodeScanner ref={videoRef} isActive={true} onScan={handleScan}>
+                        <div className="absolute bottom-14 left-0 right-0 flex justify-center pointer-events-none">
+                            <span className="text-xs text-white/80 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
+                                Point at barcode — <span className="text-emerald-400 font-medium">detects automatically</span>
+                            </span>
+                        </div>
+
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-3 pointer-events-auto">
+                            <Button
+                                variant="secondary"
+                                size="icon"
+                                onClick={capture}
+                                className="h-8 w-8 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm border-0"
+                                title="Capture photo"
+                            >
+                                <Camera className="h-4 w-4" />
                             </Button>
                         </div>
-                    ) : (
-                        <div className="relative aspect-video">
-                            <video ref={videoRef} className="w-full h-full object-cover" />
-
-                            {/* Scan guide overlay */}
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-64 h-32 border-2 border-emerald-400/70 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
-                            </div>
-
-                            {/* Hint text inside camera */}
-                            <div className="absolute bottom-14 left-0 right-0 flex justify-center pointer-events-none">
-                                <span className="text-xs text-white/80 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
-                                    Point at barcode — <span className="text-emerald-400 font-medium">detects automatically</span>
-                                </span>
-                            </div>
-
-                            {/* Camera Controls Overlay */}
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3">
-                                <Button
-                                    variant="secondary"
-                                    size="icon"
-                                    onClick={toggleCamera}
-                                    className="h-9 w-9 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm border-0"
-                                    title="Flip camera"
-                                >
-                                    <RotateCcw className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    size="icon"
-                                    onClick={capture}
-                                    className="h-9 w-9 bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm border-0"
-                                    title="Capture photo"
-                                >
-                                    <Camera className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                    </BarcodeScanner>
                 </div>
 
                 {/* Captured Photos Filmstrip */}

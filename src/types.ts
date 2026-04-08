@@ -98,7 +98,7 @@ export interface Order {
     customerAddress: string;
     items: OrderItem[];
     total: number;
-    status: 'Pending' | 'Paid' | 'Ready' | 'Out for Delivery' | 'Delivered' | 'Pre-order';
+    status: 'Pending' | 'Paid' | 'Ready' | 'Out for Delivery' | 'Delivered' | 'Pre-order' | 'Cancelled';
     date: string;
     driverId?: string;
     userId?: string; // Link to customer

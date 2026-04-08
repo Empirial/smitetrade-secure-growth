@@ -186,7 +186,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
 
       match /cashDrops/{dropId} {
-        allow read, write: if isAuth();
+        allow read: if isAuth() && (
+          isAdmin() ||
+          resource.data.cashierId == uid() ||
+          (isOwner() && get(/databases/$(database)/documents/shifts/$(shiftId)).data.storeId == storeId())
+        );
+        allow create: if isAuth() && (isCashier() || isOwner() || isAdmin());
+        allow update, delete: if isAdmin();
       }
     }
 

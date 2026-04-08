@@ -12,7 +12,7 @@ import { useCredit } from "@/context/CreditContext";
 import { useStore } from "@/context/StoreContext";
 import { useState, useEffect } from "react";
 import FieldError from "@/components/ui/FieldError";
-import { Navigation } from "lucide-react";
+import { Navigation, MapPin } from "lucide-react";
 import { getSavedLocation, saveLocation, clearLocation, getCurrentPosition, geocodeAddress, type SavedLocation } from "@/utils/locationUtils";
 import { validateRequired, validateEmail, validatePhone, validateIdNumber, validatePassword, validatePasswordMatch, hasErrors } from "@/utils/validation";
 

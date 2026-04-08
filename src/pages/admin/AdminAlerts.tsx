@@ -125,7 +125,7 @@ const AdminAlerts = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <Label>Type</Label>
-                                        <Select value={newType} onValueChange={setNewType}>
+                                        <Select value={newType} onValueChange={(v) => setNewType(v as typeof newType)}>
                                             <SelectTrigger><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="info">Info</SelectItem>

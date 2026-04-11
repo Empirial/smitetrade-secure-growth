@@ -37,7 +37,6 @@ const OwnerSuppliers = lazy(() => import("./pages/owner/OwnerSuppliers"));
 const OwnerAlerts = lazy(() => import("./pages/owner/OwnerAlerts"));
 const OwnerAnalytics = lazy(() => import("./pages/owner/OwnerAnalytics"));
 const OwnerExpenses = lazy(() => import("./pages/owner/OwnerExpenses"));
-const OwnerCustomers = lazy(() => import("./pages/owner/OwnerCustomers"));
 const OwnerCreditReview = lazy(() => import("./pages/owner/OwnerCreditReview"));
 const OwnerStockAdjustment = lazy(() => import("./pages/owner/OwnerStockAdjustment"));
 const OwnerSupport = lazy(() => import("./pages/owner/OwnerSupport"));
@@ -157,7 +156,6 @@ const App = () => (
                 <Route path="/owner/alerts" element={<AuthGuard role="owner"><OwnerAlerts /></AuthGuard>} />
                 <Route path="/owner/analytics" element={<AuthGuard role="owner"><OwnerAnalytics /></AuthGuard>} />
                 <Route path="/owner/expenses" element={<AuthGuard role="owner"><OwnerExpenses /></AuthGuard>} />
-                <Route path="/owner/customers" element={<AuthGuard role="owner"><OwnerCustomers /></AuthGuard>} />
                 <Route path="/owner/credit-review" element={<AuthGuard role="owner"><OwnerCreditReview /></AuthGuard>} />
                 <Route path="/owner/stock-adjustment" element={<AuthGuard role="owner"><OwnerStockAdjustment /></AuthGuard>} />
                 <Route path="/owner/support" element={<AuthGuard role="owner"><OwnerSupport /></AuthGuard>} />

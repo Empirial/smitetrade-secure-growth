@@ -5,13 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStore } from "@/context/StoreContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit2, Percent, Clock, Plus, Tag, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { db } from "@/lib/firebase";
+import {
+    addDoc, collection, onSnapshot, query, where, orderBy,
+    deleteDoc, doc, updateDoc, serverTimestamp
+} from "firebase/firestore";
 
 export interface Promotion {
     id: string;
@@ -24,19 +29,22 @@ export interface Promotion {
     endDate: string;
 }
 
-const initialPromotions: Promotion[] = [
-    { id: "PROMO-1", name: "Weekend Braai Combo", type: "Combo", items: "Charcoal, Meat, Chakalaka", price: 150.00, status: "Active", startDate: "2026-03-06", endDate: "2026-03-08" },
-    { id: "PROMO-2", name: "Bread & Milk Special", type: "Combo", items: "1x Brown Bread, 1x 2L Milk", price: 42.00, status: "Active", startDate: "2026-03-01", endDate: "2026-03-31" },
-    { id: "PROMO-3", name: "End of Month Sale", type: "Discount", items: "All 2L Cool Drinks", price: "10% off", status: "Upcoming", startDate: "2026-03-25", endDate: "2026-03-31" },
-];
+interface TimedSpecial {
+    id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+    discountPercent: string;
+}
 
 const OwnerPricing = () => {
-    const { products } = useStore();
+    const { products, user, updateProduct } = useStore();
     const { toast } = useToast();
+    const storeId = user?.storeId;
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Promotions State
-    const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
+    // Promotions
+    const [promotions, setPromotions] = useState<Promotion[]>([]);
     const [isAddPromoOpen, setIsAddPromoOpen] = useState(false);
     const [promoName, setPromoName] = useState("");
     const [promoType, setPromoType] = useState("Combo");
@@ -44,84 +52,94 @@ const OwnerPricing = () => {
     const [promoPrice, setPromoPrice] = useState("");
     const [promoStartDate, setPromoStartDate] = useState("");
     const [promoEndDate, setPromoEndDate] = useState("");
-
-    // Edit Product State
-    const [isEditProductOpen, setIsEditProductOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<any>(null);
-    const [newPrice, setNewPrice] = useState("");
-
-    // Edit Promo State
     const [isEditPromoOpen, setIsEditPromoOpen] = useState(false);
     const [editingPromoId, setEditingPromoId] = useState<string | null>(null);
 
-    // Schedule Special State
+    // Timed specials
+    const [timedSpecials, setTimedSpecials] = useState<TimedSpecial[]>([]);
     const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+    const [specialName, setSpecialName] = useState("");
+    const [specialStartTime, setSpecialStartTime] = useState("14:00");
+    const [specialEndTime, setSpecialEndTime] = useState("16:00");
+    const [specialDiscount, setSpecialDiscount] = useState("");
+
+    // Edit product price
+    const [isEditProductOpen, setIsEditProductOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+    const [newPrice, setNewPrice] = useState("");
+    const [isSavingPrice, setIsSavingPrice] = useState(false);
+
+    // Load promotions from Firestore
+    useEffect(() => {
+        if (!storeId) return;
+        const q = query(
+            collection(db, "promotions"),
+            where("storeId", "==", storeId),
+            orderBy("createdAt", "desc")
+        );
+        return onSnapshot(q, (snap) => {
+            setPromotions(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Promotion[]);
+        });
+    }, [storeId]);
+
+    // Load timed specials from Firestore
+    useEffect(() => {
+        if (!storeId) return;
+        const q = query(
+            collection(db, "timed_specials"),
+            where("storeId", "==", storeId),
+            orderBy("createdAt", "desc")
+        );
+        return onSnapshot(q, (snap) => {
+            setTimedSpecials(snap.docs.map(d => ({ id: d.id, ...d.data() })) as TimedSpecial[]);
+        });
+    }, [storeId]);
 
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleAddPromotion = () => {
+    const resetPromoForm = () => {
+        setPromoName(""); setPromoType("Combo"); setPromoItems("");
+        setPromoPrice(""); setPromoStartDate(""); setPromoEndDate("");
+        setEditingPromoId(null);
+    };
+
+    const handleAddPromotion = async () => {
         if (!promoName || !promoItems || !promoPrice || !promoStartDate || !promoEndDate) {
-            toast({
-                title: "Error",
-                description: "All fields are required.",
-                variant: "destructive"
-            });
+            toast({ title: "Error", description: "All fields are required.", variant: "destructive" });
             return;
         }
-
-        const newPromo = {
-            id: `PROMO-${promotions.length + 1}`,
-            name: promoName,
-            type: promoType,
-            items: promoItems,
-            price: promoType === 'Discount' ? promoPrice : parseFloat(promoPrice),
-            status: "Active",
-            startDate: promoStartDate,
-            endDate: promoEndDate
-        };
-
-        setPromotions([...promotions, newPromo]);
-        setIsAddPromoOpen(false);
-
-        // Reset
-        setPromoName("");
-        setPromoType("Combo");
-        setPromoItems("");
-        setPromoPrice("");
-        setPromoStartDate("");
-        setPromoEndDate("");
-
-        toast({
-            title: "Promotion Added",
-            description: "The new special is now active.",
-        });
+        try {
+            await addDoc(collection(db, "promotions"), {
+                storeId,
+                name: promoName,
+                type: promoType,
+                items: promoItems,
+                price: promoType === "Discount" ? promoPrice : parseFloat(promoPrice),
+                status: "Active",
+                startDate: promoStartDate,
+                endDate: promoEndDate,
+                createdAt: serverTimestamp(),
+            });
+            setIsAddPromoOpen(false);
+            resetPromoForm();
+            toast({ title: "Promotion Added", description: "The new special is now active." });
+        } catch {
+            toast({ title: "Error", description: "Failed to save promotion.", variant: "destructive" });
+        }
     };
 
-    const handleDeletePromo = (id: string) => {
-        setPromotions(promotions.filter(p => p.id !== id));
-        toast({
-            title: "Promotion Removed",
-            description: "The special has been ended."
-        });
+    const handleDeletePromo = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "promotions", id));
+            toast({ title: "Promotion Removed", description: "The special has been ended." });
+        } catch {
+            toast({ title: "Error", description: "Failed to delete promotion.", variant: "destructive" });
+        }
     };
 
-    const handleEditProductClick = (product: any) => {
-        setEditingProduct(product);
-        setNewPrice(product.price.toString());
-        setIsEditProductOpen(true);
-    };
-
-    const handleSaveProductPrice = () => {
-        toast({
-            title: "Price Updated",
-            description: `The price for ${editingProduct?.name} has been updated to R ${newPrice}.`
-        });
-        setIsEditProductOpen(false);
-    };
-
-    const handleEditPromoClick = (promo: any) => {
+    const handleEditPromoClick = (promo: Promotion) => {
         setEditingPromoId(promo.id);
         setPromoName(promo.name);
         setPromoType(promo.type);
@@ -132,35 +150,80 @@ const OwnerPricing = () => {
         setIsEditPromoOpen(true);
     };
 
-    const handleSaveEditPromo = () => {
-        setPromotions(promotions.map(p => p.id === editingPromoId ? {
-            ...p,
-            name: promoName,
-            type: promoType,
-            items: promoItems,
-            price: promoType === 'Discount' ? promoPrice : parseFloat(promoPrice),
-            startDate: promoStartDate,
-            endDate: promoEndDate
-        } : p));
-        toast({
-            title: "Promotion Updated",
-            description: "The special has been updated."
-        });
-        setIsEditPromoOpen(false);
-        setPromoName("");
-        setPromoType("Combo");
-        setPromoItems("");
-        setPromoPrice("");
-        setPromoStartDate("");
-        setPromoEndDate("");
+    const handleSaveEditPromo = async () => {
+        if (!editingPromoId) return;
+        try {
+            await updateDoc(doc(db, "promotions", editingPromoId), {
+                name: promoName,
+                type: promoType,
+                items: promoItems,
+                price: promoType === "Discount" ? promoPrice : parseFloat(promoPrice),
+                startDate: promoStartDate,
+                endDate: promoEndDate,
+            });
+            toast({ title: "Promotion Updated", description: "The special has been updated." });
+            setIsEditPromoOpen(false);
+            resetPromoForm();
+        } catch {
+            toast({ title: "Error", description: "Failed to update promotion.", variant: "destructive" });
+        }
     };
 
-    const handleScheduleSpecial = () => {
-        toast({
-            title: "Special Scheduled",
-            description: "The time-based special has been configured."
-        });
-        setIsScheduleOpen(false);
+    const handleEditProductClick = (product: any) => {
+        setEditingProduct(product);
+        setNewPrice(product.price.toString());
+        setIsEditProductOpen(true);
+    };
+
+    const handleSaveProductPrice = async () => {
+        if (!editingProduct) return;
+        const parsed = parseFloat(newPrice);
+        if (isNaN(parsed) || parsed <= 0) {
+            toast({ title: "Error", description: "Enter a valid price.", variant: "destructive" });
+            return;
+        }
+        setIsSavingPrice(true);
+        try {
+            await updateProduct(editingProduct.id, { price: parsed });
+            toast({ title: "Price Updated", description: `${editingProduct.name} updated to R ${parsed.toFixed(2)}.` });
+            setIsEditProductOpen(false);
+        } catch {
+            toast({ title: "Error", description: "Failed to update price.", variant: "destructive" });
+        } finally {
+            setIsSavingPrice(false);
+        }
+    };
+
+    const handleScheduleSpecial = async () => {
+        if (!specialName || !specialDiscount) {
+            toast({ title: "Error", description: "Name and discount are required.", variant: "destructive" });
+            return;
+        }
+        try {
+            await addDoc(collection(db, "timed_specials"), {
+                storeId,
+                name: specialName,
+                startTime: specialStartTime,
+                endTime: specialEndTime,
+                discountPercent: specialDiscount,
+                createdAt: serverTimestamp(),
+            });
+            toast({ title: "Special Scheduled", description: "The time-based special has been configured." });
+            setIsScheduleOpen(false);
+            setSpecialName(""); setSpecialDiscount("");
+            setSpecialStartTime("14:00"); setSpecialEndTime("16:00");
+        } catch {
+            toast({ title: "Error", description: "Failed to save schedule.", variant: "destructive" });
+        }
+    };
+
+    const handleDeleteTimedSpecial = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "timed_specials", id));
+            toast({ title: "Special Removed" });
+        } catch {
+            toast({ title: "Error", description: "Failed to delete special.", variant: "destructive" });
+        }
     };
 
     return (
@@ -178,6 +241,7 @@ const OwnerPricing = () => {
                         <TabsTrigger value="timed">Time-Based Specials</TabsTrigger>
                     </TabsList>
 
+                    {/* ── Product Pricing ── */}
                     <TabsContent value="products" className="space-y-4">
                         <div className="flex items-center gap-4">
                             <Input
@@ -190,7 +254,7 @@ const OwnerPricing = () => {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Product List</CardTitle>
-                                <CardDescription>Update selling prices and cost prices.</CardDescription>
+                                <CardDescription>Update selling prices.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Table>
@@ -199,7 +263,6 @@ const OwnerPricing = () => {
                                             <TableHead>Product Name</TableHead>
                                             <TableHead>Category</TableHead>
                                             <TableHead>Current Price</TableHead>
-                                            <TableHead>Cost Price</TableHead>
                                             <TableHead className="text-right">Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -209,11 +272,9 @@ const OwnerPricing = () => {
                                                 <TableCell className="font-medium">{product.name}</TableCell>
                                                 <TableCell>{product.category}</TableCell>
                                                 <TableCell>R {product.price.toFixed(2)}</TableCell>
-                                                <TableCell className="text-muted-foreground">R {(product.price * 0.7).toFixed(2)}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Button variant="ghost" size="sm" onClick={() => handleEditProductClick(product)}>
-                                                        <Edit2 className="h-4 w-4 mr-2" />
-                                                        Edit
+                                                        <Edit2 className="h-4 w-4 mr-2" /> Edit
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -221,14 +282,11 @@ const OwnerPricing = () => {
                                     </TableBody>
                                 </Table>
 
-                                {/* Product Price Edit Dialog */}
                                 <Dialog open={isEditProductOpen} onOpenChange={setIsEditProductOpen}>
                                     <DialogContent>
                                         <DialogHeader>
                                             <DialogTitle>Edit Product Price</DialogTitle>
-                                            <DialogDescription>
-                                                Update the selling price for {editingProduct?.name}.
-                                            </DialogDescription>
+                                            <DialogDescription>Update the selling price for {editingProduct?.name}.</DialogDescription>
                                         </DialogHeader>
                                         <div className="space-y-4 py-4">
                                             <div className="space-y-2">
@@ -240,12 +298,11 @@ const OwnerPricing = () => {
                                                     onChange={e => setNewPrice(e.target.value)}
                                                 />
                                             </div>
-                                            <p className="text-sm text-muted-foreground">
-                                                Cost Price: R {editingProduct ? (editingProduct.price * 0.7).toFixed(2) : '0.00'}
-                                            </p>
                                         </div>
                                         <DialogFooter>
-                                            <Button onClick={handleSaveProductPrice}>Update Price</Button>
+                                            <Button onClick={handleSaveProductPrice} disabled={isSavingPrice}>
+                                                {isSavingPrice ? "Saving..." : "Update Price"}
+                                            </Button>
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
@@ -253,17 +310,16 @@ const OwnerPricing = () => {
                         </Card>
                     </TabsContent>
 
+                    {/* ── Promotions & Combos ── */}
                     <TabsContent value="promotions" className="space-y-4">
                         <div className="flex justify-between items-center mb-4">
                             <div>
                                 <h3 className="text-lg font-medium">Active Deals</h3>
                                 <p className="text-sm text-muted-foreground">Manage your current promotions, combos, and discounts.</p>
                             </div>
-                            <Dialog open={isAddPromoOpen} onOpenChange={setIsAddPromoOpen}>
+                            <Dialog open={isAddPromoOpen} onOpenChange={(v) => { setIsAddPromoOpen(v); if (!v) resetPromoForm(); }}>
                                 <DialogTrigger asChild>
-                                    <Button>
-                                        <Plus className="h-4 w-4 mr-2" /> New Deal
-                                    </Button>
+                                    <Button><Plus className="h-4 w-4 mr-2" /> New Deal</Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
@@ -278,9 +334,7 @@ const OwnerPricing = () => {
                                         <div className="space-y-2">
                                             <Label>Promotion Type</Label>
                                             <Select value={promoType} onValueChange={setPromoType}>
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="Combo">Combo Deal (Fixed Price)</SelectItem>
                                                     <SelectItem value="Discount">Percentage % Off</SelectItem>
@@ -292,8 +346,8 @@ const OwnerPricing = () => {
                                             <Input placeholder="e.g. 2x Coke, 1x Bread" value={promoItems} onChange={e => setPromoItems(e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>{promoType === 'Combo' ? "Combo Price (R)" : "Discount Value"}</Label>
-                                            <Input placeholder={promoType === 'Combo' ? "150.00" : "10% off"} value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
+                                            <Label>{promoType === "Combo" ? "Combo Price (R)" : "Discount Value"}</Label>
+                                            <Input placeholder={promoType === "Combo" ? "150.00" : "10% off"} value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
@@ -312,6 +366,7 @@ const OwnerPricing = () => {
                                 </DialogContent>
                             </Dialog>
                         </div>
+
                         <Card>
                             <CardHeader>
                                 <div className="flex items-center gap-2">
@@ -336,20 +391,16 @@ const OwnerPricing = () => {
                                         {promotions.map((promo) => (
                                             <TableRow key={promo.id}>
                                                 <TableCell className="font-medium">{promo.name}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant="secondary">{promo.type}</Badge>
-                                                </TableCell>
+                                                <TableCell><Badge variant="secondary">{promo.type}</Badge></TableCell>
                                                 <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate" title={promo.items}>
                                                     {promo.items}
                                                 </TableCell>
                                                 <TableCell className="font-bold">
-                                                    {promo.type === 'Combo' ? `R ${parseFloat(promo.price as string).toFixed(2)}` : promo.price}
+                                                    {promo.type === "Combo" ? `R ${parseFloat(promo.price as string).toFixed(2)}` : promo.price}
                                                 </TableCell>
-                                                <TableCell className="text-sm">
-                                                    {promo.startDate} to {promo.endDate}
-                                                </TableCell>
+                                                <TableCell className="text-sm">{promo.startDate} to {promo.endDate}</TableCell>
                                                 <TableCell>
-                                                    <Badge variant={promo.status === 'Active' ? 'default' : 'outline'} className={promo.status === 'Active' ? 'bg-indigo-500' : ''}>
+                                                    <Badge variant={promo.status === "Active" ? "default" : "outline"} className={promo.status === "Active" ? "bg-indigo-500" : ""}>
                                                         {promo.status}
                                                     </Badge>
                                                 </TableCell>
@@ -367,7 +418,7 @@ const OwnerPricing = () => {
                                         ))}
                                         {promotions.length === 0 && (
                                             <TableRow>
-                                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                                                     <Percent className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                                     No active promotions. Create one above!
                                                 </TableCell>
@@ -376,8 +427,8 @@ const OwnerPricing = () => {
                                     </TableBody>
                                 </Table>
 
-                                {/* Promotion Edit Dialog */}
-                                <Dialog open={isEditPromoOpen} onOpenChange={setIsEditPromoOpen}>
+                                {/* Edit Promo Dialog */}
+                                <Dialog open={isEditPromoOpen} onOpenChange={(v) => { setIsEditPromoOpen(v); if (!v) resetPromoForm(); }}>
                                     <DialogContent>
                                         <DialogHeader>
                                             <DialogTitle>Edit Promotion</DialogTitle>
@@ -386,14 +437,12 @@ const OwnerPricing = () => {
                                         <div className="space-y-4 py-4">
                                             <div className="space-y-2">
                                                 <Label>Deal Name</Label>
-                                                <Input placeholder="e.g. Weekend Braai Pack" value={promoName} onChange={e => setPromoName(e.target.value)} />
+                                                <Input value={promoName} onChange={e => setPromoName(e.target.value)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Promotion Type</Label>
                                                 <Select value={promoType} onValueChange={setPromoType}>
-                                                    <SelectTrigger>
-                                                        <SelectValue />
-                                                    </SelectTrigger>
+                                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="Combo">Combo Deal (Fixed Price)</SelectItem>
                                                         <SelectItem value="Discount">Percentage % Off</SelectItem>
@@ -402,11 +451,11 @@ const OwnerPricing = () => {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Included Item(s) / Category</Label>
-                                                <Input placeholder="e.g. 2x Coke, 1x Bread" value={promoItems} onChange={e => setPromoItems(e.target.value)} />
+                                                <Input value={promoItems} onChange={e => setPromoItems(e.target.value)} />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>{promoType === 'Combo' ? "Combo Price (R)" : "Discount Value"}</Label>
-                                                <Input placeholder={promoType === 'Combo' ? "150.00" : "10% off"} value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
+                                                <Label>{promoType === "Combo" ? "Combo Price (R)" : "Discount Value"}</Label>
+                                                <Input value={promoPrice} onChange={e => setPromoPrice(e.target.value)} />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
@@ -424,56 +473,88 @@ const OwnerPricing = () => {
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
-
                             </CardContent>
                         </Card>
                     </TabsContent>
 
+                    {/* ── Time-Based Specials ── */}
                     <TabsContent value="timed" className="space-y-4">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Happy Hour & Specials</CardTitle>
-                                <CardDescription>Set automatic price changes based on time of day.</CardDescription>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle>Happy Hour & Specials</CardTitle>
+                                        <CardDescription>Set automatic price changes based on time of day.</CardDescription>
+                                    </div>
+                                    <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button>Schedule Special</Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Schedule Happy Hour</DialogTitle>
+                                                <DialogDescription>Automatically adjust prices for specific periods.</DialogDescription>
+                                            </DialogHeader>
+                                            <div className="space-y-4 py-4">
+                                                <div className="space-y-2">
+                                                    <Label>Event Name</Label>
+                                                    <Input placeholder="e.g. Afternoon Rush Special" value={specialName} onChange={e => setSpecialName(e.target.value)} />
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label>Start Time</Label>
+                                                        <Input type="time" value={specialStartTime} onChange={e => setSpecialStartTime(e.target.value)} />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>End Time</Label>
+                                                        <Input type="time" value={specialEndTime} onChange={e => setSpecialEndTime(e.target.value)} />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Discount Percentage</Label>
+                                                    <Input placeholder="e.g. 15" value={specialDiscount} onChange={e => setSpecialDiscount(e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <DialogFooter>
+                                                <Button onClick={handleScheduleSpecial}>Save Schedule</Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
                             </CardHeader>
-                            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                                <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-medium">No timed specials active</h3>
-                                <p className="text-sm text-muted-foreground mb-4">Schedule price reductions for off-peak hours.</p>
-
-                                <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button>Schedule Special</Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Schedule Happy Hour</DialogTitle>
-                                            <DialogDescription>Automatically adjust prices for specific periods.</DialogDescription>
-                                        </DialogHeader>
-                                        <div className="space-y-4 py-4 text-left">
-                                            <div className="space-y-2">
-                                                <Label>Event Name</Label>
-                                                <Input placeholder="e.g. Afternoon Rush Special" />
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Start Time</Label>
-                                                    <Input type="time" defaultValue="14:00" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>End Time</Label>
-                                                    <Input type="time" defaultValue="16:00" />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Discount Percentage</Label>
-                                                <Input placeholder="e.g. 15%" />
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <Button onClick={handleScheduleSpecial}>Save Schedule</Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
+                            <CardContent>
+                                {timedSpecials.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                                        <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+                                        <h3 className="text-lg font-medium">No timed specials active</h3>
+                                        <p className="text-sm text-muted-foreground">Schedule price reductions for off-peak hours.</p>
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Time Window</TableHead>
+                                                <TableHead>Discount</TableHead>
+                                                <TableHead className="text-right">Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {timedSpecials.map((special) => (
+                                                <TableRow key={special.id}>
+                                                    <TableCell className="font-medium">{special.name}</TableCell>
+                                                    <TableCell>{special.startTime} – {special.endTime}</TableCell>
+                                                    <TableCell>{special.discountPercent}% off</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteTimedSpecial(special.id)}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>

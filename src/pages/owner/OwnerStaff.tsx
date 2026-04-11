@@ -34,32 +34,35 @@ const OwnerStaff = () => {
     const [editId, setEditId] = useState<string | null>(null);
     const [formData, setFormData] = useState({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
 
-    const handleAddStaff = () => {
-        if (editId) {
-            updateStaff(editId, {
-                name: formData.name,
-                email: formData.email,
-                role: formData.role as 'cashier' | 'driver' | 'admin',
-                username: formData.username,
-                password: formData.password as string,
-                pin: formData.pin
-            } as Partial<StaffMember>);
-        } else {
-            addStaff({
-                name: formData.name,
-                email: formData.email,
-                role: formData.role as 'cashier' | 'driver' | 'admin',
-                username: formData.username,
-                status: "Active",
-                joined: new Date().toISOString().split('T')[0],
-                pin: formData.pin,
-                password: formData.password as string
-            } as Omit<StaffMember, 'id'>);
+    const handleAddStaff = async () => {
+        try {
+            if (editId) {
+                await updateStaff(editId, {
+                    name: formData.name,
+                    email: formData.email,
+                    role: formData.role as 'cashier' | 'driver' | 'admin',
+                    username: formData.username,
+                    password: formData.password as string,
+                    pin: formData.pin
+                } as Partial<StaffMember>);
+            } else {
+                await addStaff({
+                    name: formData.name,
+                    email: formData.email,
+                    role: formData.role as 'cashier' | 'driver' | 'admin',
+                    username: formData.username,
+                    status: "Active",
+                    joined: new Date().toISOString().split('T')[0],
+                    pin: formData.pin,
+                    password: formData.password as string
+                } as Omit<StaffMember, 'id'>);
+            }
+            setIsAddOpen(false);
+            setEditId(null);
+            setFormData({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
+        } catch {
+            // Error toast already shown by context — keep dialog open so user can fix inputs
         }
-
-        setIsAddOpen(false);
-        setEditId(null);
-        setFormData({ name: "", email: "", role: "cashier", username: "", password: "", pin: "" });
     };
 
     const handleEditClick = (member: any) => {
@@ -273,21 +276,13 @@ const OwnerStaff = () => {
                                                     <span className="font-mono">{member.pin ? "••••" : "-"}</span>
                                                 </div>
                                             </div>
-                                            <div className="flex justify-end">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => handleEditClick(member)}>Edit Details</DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem className="text-red-600" onClick={() => deleteStaff(member.id)}>Delete Account</DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
+                                                <Button variant="outline" size="sm" onClick={() => handleEditClick(member)}>
+                                                    Edit Details
+                                                </Button>
+                                                <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => deleteStaff(member.id)}>
+                                                    Delete Account
+                                                </Button>
                                             </div>
                                         </CardContent>
                                     </Card>

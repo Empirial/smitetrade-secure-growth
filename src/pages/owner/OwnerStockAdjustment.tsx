@@ -5,43 +5,82 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClipboardList, Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/context/StoreContext";
 import { toast } from "sonner";
+import { db } from "@/lib/firebase";
+import { addDoc, collection, onSnapshot, query, where, orderBy, serverTimestamp } from "firebase/firestore";
 
-const INITIAL_ADJUSTMENTS = [
-    { id: 1, date: "2026-02-26", product: "Albany Brown Bread", qty: -2, reason: "Expired", cost: 36.00, user: "Thabo (Owner)" },
-    { id: 2, date: "2026-02-25", product: "Coke 2L", qty: -1, reason: "Damaged in store", cost: 24.50, user: "Lerato (Cashier)" },
-];
+interface StockAdjustment {
+    id: string;
+    productId: string;
+    productName: string;
+    qty: number;
+    reason: string;
+    cost: number;
+    loggedBy: string;
+    createdAt: any;
+}
 
 const OwnerStockAdjustment = () => {
-    const { products, user } = useStore();
-    const [adjustments, setAdjustments] = useState(INITIAL_ADJUSTMENTS);
+    const { products, user, updateProduct } = useStore();
+    const [adjustments, setAdjustments] = useState<StockAdjustment[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newAdj, setNewAdj] = useState({ productId: "", qty: "", reason: "Damaged" });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleAddAdjustment = () => {
+    useEffect(() => {
+        if (!user?.storeId) return;
+        const q = query(
+            collection(db, "stock_adjustments"),
+            where("storeId", "==", user.storeId),
+            orderBy("createdAt", "desc")
+        );
+        return onSnapshot(q, (snap) => {
+            setAdjustments(snap.docs.map(d => ({ id: d.id, ...d.data() })) as StockAdjustment[]);
+        });
+    }, [user?.storeId]);
+
+    const handleAddAdjustment = async () => {
         if (!newAdj.productId) { toast.error("Please select a product."); return; }
         const qty = parseInt(newAdj.qty);
         if (!newAdj.qty || isNaN(qty) || qty <= 0) { toast.error("Please enter a valid quantity."); return; }
         const product = products.find(p => p.id === newAdj.productId);
         if (!product) return;
-        const cost = product.price * qty;
-        setAdjustments(prev => [{
-            id: Date.now(),
-            date: new Date().toISOString().split('T')[0],
-            product: product.name,
-            qty: -qty,
-            reason: newAdj.reason,
-            cost,
-            user: user?.name || "Owner",
-        }, ...prev]);
-        toast.success(`Stock adjustment logged: -${qty} ${product.name}`);
-        setIsAddOpen(false);
-        setNewAdj({ productId: "", qty: "", reason: "Damaged" });
+        if ((product.quantity ?? 0) < qty) {
+            toast.error(`Only ${product.quantity ?? 0} units in stock.`);
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            await addDoc(collection(db, "stock_adjustments"), {
+                storeId: user?.storeId || "unknown",
+                productId: product.id,
+                productName: product.name,
+                qty: -qty,
+                reason: newAdj.reason,
+                cost: product.price * qty,
+                loggedBy: user?.name || "Owner",
+                createdAt: serverTimestamp(),
+            });
+            await updateProduct(product.id, { quantity: (product.quantity ?? 0) - qty });
+            toast.success(`Stock adjustment logged: -${qty} ${product.name}`);
+            setIsAddOpen(false);
+            setNewAdj({ productId: "", qty: "", reason: "Damaged" });
+        } catch {
+            toast.error("Failed to save adjustment. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const formatDate = (ts: any) => {
+        if (!ts) return "—";
+        const d = ts?.toDate ? ts.toDate() : new Date(ts);
+        return d.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
     };
 
     return (
@@ -72,7 +111,9 @@ const OwnerStockAdjustment = () => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             {products.map(p => (
-                                                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                                <SelectItem key={p.id} value={p.id}>
+                                                    {p.name} ({p.quantity ?? 0} in stock)
+                                                </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
@@ -85,9 +126,7 @@ const OwnerStockAdjustment = () => {
                                     <div className="grid gap-2">
                                         <Label>Reason</Label>
                                         <Select value={newAdj.reason} onValueChange={(v) => setNewAdj({ ...newAdj, reason: v })}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="Damaged">Damaged</SelectItem>
                                                 <SelectItem value="Expired">Expired</SelectItem>
@@ -99,22 +138,22 @@ const OwnerStockAdjustment = () => {
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button onClick={handleAddAdjustment} variant="destructive">Deduct Stock</Button>
+                                <Button onClick={handleAddAdjustment} variant="destructive" disabled={isSubmitting}>
+                                    {isSubmitting ? "Saving..." : "Deduct Stock"}
+                                </Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search records..."
-                            className="pl-8 max-w-sm"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
+                <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search records..."
+                        className="pl-8 max-w-sm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
 
                 <Card>
@@ -137,20 +176,30 @@ const OwnerStockAdjustment = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {adjustments.filter(a => a.product.toLowerCase().includes(searchTerm.toLowerCase())).map((adj) => (
-                                    <TableRow key={adj.id}>
-                                        <TableCell>{adj.date}</TableCell>
-                                        <TableCell className="font-medium">{adj.product}</TableCell>
-                                        <TableCell>
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                {adj.reason}
-                                            </span>
+                                {adjustments.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                            No adjustments logged yet.
                                         </TableCell>
-                                        <TableCell className="text-red-600 font-bold">{adj.qty}</TableCell>
-                                        <TableCell>R {adj.cost.toFixed(2)}</TableCell>
-                                        <TableCell>{adj.user}</TableCell>
                                     </TableRow>
-                                ))}
+                                ) : (
+                                    adjustments
+                                        .filter(a => a.productName?.toLowerCase().includes(searchTerm.toLowerCase()))
+                                        .map((adj) => (
+                                            <TableRow key={adj.id}>
+                                                <TableCell>{formatDate(adj.createdAt)}</TableCell>
+                                                <TableCell className="font-medium">{adj.productName}</TableCell>
+                                                <TableCell>
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        {adj.reason}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-red-600 font-bold">{adj.qty}</TableCell>
+                                                <TableCell>R {adj.cost?.toFixed(2)}</TableCell>
+                                                <TableCell>{adj.loggedBy}</TableCell>
+                                            </TableRow>
+                                        ))
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>

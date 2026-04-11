@@ -43,7 +43,7 @@ const OwnerInventory = () => {
     // Scanner state
     const [isScannerOpen, setIsScannerOpen] = useState(false);
 
-    const handleBarcodeDetected = useCallback((barcode: string) => {
+    const handleBarcodeDetected = useCallback((barcode: string, productName?: string) => {
         const found = products.find(p => p.barcode === barcode);
         if (found) {
             setFormData({
@@ -57,9 +57,12 @@ const OwnerInventory = () => {
             setIsScannerOpen(false);
             toast({ title: "Product Found", description: `Auto-filled details for "${found.name}"` });
         } else {
-            setFormData(prev => ({ ...prev, barcode }));
+            setFormData(prev => ({ ...prev, barcode, name: productName || prev.name }));
             setIsScannerOpen(false);
-            toast({ title: "Barcode Scanned", description: `No matching product. Barcode: ${barcode}` });
+            toast({
+                title: "Barcode Scanned",
+                description: productName ? `Product name pre-filled from Open Food Facts: "${productName}"` : `No matching product. Barcode: ${barcode}`,
+            });
         }
     }, [toast, products]);
 

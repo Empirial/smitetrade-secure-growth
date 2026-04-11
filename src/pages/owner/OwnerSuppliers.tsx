@@ -13,7 +13,6 @@ import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
 import { addDoc, collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
-import { USE_MOCK_DATA } from "@/lib/constants";
 import { PlatformSupplier } from "@/types";
 import { usePayfast } from "@/hooks/usePayfast";
 
@@ -40,43 +39,6 @@ interface SupplierPreorder {
     paidAt?: string;
 }
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-const MOCK_PLATFORM_SUPPLIERS: PlatformSupplier[] = [
-    { id: "ps1", name: "Unilever SA", status: "Active", createdAt: new Date().toISOString() },
-    { id: "ps2", name: "Pioneer Foods", status: "Active", createdAt: new Date().toISOString() },
-    { id: "ps3", name: "Tiger Brands", status: "Active", createdAt: new Date().toISOString() },
-    { id: "ps4", name: "Clover SA", status: "Active", createdAt: new Date().toISOString() },
-    { id: "ps5", name: "Nestlé SA", status: "Active", createdAt: new Date().toISOString() },
-];
-
-const MOCK_PREORDERS: SupplierPreorder[] = [
-    {
-        id: "po1",
-        supplierId: "ps1",
-        supplierName: "Unilever SA",
-        storeId: "store1",
-        submittedBy: "Owner",
-        items: [{ name: "Sunlight Dishwashing Liquid 750ml", quantity: "50", unit: "units" }, { name: "Omo Washing Powder 2kg", quantity: "30", unit: "bags" }],
-        notes: "Please deliver before end of week",
-        status: "Quote Received",
-        quoteAmount: 3240.00,
-        quoteNotes: "Price valid for 7 days. Delivery included.",
-        submittedAt: new Date(Date.now() - 86400000).toISOString(),
-        quotedAt: new Date().toISOString(),
-    },
-    {
-        id: "po2",
-        supplierId: "ps2",
-        supplierName: "Pioneer Foods",
-        storeId: "store1",
-        submittedBy: "Owner",
-        items: [{ name: "Sasko Bread Flour 10kg", quantity: "20", unit: "bags" }],
-        notes: "",
-        status: "Pending Quote",
-        submittedAt: new Date(Date.now() - 3600000).toISOString(),
-    },
-];
-
 // ─── Status Badge ────────────────────────────────────────────────────────────
 const statusConfig: Record<string, { label: string; className: string }> = {
     "Pending Quote":  { label: "Pending Quote",  className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
@@ -94,12 +56,13 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 const OwnerSuppliers = () => {
-    const { suppliers, addSupplier, user } = useStore();
+    const { suppliers, addSupplier, updateSupplier, deleteSupplier, user } = useStore();
     const { pay, loading: payfastLoading } = usePayfast();
 
-    // Add supplier
+    // Add/Edit supplier
     const [isAddOpen, setIsAddOpen] = useState(false);
-    const [newSupplier, setNewSupplier] = useState({ name: "", products: "" });
+    const [editSupplierId, setEditSupplierId] = useState<string | null>(null);
+    const [newSupplier, setNewSupplier] = useState({ name: "", products: "", contact: "" });
 
     // Platform suppliers
     const [platformSuppliers, setPlatformSuppliers] = useState<PlatformSupplier[]>([]);
@@ -123,7 +86,6 @@ const OwnerSuppliers = () => {
 
     // Load platform suppliers
     useEffect(() => {
-        if (USE_MOCK_DATA) { setPlatformSuppliers(MOCK_PLATFORM_SUPPLIERS); return; }
         const unsub = onSnapshot(collection(db, "platform_suppliers"), (snap) => {
             const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as PlatformSupplier[];
             setPlatformSuppliers(data.filter(s => s.status === "Active"));
@@ -133,7 +95,6 @@ const OwnerSuppliers = () => {
 
     // Load preorders for this store
     useEffect(() => {
-        if (USE_MOCK_DATA) { setPreorders(MOCK_PREORDERS); return; }
         if (!user?.storeId) return;
         const q = query(
             collection(db, "supplier_preorders"),
@@ -149,16 +110,36 @@ const OwnerSuppliers = () => {
     const scrollLeft = () => scrollRef.current?.scrollBy({ left: -240, behavior: "smooth" });
     const scrollRight = () => scrollRef.current?.scrollBy({ left: 240, behavior: "smooth" });
 
-    // ── Add supplier ──────────────────────────────────────────────────────────
+    // ── Add/Edit supplier ────────────────────────────────────────────────────────
     const handleAddSupplier = () => {
         if (!newSupplier.name || !newSupplier.products) return;
-        addSupplier({
-            name: newSupplier.name,
-            contact: "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za",
-            products: newSupplier.products,
-        });
+
+        if (editSupplierId) {
+            updateSupplier(editSupplierId, {
+                name: newSupplier.name,
+                products: newSupplier.products,
+                contact: newSupplier.contact || "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za",
+            });
+        } else {
+            addSupplier({
+                name: newSupplier.name,
+                contact: newSupplier.contact || "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za",
+                products: newSupplier.products,
+            });
+        }
+        closeAddSupplierDialog();
+    };
+
+    const closeAddSupplierDialog = () => {
         setIsAddOpen(false);
-        setNewSupplier({ name: "", products: "" });
+        setEditSupplierId(null);
+        setNewSupplier({ name: "", products: "", contact: "" });
+    };
+
+    const openEditSupplier = (supplier: Supplier) => {
+        setEditSupplierId(supplier.id);
+        setNewSupplier({ name: supplier.name, products: supplier.products || "", contact: supplier.contact || "" });
+        setIsAddOpen(true);
     };
 
     // ── Place order (file upload) ─────────────────────────────────────────────
@@ -170,16 +151,14 @@ const OwnerSuppliers = () => {
         setIsSubmitting(true);
         const fileName = fileInputRef.current?.files?.[0]?.name || null;
         try {
-            if (!USE_MOCK_DATA) {
-                await addDoc(collection(db, "supplier_orders"), {
-                    supplierId: selectedSupplierId, supplierName,
-                    storeId: user?.storeId || "unknown",
-                    notes: orderNotes, fileName,
-                    status: "Submitted",
-                    submittedAt: new Date().toISOString(),
-                    submittedBy: user?.name || "Owner",
-                });
-            }
+            await addDoc(collection(db, "supplier_orders"), {
+                supplierId: selectedSupplierId, supplierName,
+                storeId: user?.storeId || "unknown",
+                notes: orderNotes, fileName,
+                status: "Submitted",
+                submittedAt: new Date().toISOString(),
+                submittedBy: user?.name || "Owner",
+            });
             toast.success(`Order submitted to ${supplierName} via Smitetrade`, {
                 description: fileName ? `File: ${fileName}` : "Manual order — check email for confirmation.",
             });
@@ -226,9 +205,7 @@ const OwnerSuppliers = () => {
                 status: "Pending Quote",
                 submittedAt: new Date().toISOString(),
             };
-            if (!USE_MOCK_DATA) {
-                await addDoc(collection(db, "supplier_preorders"), preorderData);
-            }
+            await addDoc(collection(db, "supplier_preorders"), preorderData);
             toast.success(`Preorder sent to ${supplierName}`, {
                 description: `${validItems.length} item(s) requested. You'll be notified when a quote is ready.`,
             });
@@ -277,7 +254,10 @@ const OwnerSuppliers = () => {
                     <div className="flex gap-2 flex-wrap">
 
                         {/* Add Supplier */}
-                        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                        <Dialog open={isAddOpen} onOpenChange={(open) => {
+                            if (!open) closeAddSupplierDialog();
+                            else setIsAddOpen(true);
+                        }}>
                             <DialogTrigger asChild>
                                 <Button variant="outline">
                                     <Plus className="mr-2 h-4 w-4" />
@@ -286,8 +266,10 @@ const OwnerSuppliers = () => {
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Add New Supplier</DialogTitle>
-                                    <DialogDescription>Register a new supplier. All orders will be routed via Smitetrade.</DialogDescription>
+                                    <DialogTitle>{editSupplierId ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
+                                    <DialogDescription>
+                                        {editSupplierId ? "Update supplier details." : "Register a new supplier. All orders will be routed via Smitetrade."}
+                                    </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
@@ -298,9 +280,13 @@ const OwnerSuppliers = () => {
                                         <Label htmlFor="products">Main Products</Label>
                                         <Input id="products" placeholder="e.g. Beverages, Cleaning Supplies" value={newSupplier.products} onChange={(e) => setNewSupplier({ ...newSupplier, products: e.target.value })} />
                                     </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="contact">Contact Information</Label>
+                                        <Input id="contact" placeholder="e.g. 010 880 3456" value={newSupplier.contact} onChange={(e) => setNewSupplier({ ...newSupplier, contact: e.target.value })} />
+                                    </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button onClick={handleAddSupplier}>Register Supplier</Button>
+                                    <Button onClick={handleAddSupplier}>{editSupplierId ? "Save Changes" : "Register Supplier"}</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -632,12 +618,18 @@ const OwnerSuppliers = () => {
                                                 </span>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <div className="flex justify-end gap-1">
+                                                <div className="flex justify-end gap-1 flex-wrap w-full max-w-[200px]">
                                                     <Button variant="ghost" size="sm" onClick={() => { setSelectedSupplierId(supplier.id); setIsOrderOpen(true); }}>
                                                         Order
                                                     </Button>
                                                     <Button variant="outline" size="sm" onClick={() => { setPreorderSupplierId(supplier.id); setIsPreorderOpen(true); }}>
                                                         Preorder
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={() => openEditSupplier(supplier)}>
+                                                        Edit
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => deleteSupplier(supplier.id)}>
+                                                        Delete
                                                     </Button>
                                                 </div>
                                             </TableCell>

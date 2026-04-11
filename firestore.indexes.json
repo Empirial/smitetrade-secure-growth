@@ -143,6 +143,14 @@
         { "fieldPath": "storeId",       "order": "ASCENDING" },
         { "fieldPath": "name",          "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "staff",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "storeId",       "order": "ASCENDING" },
+        { "fieldPath": "name",          "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

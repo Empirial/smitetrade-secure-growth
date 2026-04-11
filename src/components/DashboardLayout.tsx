@@ -18,6 +18,7 @@ import {
 import PageTransition from "@/components/PageTransition";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useStore } from "@/context/StoreContext";
+import { ChatBot } from "@/components/ChatBot";
 import logo from "@/assets/smitetrade-logo.jpeg";
 
 interface DashboardLayoutProps {
@@ -29,7 +30,6 @@ const getLinks = (role: string) => {
     const ownerLinks = {
         Overview: [
             { href: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-            { href: "/owner/customers", label: "Customers", icon: Users },
             { href: "/owner/profile", label: "Profile", icon: User },
             { href: "/owner/alerts", label: "Alerts", icon: Bell },
         ],
@@ -139,13 +139,13 @@ const NavContent = ({ role, location, navigate, isOpen, setIsOpen, logout }: any
 
     return (
         <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border text-sidebar-foreground p-4">
-            <div className="mb-8 p-2">
+            <div className="mb-4 p-2">
                 <Link to="/">
                     <img src={logo} alt="SMITETRADE" className="max-w-[150px] h-auto mx-auto md:mx-0" />
                 </Link>
-                <p className="text-xs text-muted-foreground uppercase tracking-widest mt-2">{role} Portal</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">{role} Portal</p>
             </div>
-            <nav className="space-y-4 flex-1 overflow-y-auto">
+            <nav className="flex-1 overflow-y-auto min-h-0">
                 {role === 'owner' ? (
                     Object.entries(ownerLinks).map(([category, items]) => (
                         <div key={category} className="mb-2">
@@ -198,7 +198,7 @@ const NavContent = ({ role, location, navigate, isOpen, setIsOpen, logout }: any
                                                 key={link.href}
                                                 to={link.href}
                                                 onClick={() => setIsOpen(false)}
-                                                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group ${location.pathname === link.href
+                                                className={`flex items-center gap-3 px-3 py-1.5 rounded-md transition-all duration-200 group ${location.pathname === link.href
                                                     ? "bg-primary/10 text-primary font-medium shadow-sm"
                                                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     }`}
@@ -287,9 +287,9 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
     const { logout } = useStore();
 
     return (
-        <div className="min-h-screen bg-background flex">
+        <div className="h-screen bg-background flex overflow-hidden">
             {/* Desktop Sidebar */}
-            <div className="hidden md:block w-64 shrink-0 z-20 sticky top-0 h-screen">
+            <div className="hidden md:flex flex-col w-64 shrink-0 z-20 h-full overflow-y-auto">
                 <NavContent role={role} location={location} navigate={navigate} isOpen={isOpen} setIsOpen={setIsOpen} logout={logout} />
             </div>
 
@@ -309,7 +309,7 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
             </div>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto md:pt-0 pt-16">
+            <main className="flex-1 overflow-y-auto md:pt-0 pt-16">
                 <div className="p-4 md:p-10 xl:p-12 max-w-[1600px] mx-auto space-y-8">
                     <ErrorBoundary>
                         <PageTransition>
@@ -321,6 +321,9 @@ const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
 
             {/* Floating Cart Bubble for Customer Portal */}
             {role === "customer" && <FloatingCartBubble />}
+
+            {/* AI Chatbot — all portals */}
+            <ChatBot role={role} />
         </div>
     );
 };

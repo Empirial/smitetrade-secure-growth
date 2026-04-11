@@ -24,6 +24,7 @@ import {
     orderBy,
     setDoc,
     getDoc,
+    getFirestore,
     runTransaction,
     where
 } from 'firebase/firestore';
@@ -83,6 +84,8 @@ interface StoreContextType {
     // Suppliers
     suppliers: Supplier[];
     addSupplier: (supplier: Omit<Supplier, 'id' | 'status'>) => void;
+    updateSupplier: (id: string, updates: Partial<Supplier>) => Promise<void>;
+    deleteSupplier: (id: string) => Promise<void>;
 
     // Staff
     staff: StaffMember[];
@@ -134,27 +137,14 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     const loginRoleRef = useRef<UserRole | null>(null);
 
     // --- Snag List State ---
-    const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
-        const saved = localStorage.getItem('smite_suppliers');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [staff, setStaff] = useState<StaffMember[]>(() => {
-        if (USE_MOCK_DATA) return MOCK_STAFF;
-        const saved = localStorage.getItem('smite_staff');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [shifts, setShifts] = useState<Shift[]>(() => {
-        const saved = localStorage.getItem('smite_shifts');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [staff, setStaff] = useState<StaffMember[]>(USE_MOCK_DATA ? MOCK_STAFF : []);
+    const [shifts, setShifts] = useState<Shift[]>([]);
     const [currentShift, setCurrentShift] = useState<Shift | null>(() => {
         const saved = localStorage.getItem('smite_current_shift');
         return saved ? JSON.parse(saved) : null;
     });
-    const [issues, setIssues] = useState<Issue[]>(() => {
-        const saved = localStorage.getItem('smite_issues');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [issues, setIssues] = useState<Issue[]>([]);
 
     // --- New States ---
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -392,10 +382,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             }));
 
             const staffQ = storeId && user.role !== 'admin'
-                ? query(collection(db, "staff"), where("storeId", "==", storeId), orderBy("name"))
-                : query(collection(db, "staff"), orderBy("name"));
+                ? query(collection(db, "staff"), where("storeId", "==", storeId))
+                : query(collection(db, "staff"));
             unsubs.push(onSnapshot(staffQ, (snapshot) => {
-                setStaff(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StaffMember[]);
+                const members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StaffMember[];
+                setStaff(members.sort((a, b) => a.name.localeCompare(b.name)));
             }));
 
             const shiftsQ = storeId && user.role !== 'admin'
@@ -979,9 +970,41 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const updateSupplier = async (id: string, updates: Partial<Supplier>) => {
+        if (USE_MOCK_DATA) {
+            setSuppliers(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+            toast.success("Supplier updated (Mock)");
+            return;
+        }
+
+        try {
+            await updateDoc(doc(db, "suppliers", id), updates);
+            toast.success("Supplier updated");
+        } catch (error) {
+            toast.error("Failed to update supplier");
+            throw error;
+        }
+    };
+
+    const deleteSupplier = async (id: string) => {
+        if (USE_MOCK_DATA) {
+            setSuppliers(prev => prev.filter(s => s.id !== id));
+            toast.success("Supplier removed (Mock)");
+            return;
+        }
+
+        try {
+            await deleteDoc(doc(db, "suppliers", id));
+            toast.success("Supplier removed");
+        } catch (error) {
+            toast.error("Failed to delete supplier");
+            throw error;
+        }
+    };
+
     // --- Staff Actions (store-scoped) ---
     const addStaff = async (staffData: Omit<StaffMember, 'id'>) => {
-        const storeId = user?.storeId;
+        const storeId = currentStore?.id ?? user?.storeId;
         if (USE_MOCK_DATA) {
             const newStaff: StaffMember = {
                 ...staffData,
@@ -1004,12 +1027,14 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             // Use a secondary app instance so the owner stays signed in
             const secondaryApp = initializeApp(firebaseConfig, `staff-create-${Date.now()}`);
             const secondaryAuth = getAuth(secondaryApp);
+            const secondaryDb = getFirestore(secondaryApp);
 
             try {
                 const { user: newUser } = await createUserWithEmailAndPassword(secondaryAuth, email, password);
 
-                // Create Firestore profile for the staff member
-                await setDoc(doc(db, "users", newUser.uid), {
+                // Write the user doc using the secondary app (authenticated as the new user)
+                // so that Firestore rule "uid() == userId" passes
+                await setDoc(doc(secondaryDb, "users", newUser.uid), {
                     name: name || staffData.name,
                     email,
                     role: staffRole || staffData.role || 'cashier',
@@ -1017,7 +1042,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     createdAt: new Date().toISOString()
                 });
 
-                // Save to staff collection
+                // Save to staff collection using owner auth (owner create rule allows this)
                 await addDoc(collection(db, "staff"), {
                     ...staffData,
                     uid: newUser.uid,
@@ -1033,6 +1058,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         } catch (error: any) {
             const msg = error?.code === 'auth/email-already-in-use'
                 ? "An account with this email already exists"
+                : error?.code === 'auth/weak-password'
+                ? "Password must be at least 6 characters"
                 : "Failed to create staff account";
             toast.error(msg);
             throw error;
@@ -1186,7 +1213,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Customer Actions (store-scoped) ---
     const addCustomer = async (customer: Omit<Customer, 'id' | 'totalSpend' | 'tabBalance' | 'lastVisit'>) => {
-        const storeId = user?.storeId;
+        const storeId = currentStore?.id ?? user?.storeId;
         if (USE_MOCK_DATA) {
             const newCustomer: Customer = {
                 ...customer,
@@ -1320,7 +1347,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         products, allProducts, addProduct, updateProduct, deleteProduct,
         cart, addToCart, removeFromCart, updateCartQuantity, clearCart, cartTotal,
         orders, placeOrder, updateOrderStatus, assignDriver, isLoading,
-        suppliers, addSupplier,
+        suppliers, addSupplier, updateSupplier, deleteSupplier,
         staff, addStaff, updateStaff, deleteStaff,
         shifts, currentShift, startShift, endShift, recordCashDrop,
         toggleWishlist,

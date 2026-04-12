@@ -173,7 +173,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                         const userData = { ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User;
 
                         // Apply active role from the portal the user logged into
-                        const intendedRole = loginRoleRef.current;
+                        const intendedRole = loginRoleRef.current ?? (sessionStorage.getItem('smite_active_role') as UserRole | null);
                         loginRoleRef.current = null;
                         if (intendedRole) {
                             const userRoles: UserRole[] = userData.roles || [userData.role];
@@ -372,6 +372,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 : query(collection(db, "expenses"), orderBy("date", "desc"));
             unsubs.push(onSnapshot(expensesQ, (snapshot) => {
                 setExpenses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[]);
+            }, (error) => {
+                console.error("[StoreContext] expenses listener error:", error.code, error.message);
+                toast.error("Failed to load expenses. Check console for details.");
             }));
 
             const suppliersQ = storeId && user.role !== 'admin'
@@ -387,6 +390,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
             unsubs.push(onSnapshot(staffQ, (snapshot) => {
                 const members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StaffMember[];
                 setStaff(members.sort((a, b) => a.name.localeCompare(b.name)));
+            }, (err) => {
+                console.error("[staff onSnapshot]", err.code, err.message);
             }));
 
             const shiftsQ = storeId && user.role !== 'admin'
@@ -446,6 +451,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             loginRoleRef.current = roleFallback || null;
+            if (roleFallback) sessionStorage.setItem('smite_active_role', roleFallback);
             await signInWithEmailAndPassword(auth, email, password);
             toast.success("Welcome back!");
         } catch (error) {
@@ -474,6 +480,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 await setDoc(userRef, userData);
                 await setDoc(doc(db, "user_roles", firebaseUser.uid), { role, roles: [role] });
                 isRegistering.current = false;
+                sessionStorage.setItem('smite_active_role', role);
                 setUser({ ...userData, id: firebaseUser.uid, uid: firebaseUser.uid });
                 toast.success("Account created with Google!");
             } else {
@@ -487,6 +494,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                     await updateDoc(userRef, updates);
                 }
                 isRegistering.current = false;
+                sessionStorage.setItem('smite_active_role', role);
                 setUser({ ...existingData, ...updates, id: firebaseUser.uid, uid: firebaseUser.uid, role, roles: existingRoles } as User);
                 toast.success("Signed in with Google!");
             }
@@ -625,6 +633,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
 
         try {
+            sessionStorage.removeItem('smite_active_role');
             await signOut(auth);
             setCart([]);
             setCurrentStore(null);
@@ -1043,17 +1052,29 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 });
 
                 // Save to staff collection using owner auth (owner create rule allows this)
-                await addDoc(collection(db, "staff"), {
+                const staffDocRef = await addDoc(collection(db, "staff"), {
                     ...staffData,
                     uid: newUser.uid,
                     storeId,
                     createdAt: new Date().toISOString()
                 });
 
+                // Optimistically update local state so the new member appears immediately
+                // (deleteApp below can disrupt the onSnapshot listener's connection)
+                const newMember: StaffMember = {
+                    ...staffData,
+                    id: staffDocRef.id,
+                    uid: newUser.uid,
+                    storeId,
+                } as StaffMember;
+                setStaff(prev => [...prev, newMember].sort((a, b) => a.name.localeCompare(b.name)));
+
                 await signOut(secondaryAuth);
                 toast.success("Staff account created — they can now log in");
             } finally {
-                await deleteApp(secondaryApp);
+                // Fire-and-forget — awaiting deleteApp can close the shared Firestore
+                // WebSocket used by the primary db, killing active onSnapshot listeners.
+                deleteApp(secondaryApp).catch(() => {});
             }
         } catch (error: any) {
             const msg = error?.code === 'auth/email-already-in-use'
@@ -1290,7 +1311,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Expense Actions (store-scoped) ---
     const addExpense = async (expense: Omit<Expense, 'id' | 'date' | 'loggedBy'>) => {
-        const storeId = user?.storeId;
+        const storeId = currentStore?.id ?? user?.storeId;
+        if (!storeId) {
+            console.error("[addExpense] storeId is undefined — currentStore:", currentStore, "user.storeId:", user?.storeId);
+            toast.error("No active store found. Please refresh and try again.");
+            throw new Error("storeId is undefined");
+        }
         if (USE_MOCK_DATA) {
             const newExpense: Expense = {
                 ...expense,
@@ -1300,7 +1326,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 storeId
             };
             setExpenses(prev => [...prev, newExpense]);
-            toast.success("Expense logged (Mock)");
             return;
         }
 
@@ -1312,7 +1337,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 userId: user?.uid || 'unknown',
                 storeId
             });
-            toast.success("Expense logged");
         } catch (error) {
             toast.error("Failed to log expense");
             throw error;

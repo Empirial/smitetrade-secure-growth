@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FileText, Plus, Receipt, TrendingDown, Calendar, User, Tag, ArrowRight } from "lucide-react";
+import { FileText, Plus, TrendingDown, Calendar, User, Tag } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
 
 const OwnerExpenses = () => {
@@ -33,17 +33,27 @@ const OwnerExpenses = () => {
             return;
         }
 
-        await addExpense({
-            category,
-            description,
-            amount: parseFloat(amount),
-        });
+        const parsed = parseFloat(amount);
+        if (isNaN(parsed) || parsed <= 0) {
+            toast.error("Amount must be a positive number.");
+            return;
+        }
 
-        setAmount("");
-        setDescription("");
-        setCategory("Operational");
+        try {
+            await addExpense({
+                category,
+                description,
+                amount: parsed,
+            });
 
-        toast.success("Petty cash expense successfully recorded.");
+            setAmount("");
+            setDescription("");
+            setCategory("Operational");
+
+            toast.success("Petty cash expense successfully recorded.");
+        } catch {
+            // error toast is handled inside addExpense
+        }
     };
 
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -134,7 +144,7 @@ const OwnerExpenses = () => {
                                             className="cursor-pointer hover:bg-muted/50"
                                             onClick={() => handleRowClick(expense)}
                                         >
-                                            <TableCell className="text-muted-foreground text-sm">{expense.date}</TableCell>
+                                            <TableCell className="text-muted-foreground text-sm">{new Date(expense.date).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}</TableCell>
                                             <TableCell className="font-medium">{expense.category}</TableCell>
                                             <TableCell>{expense.description}</TableCell>
                                             <TableCell>{expense.loggedBy}</TableCell>
@@ -180,7 +190,7 @@ const OwnerExpenses = () => {
                                         <Calendar className="h-5 w-5 text-muted-foreground" />
                                         <div className="flex flex-col">
                                             <span className="text-sm font-medium">Date & Time</span>
-                                            <span className="text-sm text-muted-foreground">{selectedExpense.date}</span>
+                                            <span className="text-sm text-muted-foreground">{new Date(selectedExpense.date).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">

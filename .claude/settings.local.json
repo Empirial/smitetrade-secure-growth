@@ -65,5 +65,9 @@
       "Bash(echo \"EXIT_CODE:$?\")",
       "Bash(node_modules/.bin/tsc -p tsconfig.app.json --noEmit)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "firebase"
+  ],
+  "enableAllProjectMcpServers": true
 }

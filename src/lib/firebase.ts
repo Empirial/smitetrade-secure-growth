@@ -2,7 +2,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, setPersistence, browserSessionPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -21,6 +21,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
+// Edge/Safari tracking prevention blocks IndexedDB (Firebase's default auth storage).
+// sessionStorage is not subject to tracking prevention, so auth survives page refreshes
+// within the same tab. The user will need to log in again after closing the tab/browser.
+setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();

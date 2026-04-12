@@ -26,6 +26,18 @@ service cloud.firestore {
       return userDoc().storeId;
     }
 
+    // True when the user owns the given store (fallback when userDoc().storeId is null)
+    function ownsStore(sid) {
+      return sid != null &&
+             exists(/databases/$(database)/documents/stores/$(sid)) &&
+             get(/databases/$(database)/documents/stores/$(sid)).data.ownerId == uid();
+    }
+
+    // Passes if the document's storeId matches the user's storeId OR the user owns that store
+    function canAccessStore(sid) {
+      return sid == storeId() || ownsStore(sid);
+    }
+
     function hasRole(r) {
       let d = userDoc();
       return d.role == r || d.get('roles', []).hasAny([r]);
@@ -88,12 +100,12 @@ service cloud.firestore {
       allow create: if isAuth() && (isOwner() || isAdmin()) && isValidProduct();
       allow update: if isAuth() && (
         isAdmin() ||
-        (isOwner()   && resource.data.storeId == storeId()) ||
-        (isCashier() && resource.data.storeId == storeId())
+        (isOwner()   && canAccessStore(resource.data.storeId)) ||
+        (isCashier() && canAccessStore(resource.data.storeId))
       );
       allow delete: if isAuth() && (
         isAdmin() ||
-        (isOwner() && resource.data.storeId == storeId())
+        (isOwner() && canAccessStore(resource.data.storeId))
       );
     }
 
@@ -103,14 +115,14 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow read: if isAuth() && (
         isAdmin() ||
-        resource.data.storeId == storeId() ||
+        canAccessStore(resource.data.storeId) ||
         resource.data.userId  == uid() ||
         resource.data.driverId == uid()
       );
       allow create: if isAuth() && isValidOrder();
       allow update: if isAuth() && (
         isAdmin() ||
-        resource.data.storeId  == storeId() ||
+        canAccessStore(resource.data.storeId) ||
         resource.data.driverId == uid()
       );
       allow delete: if isAdmin();
@@ -122,32 +134,32 @@ service cloud.firestore {
     match /customers/{customerId} {
       allow read: if isAuth() && (
         isAdmin() ||
-        resource.data.storeId == storeId() ||
+        canAccessStore(resource.data.storeId) ||
         uid() == customerId
       );
       allow create: if isAuth() && (isOwner() || isCashier() || isAdmin());
-      allow update: if isAuth() && (isAdmin() || resource.data.storeId == storeId());
-      allow delete: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
+      allow update: if isAuth() && (isAdmin() || canAccessStore(resource.data.storeId));
+      allow delete: if isAuth() && (isAdmin() || (isOwner() && canAccessStore(resource.data.storeId)));
     }
 
     // ─────────────────────────────────────────────
     // EXPENSES
     // ─────────────────────────────────────────────
     match /expenses/{expenseId} {
-      allow read:   if isAuth() && (isAdmin() || resource.data.storeId == storeId());
+      allow read:   if isAuth() && (isAdmin() || canAccessStore(resource.data.storeId));
       allow create: if isAuth() && (isOwner() || isAdmin());
-      allow update: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
-      allow delete: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
+      allow update: if isAuth() && (isAdmin() || (isOwner() && canAccessStore(resource.data.storeId)));
+      allow delete: if isAuth() && (isAdmin() || (isOwner() && canAccessStore(resource.data.storeId)));
     }
 
     // ─────────────────────────────────────────────
     // SUPPLIERS
     // ─────────────────────────────────────────────
     match /suppliers/{supplierId} {
-      allow read:   if isAuth() && (isAdmin() || resource.data.storeId == storeId());
+      allow read:   if isAuth() && (isAdmin() || canAccessStore(resource.data.storeId));
       allow create: if isAuth() && (isOwner() || isAdmin());
-      allow update: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
-      allow delete: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
+      allow update: if isAuth() && (isAdmin() || (isOwner() && canAccessStore(resource.data.storeId)));
+      allow delete: if isAuth() && (isAdmin() || (isOwner() && canAccessStore(resource.data.storeId)));
     }
 
     // ─────────────────────────────────────────────
@@ -156,16 +168,16 @@ service cloud.firestore {
     match /staff/{staffId} {
       allow read: if isAuth() && (
         isAdmin() ||
-        resource.data.storeId == storeId() ||
+        canAccessStore(resource.data.storeId) ||
         uid() == staffId
       );
       allow create: if isAuth() && (isOwner() || isAdmin());
       allow update: if isAuth() && (
         isAdmin() ||
-        (isOwner() && resource.data.storeId == storeId()) ||
+        (isOwner() && canAccessStore(resource.data.storeId)) ||
         uid() == staffId
       );
-      allow delete: if isAuth() && (isAdmin() || (isOwner() && resource.data.storeId == storeId()));
+      allow delete: if isAuth() && (isAdmin() || (isOwner() && canAccessStore(resource.data.storeId)));
     }
 
     // ─────────────────────────────────────────────
@@ -174,14 +186,14 @@ service cloud.firestore {
     match /shifts/{shiftId} {
       allow read: if isAuth() && (
         isAdmin() ||
-        resource.data.storeId  == storeId() ||
+        canAccessStore(resource.data.storeId) ||
         resource.data.cashierId == uid()
       );
       allow create: if isAuth() && (isCashier() || isOwner() || isAdmin());
       allow update: if isAuth() && (
         isAdmin() ||
         resource.data.cashierId == uid() ||
-        (isOwner() && resource.data.storeId == storeId())
+        (isOwner() && canAccessStore(resource.data.storeId))
       );
       allow delete: if isAdmin();
 
@@ -189,7 +201,7 @@ service cloud.firestore {
         allow read: if isAuth() && (
           isAdmin() ||
           resource.data.cashierId == uid() ||
-          (isOwner() && get(/databases/$(database)/documents/shifts/$(shiftId)).data.storeId == storeId())
+          (isOwner() && canAccessStore(get(/databases/$(database)/documents/shifts/$(shiftId)).data.storeId))
         );
         allow create: if isAuth() && (isCashier() || isOwner() || isAdmin());
         allow update, delete: if isAdmin();
@@ -203,12 +215,12 @@ service cloud.firestore {
       allow read: if isAuth() && (
         isAdmin() ||
         resource.data.driverId == uid() ||
-        resource.data.storeId  == storeId()
+        canAccessStore(resource.data.storeId)
       );
       allow create: if isAuth() && (isDriver() || isAdmin());
       allow update: if isAuth() && (
         isAdmin() ||
-        (isOwner() && resource.data.storeId == storeId()) ||
+        (isOwner() && canAccessStore(resource.data.storeId)) ||
         resource.data.driverId == uid()
       );
       allow delete: if isAdmin();

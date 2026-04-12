@@ -223,11 +223,15 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     // --- Stores Listener (for customers browsing all stores) ---
+    // NOTE: Must wait for auth — Firestore rules require isAuth() on stores reads.
     useEffect(() => {
         if (USE_MOCK_DATA) {
             setStores(MOCK_STORES as Store[]);
             return;
         }
+
+        // Don't subscribe until we know auth has resolved and the user is present
+        if (isLoading || !user) return;
 
         const q = query(collection(db, "stores"), orderBy("name"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -236,9 +240,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
                 ...doc.data()
             })) as Store[];
             setStores(storesData);
+        }, (error) => {
+            console.error("[StoreContext] stores listener error:", error.code, error.message);
         });
         return () => unsubscribe();
-    }, []);
+    }, [user, isLoading]);
 
     // --- Restore / maintain active store selection ---
     useEffect(() => {

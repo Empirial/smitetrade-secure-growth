@@ -28,7 +28,9 @@ const OwnerRegister = () => {
         try {
             await loginWithGoogle('owner');
             navigate("/owner/dashboard");
-        } catch { } finally {
+        } catch (_e) {
+            // error handled by loginWithGoogle internally
+        } finally {
             setGoogleLoading(false);
         }
     };

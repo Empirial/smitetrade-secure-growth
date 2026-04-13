@@ -59,7 +59,9 @@ service cloud.firestore {
              d.total >= 0 &&
              d.items is list &&
              d.items.size() > 0 &&
-             d.status in ['Pending', 'Paid', 'Ready', 'Out for Delivery', 'Delivered', 'Cancelled'];
+             d.status in ['Pending', 'Paid', 'Ready', 'Out for Delivery', 'Delivered', 'Cancelled'] &&
+             d.storeId is string &&
+             d.storeId.size() > 0;
     }
 
     function isValidProduct() {
@@ -76,7 +78,11 @@ service cloud.firestore {
     // Admin reads/writes all.
     // ─────────────────────────────────────────────
     match /users/{userId} {
-      allow read:   if isAuth() && (uid() == userId || isAdmin() || isOwner());
+      // Use direct uid comparison for self-reads to avoid circular userDoc() lookups.
+      // isAdmin()/isOwner() call userDoc() which does a get() on /users — causing
+      // a deadlock when the user doc is being fetched for the first time.
+      allow get:    if isAuth() && uid() == userId;
+      allow list:   if isAuth() && (uid() == userId || isAdmin() || isOwner());
       allow create: if isAuth() && uid() == userId;
       allow update: if isAuth() && (uid() == userId || isAdmin());
       allow delete: if isAdmin();
@@ -87,7 +93,9 @@ service cloud.firestore {
     // ─────────────────────────────────────────────
     match /stores/{docStoreId} {
       allow read:   if isAuth();
-      allow create: if isAuth() && (isOwner() || isAdmin()) && request.resource.data.ownerId == uid();
+      // Allow create if the requesting user will own it — avoids chicken-and-egg
+      // where a new owner's role isn't set yet when their first store is created.
+      allow create: if isAuth() && request.resource.data.ownerId == uid();
       allow update: if isAuth() && (resource.data.ownerId == uid() || isAdmin());
       allow delete: if isAdmin();
     }

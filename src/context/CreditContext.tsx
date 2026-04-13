@@ -323,20 +323,18 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
             (err) => console.error("Loans:", err)
         ));
 
-        unsubs.push(onSnapshot(
-            query(collection(db, 'applications'), where('status', '==', 'pending')),
-            (snap) => setApplications(snap.docs.map(d => ({ ...d.data(), id: d.id }))),
-            (err) => console.error("Applications:", err)
-        ));
+        if (user.role === 'lender' || user.role === 'admin') {
+            unsubs.push(onSnapshot(
+                query(collection(db, 'applications'), where('status', '==', 'pending')),
+                (snap) => setApplications(snap.docs.map(d => ({ ...d.data(), id: d.id }))),
+                (err) => console.error("Applications:", err)
+            ));
+        }
 
         unsubs.push(onSnapshot(
             collection(db, 'lender_offers'),
             (snap) => {
-                if (snap.empty) {
-                    MOCK_LENDER_OFFERS.forEach(offer => addDoc(collection(db, 'lender_offers'), offer));
-                } else {
-                    setLenderOffers(snap.docs.map(d => ({ ...d.data(), id: d.id })));
-                }
+                setLenderOffers(snap.docs.map(d => ({ ...d.data(), id: d.id })));
             },
             (err) => console.error("Lender offers:", err)
         ));

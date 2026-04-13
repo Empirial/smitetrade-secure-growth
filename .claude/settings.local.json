@@ -63,11 +63,12 @@
       "Bash(tee /tmp/ts_errors.txt)",
       "Bash(echo \"EXIT:$?\")",
       "Bash(echo \"EXIT_CODE:$?\")",
-      "Bash(node_modules/.bin/tsc -p tsconfig.app.json --noEmit)"
+      "Bash(node_modules/.bin/tsc -p tsconfig.app.json --noEmit)",
+      "Bash(timeout 50 cat:*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "firebase"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

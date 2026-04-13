@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StoreProvider } from "./context/StoreContext";
 import { CreditProvider } from "./context/CreditContext";
 import AuthGuard from "./components/AuthGuard";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { lazy, Suspense } from "react";
 
 // Global
@@ -127,7 +128,8 @@ const App = () => (
       <Sonner />
       <StoreProvider>
         <CreditProvider>
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ErrorBoundary>
             <Suspense fallback={null}>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -242,6 +244,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            </ErrorBoundary>
           </BrowserRouter>
         </CreditProvider>
       </StoreProvider>

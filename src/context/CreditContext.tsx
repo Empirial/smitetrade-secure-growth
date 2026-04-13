@@ -275,9 +275,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
                 if (data.paymentHistory?.length > 0) {
                     const { score: briScore, tier } = calculateBRIFromHistory(data.paymentHistory);
                     const creditLimit = calculateCreditLimit(tier, data.paymentHistory);
-                    const updated = { ...data, briScore, tier, creditLimit };
-                    await updateDoc(profileRef, { briScore, tier, creditLimit });
-                    setProfile(updated);
+                    setProfile({ ...data, briScore, tier, creditLimit });
                 } else {
                     setProfile(data);
                 }

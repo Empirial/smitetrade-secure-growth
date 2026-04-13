@@ -196,6 +196,7 @@ export interface Shift {
     openingFloat: number;
     closingCash?: number;
     totalSales: number;
+    expectedCash?: number;
     discrepancy?: number;
     status: 'Open' | 'Closed' | 'Pending' | 'Flagged';
     storeId?: string;

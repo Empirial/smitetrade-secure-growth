@@ -35,7 +35,7 @@ const CustomerCheckout = () => {
 
     // Collect all fulfillment options from cart items (union)
     const availableDeliveryMethods = [...new Set(
-        cart.flatMap(item => (item as any).fulfillmentOptions || [])
+        cart.flatMap(item => item.fulfillmentOptions || [])
     )] as string[];
     const cartStoreId = cart.length > 0 ? cart[0].storeId : undefined;
     const [selectedStore, setSelectedStore] = useState(cartStoreId || (activeStores.length > 0 ? activeStores[0].id : ""));
@@ -78,12 +78,10 @@ const CustomerCheckout = () => {
             address: `${address.street}, ${address.city}`,
             paymentMethod,
             storeId: selectedStore,
-            allowSubstitutions: allowSubstitutions as boolean,
-            deliveryMethod,
-        } as any);
+        });
         navigate("/customer/payment", { state: { total: cartTotal + 20, paymentMethod, orderPlaced: true } });
         toast.success("Order Placed Successfully!");
-    }, [placeOrder, address, paymentMethod, selectedStore, allowSubstitutions, navigate]);
+    }, [placeOrder, address, paymentMethod, selectedStore, navigate]);
 
     const { pay: payWithPayfast, loading: payfastLoading } = usePayfast();
 

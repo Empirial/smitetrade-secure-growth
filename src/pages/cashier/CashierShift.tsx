@@ -125,10 +125,10 @@ const CashierShift = () => {
                                         <span className="text-muted-foreground">Opening Float</span>
                                         <span className="font-medium">R {currentShift.openingFloat.toFixed(2)}</span>
                                     </div>
-                                    {(currentShift as any).expectedCash !== undefined && (
+                                    {currentShift.expectedCash !== undefined && (
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Expected (Sales)</span>
-                                            <span className="font-medium">R {((currentShift as any).expectedCash as number).toFixed(2)}</span>
+                                            <span className="font-medium">R {currentShift.expectedCash.toFixed(2)}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between">
@@ -138,11 +138,11 @@ const CashierShift = () => {
                                     <div className="flex justify-between border-t border-slate-700 pt-2 font-semibold">
                                         <span>Discrepancy</span>
                                         <span className={
-                                            (parseFloat(closingCash) - ((currentShift as any).expectedCash ?? currentShift.openingFloat)) >= 0
+                                            (parseFloat(closingCash) - (currentShift.expectedCash ?? currentShift.openingFloat)) >= 0
                                                 ? "text-emerald-500"
                                                 : "text-red-500"
                                         }>
-                                            R {(parseFloat(closingCash) - ((currentShift as any).expectedCash ?? currentShift.openingFloat)).toFixed(2)}
+                                            R {(parseFloat(closingCash) - (currentShift.expectedCash ?? currentShift.openingFloat)).toFixed(2)}
                                         </span>
                                     </div>
                                 </div>

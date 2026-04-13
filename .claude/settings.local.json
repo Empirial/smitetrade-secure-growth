@@ -64,7 +64,10 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(echo \"EXIT_CODE:$?\")",
       "Bash(node_modules/.bin/tsc -p tsconfig.app.json --noEmit)",
-      "Bash(timeout 50 cat:*)"
+      "Bash(timeout 50 cat:*)",
+      "Bash(git -C \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth\" diff --name-only HEAD)",
+      "Bash(git -C \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth\" status --short)",
+      "Bash(cmd:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

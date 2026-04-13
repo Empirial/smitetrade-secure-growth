@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useStore } from "@/context/StoreContext";
+import { Order, OrderItem } from "@/types";
 import { useState } from "react";
 import { Search, Calendar } from "lucide-react";
 
@@ -16,10 +17,10 @@ const OwnerOrders = () => {
     const [filterType, setFilterType] = useState("all");
     const [filterDate, setFilterDate] = useState("");
 
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-    const handleRowClick = (order: any) => {
+    const handleRowClick = (order: Order) => {
         setSelectedOrder(order);
         setIsDialogOpen(true);
     };
@@ -35,13 +36,13 @@ const OwnerOrders = () => {
             matchesDate = orderDateStr === filterDate;
         }
 
-        if (filterType === "preorder") return matchesSearch && matchesDate && (order as any).isPreorder === true;
+        if (filterType === "preorder") return matchesSearch && matchesDate && order.isPreorder === true;
         if (filterType === "all") return matchesSearch && matchesDate;
-        const matchesType = (order as any).orderType === filterType;
-        return matchesSearch && matchesDate && matchesType && !(order as any).isPreorder;
+        const matchesType = order.type === filterType;
+        return matchesSearch && matchesDate && matchesType && !order.isPreorder;
     });
 
-    const preorderCount = orders.filter(o => (o as any).isPreorder).length;
+    const preorderCount = orders.filter(o => o.isPreorder).length;
 
     return (
         <DashboardLayout role="owner">
@@ -115,7 +116,7 @@ const OwnerOrders = () => {
                                     </TableRow>
                                 ) : (
                                     filteredOrders.map((order) => {
-                                        const isPreorder = (order as any).isPreorder;
+                                        const isPreorder = order.isPreorder;
                                         return (
                                             <TableRow
                                                 key={order.id}
@@ -164,7 +165,7 @@ const OwnerOrders = () => {
                 <DialogContent className="w-full max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            {(selectedOrder as any)?.isPreorder && <Calendar className="h-4 w-4 text-purple-600" />}
+                            {selectedOrder?.isPreorder && <Calendar className="h-4 w-4 text-purple-600" />}
                             Order Details #{selectedOrder?.id}
                         </DialogTitle>
                         <DialogDescription>
@@ -174,13 +175,13 @@ const OwnerOrders = () => {
                     {selectedOrder && (
                         <div className="space-y-4 py-4">
                             {/* Pre-order banner */}
-                            {(selectedOrder as any).isPreorder && (
+                            {selectedOrder.isPreorder && (
                                 <div className="flex items-start gap-3 bg-purple-500/10 border border-purple-200 rounded-lg p-3">
                                     <Calendar className="h-4 w-4 text-purple-600 mt-0.5 shrink-0" />
                                     <div>
                                         <p className="text-sm font-semibold text-purple-800">Pre-order — Paid Upfront</p>
                                         <p className="text-xs text-purple-600 mt-0.5">
-                                            Customer requested: <strong>{new Date((selectedOrder as any).requestedDate + "T00:00:00").toLocaleDateString("en-ZA")}</strong>
+                                            Customer requested: <strong>{new Date((selectedOrder.requestedDate ?? '') + "T00:00:00").toLocaleDateString("en-ZA")}</strong>
                                         </p>
                                         <p className="text-xs text-purple-500 mt-0.5">You determine the actual delivery date.</p>
                                     </div>
@@ -202,7 +203,7 @@ const OwnerOrders = () => {
                             <div>
                                 <h4 className="font-semibold text-sm text-muted-foreground mb-3 uppercase tracking-wider">Order Items</h4>
                                 <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
-                                    {selectedOrder.items?.map((item: any, i: number) => (
+                                    {selectedOrder.items?.map((item: OrderItem, i: number) => (
                                         <div key={i} className="flex justify-between text-sm items-center">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs">{item.quantity}x</span>

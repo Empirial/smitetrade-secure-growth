@@ -300,8 +300,12 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
     };
 
     useEffect(() => {
-        refreshProfile();
-    }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+        if (!user) return;
+        // Defer one tick so Firebase's onIdTokenChanged microtasks settle before
+        // the Firestore read — prevents permission-denied during token propagation.
+        const t = setTimeout(() => refreshProfile(), 0);
+        return () => clearTimeout(t);
+    }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // --- Firebase real-time listeners (live mode only) ---
     useEffect(() => {

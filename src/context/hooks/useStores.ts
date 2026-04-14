@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, where, onSnapshot } from 'firebase/firestore';
 import { MOCK_STORES, USE_MOCK_DATA } from '@/lib/constants';
 import { User, Store } from '@/types';
 
@@ -29,7 +29,9 @@ export function useStores(user: User | null, isLoading: boolean) {
         }
         if (isLoading || !user) return;
 
-        const q = query(collection(db, "stores"), orderBy("name"));
+        const q = user.role === 'admin'
+            ? query(collection(db, "stores"), orderBy("name"))
+            : query(collection(db, "stores"), where("ownerId", "==", user.uid), orderBy("name"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setStores(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Store[]);
         }, (error) => {
@@ -40,12 +42,14 @@ export function useStores(user: User | null, isLoading: boolean) {
 
     // Restore active store selection when stores list loads
     useEffect(() => {
-        if (!user || USE_MOCK_DATA || !stores.length) return;
+        if (!user || USE_MOCK_DATA) return;
+        // Non-store roles (customer, driver, lender) don't need a currentStore —
+        // resolve immediately so downstream listeners can attach.
         if (!(user.role === "owner" || user.role === "cashier" || user.role === "admin")) {
-            // Roles that don't need a store (driver, customer, lender, etc.)
             setStoresResolved(true);
             return;
         }
+        if (!stores.length) return;
 
         const savedStoreId = localStorage.getItem("smite_active_store_id");
         const preferred =

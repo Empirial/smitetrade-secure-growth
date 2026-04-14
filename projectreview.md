@@ -75,3 +75,18 @@
   ---
   Want me to fix the P1 issues now? I can work through them in order — firestore rules first, then
    context cleanup.
+
+
+
+
+
+
+
+
+
+   I can see the root cause now. The refreshProfile fires immediately when user state changes — but the getIdToken(true) call   in useAuth.ts forces a token refresh right before setUser, and the Firestore SDK processes that onIdTokenChanged event   
+  asynchronously. There's a brief window where Firestore has no auth token when getDoc(credit_profiles/uid) fires.          
+                                                                                                                            
+  Two fixes:                                                                                                                  1. Move getIdToken(true) to before the getDoc(users) call in useAuth.ts — so the token refresh is fully settled before any   Firestore read, and the successful users read proves Firestore has the token                                             
+  2. Defer refreshProfile() one tick (setTimeout 0) so Firebase's pending microtasks complete first
+                                                                                                

@@ -106,6 +106,7 @@ export function useAuth() {
             isRegistering.current = true;
             const result = await signInWithPopup(auth, googleProvider);
             const firebaseUser = result.user;
+            await firebaseUser.getIdToken(true); // ensure token propagated to Firestore before reads
             const userRef = doc(db, "users", firebaseUser.uid);
             const userSnap = await getDoc(userRef);
 

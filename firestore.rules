@@ -404,11 +404,28 @@ service cloud.firestore {
     }
 
     // ─────────────────────────────────────────────
-    // 💰 FINANCE (Server-Only Writes)
+    // 💬 LOAN QUOTES (lender portal)
+    // ─────────────────────────────────────────────
+    match /loan_quotes/{quoteId} {
+      allow read: if isAuth() && (
+        resource.data.lenderId == uid() ||
+        resource.data.customerId == uid() ||
+        isAdmin()
+      );
+      allow create: if isAuth() && (isLender() || isAdmin());
+      allow update, delete: if isAuth() && (
+        resource.data.lenderId == uid() || isAdmin()
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // 💰 FINANCE
     // ─────────────────────────────────────────────
     match /transactions/{txId} {
       allow read: if isAuth() && (isAdmin() || resource.data.userId == uid());
-      allow write: if false;
+      // usePaystack and usePayfast write transaction records client-side after payment
+      allow create: if isAuth();
+      allow update, delete: if false; // immutable once created
     }
 
     match /audit_logs/{logId} {

@@ -170,9 +170,18 @@ export function useAuth() {
                 firebaseUser = result.user;
             } catch (createError: any) {
                 if (createError.code === 'auth/email-already-in-use') {
-                    const result = await signInWithEmailAndPassword(auth, email, password);
-                    firebaseUser = result.user;
-                    isExistingUser = true;
+                    // Try to sign in to add a new role to the existing account.
+                    // If the password is wrong, show a clear message instead of a
+                    // cryptic auth/invalid-credential error.
+                    try {
+                        const result = await signInWithEmailAndPassword(auth, email, password);
+                        firebaseUser = result.user;
+                        isExistingUser = true;
+                    } catch (signInError: any) {
+                        isRegistering.current = false;
+                        toast.error("An account with this email already exists. Please use the correct password to add a new role, or log in instead.");
+                        throw signInError;
+                    }
                 } else {
                     throw createError;
                 }

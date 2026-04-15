@@ -10,6 +10,7 @@ import { Borrower } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import CreditComingSoon from "@/components/CreditComingSoon";
 
 const CashierCheckout = () => {
     const location = useLocation();
@@ -183,6 +184,7 @@ const CashierCheckout = () => {
                                     </div>
                                 </CardHeader>
                             </Card>
+                            <CreditComingSoon>
                             <Card className="cursor-pointer hover:border-amber-500 transition-all border-2 border-transparent" onClick={() => { setPaymentMethod("SS-ID"); setSsidInput(""); setSsidCustomer(null); setSsidError(""); }}>
                                 <CardHeader className="flex flex-row items-center gap-4">
                                     <div className="bg-amber-100 p-3 rounded-lg"><Landmark className="text-amber-600" /></div>
@@ -192,6 +194,7 @@ const CashierCheckout = () => {
                                     </div>
                                 </CardHeader>
                             </Card>
+                            </CreditComingSoon>
 
                             <Button variant="outline" className="w-full mt-4 h-12 border-dashed" onClick={() => setIsSplitPayment(true)}>
                                 Split Payment (Multiple Methods)
@@ -268,6 +271,7 @@ const CashierCheckout = () => {
                     )}
 
                     {paymentMethod === "SS-ID" && !isSplitPayment && (
+                        <CreditComingSoon>
                         <Card className="border-amber-500 border-2 bg-slate-900 border-slate-800 text-white">
                             <CardHeader>
                                 <div className="flex items-center gap-2 pb-4">
@@ -315,6 +319,7 @@ const CashierCheckout = () => {
                                 </div>
                             </CardHeader>
                         </Card>
+                        </CreditComingSoon>
                     )}
 
                     {isSplitPayment && (
@@ -336,6 +341,7 @@ const CashierCheckout = () => {
                                         <Input type="number" placeholder="0.00" value={splitAmounts.card} onChange={(e) => handleSplitAmountChange('card', e.target.value)} />
                                         <p className="text-xs text-muted-foreground">Process this amount on the terminal before completing.</p>
                                     </div>
+                                    <CreditComingSoon>
                                     <div className="space-y-2">
                                         <Label>SS-ID Credit (R)</Label>
                                         <Input type="number" placeholder="0.00" value={splitAmounts.ssid} onChange={(e) => handleSplitAmountChange('ssid', e.target.value)} />
@@ -362,6 +368,7 @@ const CashierCheckout = () => {
                                             </div>
                                         )}
                                     </div>
+                                    </CreditComingSoon>
 
                                     <div className={`p-4 rounded-lg flex justify-between items-center ${splitBalance === 0 ? 'bg-green-100' : splitBalance < 0 ? 'bg-red-100' : 'bg-slate-100'}`}>
                                         <span className="font-medium">{splitBalance > 0 ? 'Balance Remaining:' : splitBalance < 0 ? 'Overpaid (Change):' : 'Fully Paid:'}</span>

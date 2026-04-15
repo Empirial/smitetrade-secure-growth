@@ -97,10 +97,10 @@ service cloud.firestore {
       // Products are a public catalogue — any authenticated user can browse.
       // This also unblocks cross-store allProducts queries used by the customer portal.
       allow read: if isAuth();
-      allow create: if isAuth() && (isOwner() || isAdmin()) &&
+      allow create: if isAuth() && (isOwner() || isCashier() || isAdmin()) &&
         canAccessStore(request.resource.data.storeId);
-      allow update: if isAuth() && canAccessStore(resource.data.storeId) &&
-        isStoreIdImmutable();
+      allow update: if isAuth() && (isOwner() || isCashier() || isAdmin()) &&
+        canAccessStore(resource.data.storeId) && isStoreIdImmutable();
       allow delete: if isAuth() && (isAdmin() ||
         (isOwner() && canAccessStore(resource.data.storeId)));
     }

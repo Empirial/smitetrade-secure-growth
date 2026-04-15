@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -27,6 +28,7 @@ const BehavioralReliabilityIndex = () => {
 
     return (
         <DashboardLayout role="customer">
+            <CreditComingSoon>
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="space-y-2">
@@ -131,6 +133,7 @@ const BehavioralReliabilityIndex = () => {
                     <p>Smitetrade does not act as a credit provider, financial adviser, or credit bureau.</p>
                 </div>
             </div>
+            </CreditComingSoon>
         </DashboardLayout>
     );
 };

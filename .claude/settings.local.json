@@ -70,7 +70,12 @@
       "Bash(cmd:*)",
       "mcp__firebase__firebase_get_environment",
       "mcp__firebase__firebase_update_environment",
-      "mcp__firebase__firebase_get_security_rules"
+      "mcp__firebase__firebase_get_security_rules",
+      "Bash(powershell -Command ' *)",
+      "Bash(find src/pages -name \"*.tsx\" -exec wc -l {} +)",
+      "Bash(node -e \"require\\('./lib/index.js'\\)\")",
+      "Bash(node -e \"const pkg = require\\('./node_modules/firebase-functions/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(firebase functions:log --only aiChat)"
     ]
   },
   "enableAllProjectMcpServers": true,

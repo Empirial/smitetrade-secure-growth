@@ -33,13 +33,15 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.payfastITN = void 0;
+exports.aiChat = exports.payfastITN = void 0;
 const https_1 = require("firebase-functions/v2/https");
+const params_1 = require("firebase-functions/params");
 const v2_1 = require("firebase-functions/v2");
 const admin = __importStar(require("firebase-admin"));
 const crypto = __importStar(require("crypto"));
 const querystring = __importStar(require("querystring"));
 const https = __importStar(require("https"));
+const anthropicKey = (0, params_1.defineSecret)('ANTHROPIC_API_KEY');
 admin.initializeApp();
 const db = admin.firestore();
 // ─── Config — set these env vars in Firebase Console or .env.local ──────────
@@ -179,6 +181,48 @@ exports.payfastITN = (0, https_1.onRequest)({ cors: false }, async (req, res) =>
     catch (err) {
         v2_1.logger.error('PayFast ITN Firestore error', err);
         res.status(500).send('Internal error');
+    }
+});
+// ─── AI Chat Proxy ────────────────────────────────────────────────────────────
+exports.aiChat = (0, https_1.onRequest)({ cors: true, secrets: [anthropicKey] }, async (req, res) => {
+    if (req.method !== 'POST') {
+        res.status(405).send('Method Not Allowed');
+        return;
+    }
+    // Verify Firebase Auth token
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!idToken) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+    }
+    try {
+        await admin.auth().verifyIdToken(idToken);
+    }
+    catch {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
+    }
+    const { messages, system, model = 'claude-sonnet-4-6', max_tokens = 1024 } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+        res.status(400).json({ error: 'messages array is required' });
+        return;
+    }
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { default: Anthropic } = await Promise.resolve().then(() => __importStar(require('@anthropic-ai/sdk')));
+        const client = new Anthropic({ apiKey: anthropicKey.value() });
+        const response = await client.messages.create({
+            model,
+            max_tokens,
+            ...(system ? { system } : {}),
+            messages,
+        });
+        res.status(200).json(response);
+    }
+    catch (err) {
+        v2_1.logger.error('AI chat error', err);
+        res.status(500).json({ error: 'AI request failed' });
     }
 });
 //# sourceMappingURL=index.js.map

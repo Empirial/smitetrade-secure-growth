@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -239,6 +240,7 @@ const CustomerProfile = () => {
 
                 {/* Dashboard Widgets */}
                 <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                    <CreditComingSoon>
                     <Card className="bg-emerald-50 border-emerald-100">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-emerald-800">BRI Score</CardTitle>
@@ -253,6 +255,8 @@ const CustomerProfile = () => {
                             </Button>
                         </CardContent>
                     </Card>
+                    </CreditComingSoon>
+                    <CreditComingSoon>
                     <Card className="bg-blue-50 border-blue-100">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-emerald-800">Store Credit Balance</CardTitle>
@@ -295,6 +299,7 @@ const CustomerProfile = () => {
                             </Dialog>
                         </CardContent>
                     </Card>
+                    </CreditComingSoon>
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Recent Orders</CardTitle>

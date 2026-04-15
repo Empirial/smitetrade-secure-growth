@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -301,6 +302,7 @@ const CustomerCheckout = () => {
                                                 </div>
                                             </Label>
                                         </div>
+                                        <CreditComingSoon>
                                         <div>
                                             <RadioGroupItem value="credit" id="credit" className="peer sr-only" />
                                             <Label
@@ -326,6 +328,7 @@ const CustomerCheckout = () => {
                                                 </div>
                                             </Label>
                                         </div>
+                                        </CreditComingSoon>
                                         <div>
                                             <RadioGroupItem value="wallet" id="wallet" className="peer sr-only" />
                                             <Label

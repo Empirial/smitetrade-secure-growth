@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const CustomerCreditReview = () => {
 
     return (
         <DashboardLayout role="customer">
+            <CreditComingSoon>
             <div className="max-w-2xl mx-auto space-y-6">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold tracking-tight">My BRI Score</h1>
@@ -110,6 +112,7 @@ const CustomerCreditReview = () => {
                     </CardContent>
                 </Card>
             </div>
+            </CreditComingSoon>
         </DashboardLayout>
     );
 };

@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { DollarSign, TrendingUp, AlertTriangle, Users } from "lucide-react";
@@ -106,6 +107,7 @@ const OwnerDashboard = () => {
                     icon={Users}
                     color="text-blue-500"
                 />
+                <CreditComingSoon>
                 <Link to="/owner/credit-review" className="h-full">
                     <Card className="hover:border-indigo-500 transition-all cursor-pointer h-full border-dashed border-2 flex flex-col justify-between">
                         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 gap-2">
@@ -118,6 +120,7 @@ const OwnerDashboard = () => {
                         </CardContent>
                     </Card>
                 </Link>
+                </CreditComingSoon>
             </div>
 
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 mt-4">

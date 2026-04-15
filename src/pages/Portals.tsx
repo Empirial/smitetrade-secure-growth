@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Store, User, Truck, Briefcase, ShoppingBag, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Store, User, Truck, Briefcase, ShoppingBag, ShieldCheck, ArrowLeft, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 const portals = [
@@ -11,7 +11,8 @@ const portals = [
         icon: User,
         link: "/customer/login",
         color: "text-blue-500",
-        btnColor: "bg-blue-600 hover:bg-blue-700"
+        btnColor: "bg-blue-600 hover:bg-blue-700",
+        comingSoon: false,
     },
     {
         name: "Owner",
@@ -19,7 +20,8 @@ const portals = [
         icon: Store,
         link: "/owner/login",
         color: "text-emerald-500",
-        btnColor: "bg-emerald-600 hover:bg-emerald-700"
+        btnColor: "bg-emerald-600 hover:bg-emerald-700",
+        comingSoon: false,
     },
     {
         name: "Cashier",
@@ -27,7 +29,8 @@ const portals = [
         icon: ShoppingBag,
         link: "/cashier/login",
         color: "text-orange-500",
-        btnColor: "bg-orange-600 hover:bg-orange-700"
+        btnColor: "bg-orange-600 hover:bg-orange-700",
+        comingSoon: false,
     },
     {
         name: "Driver",
@@ -35,7 +38,8 @@ const portals = [
         icon: Truck,
         link: "/driver/login",
         color: "text-indigo-500",
-        btnColor: "bg-indigo-600 hover:bg-indigo-700"
+        btnColor: "bg-indigo-600 hover:bg-indigo-700",
+        comingSoon: true,
     },
     {
         name: "Lender",
@@ -43,7 +47,8 @@ const portals = [
         icon: Briefcase,
         link: "/lender/login",
         color: "text-purple-500",
-        btnColor: "bg-purple-600 hover:bg-purple-700"
+        btnColor: "bg-purple-600 hover:bg-purple-700",
+        comingSoon: true,
     },
     {
         name: "Admin",
@@ -51,7 +56,8 @@ const portals = [
         icon: ShieldCheck,
         link: "/admin/login",
         color: "text-red-500",
-        btnColor: "bg-red-600 hover:bg-red-700"
+        btnColor: "bg-red-600 hover:bg-red-700",
+        comingSoon: false,
     }
 ];
 
@@ -103,9 +109,15 @@ const Portals = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 + 0.3 }}
                         >
-                            <Card className="h-full hover:shadow-lg transition-all duration-300 border border-foreground/10 bg-background/50 backdrop-blur-sm group hover:border-foreground/50">
+                            <Card className={`h-full transition-all duration-300 border bg-background/50 backdrop-blur-sm group relative overflow-hidden ${portal.comingSoon ? "border-foreground/5 opacity-60 cursor-not-allowed" : "border-foreground/10 hover:shadow-lg hover:border-foreground/50"}`}>
+                                {portal.comingSoon && (
+                                    <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-foreground/8 border border-foreground/10 px-2.5 py-1 text-xs font-medium text-muted-foreground z-10">
+                                        <Lock className="h-3 w-3" />
+                                        Coming Soon
+                                    </div>
+                                )}
                                 <CardHeader>
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-foreground/5 mb-4 group-hover:scale-110 transition-transform duration-300 ${portal.color}`}>
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-foreground/5 mb-4 transition-transform duration-300 ${portal.color} ${!portal.comingSoon ? "group-hover:scale-110" : ""}`}>
                                         <portal.icon className="h-6 w-6" />
                                     </div>
                                     <CardTitle className="text-2xl">{portal.name}</CardTitle>
@@ -114,11 +126,21 @@ const Portals = () => {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardFooter className="mt-auto pt-6">
-                                    <Link to={portal.link} className="w-full">
-                                        <Button className={`w-full rounded-full h-12 text-base font-medium transition-all duration-300 ${portal.btnColor} hover:opacity-90 hover:scale-[1.02]`}>
-                                            Access Portal
+                                    {portal.comingSoon ? (
+                                        <Button
+                                            disabled
+                                            className="w-full rounded-full h-12 text-base font-medium bg-foreground/5 text-muted-foreground cursor-not-allowed border border-foreground/10"
+                                        >
+                                            <Lock className="mr-2 h-4 w-4" />
+                                            Coming Soon
                                         </Button>
-                                    </Link>
+                                    ) : (
+                                        <Link to={portal.link} className="w-full">
+                                            <Button className={`w-full rounded-full h-12 text-base font-medium transition-all duration-300 ${portal.btnColor} hover:opacity-90 hover:scale-[1.02]`}>
+                                                Access Portal
+                                            </Button>
+                                        </Link>
+                                    )}
                                 </CardFooter>
                             </Card>
                         </motion.div>

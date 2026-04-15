@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,7 @@ const OwnerLending = () => {
 
     return (
         <DashboardLayout role="owner">
+            <CreditComingSoon>
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                     <div>
@@ -210,6 +212,7 @@ const OwnerLending = () => {
                     </div>
                 </div>
             </div>
+            </CreditComingSoon>
         </DashboardLayout>
     );
 };

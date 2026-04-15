@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ const OwnerCreditReview = () => {
 
     return (
         <DashboardLayout role="owner">
+            <CreditComingSoon>
             <div className="max-w-2xl mx-auto space-y-6">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold">Customer Credit Lookup</h1>
@@ -157,6 +159,7 @@ const OwnerCreditReview = () => {
                 <p>All lending, goods-on-credit, and rental decisions remain the sole responsibility of the lender, spaza shop owner, or landlord.</p>
                 <p>Smitetrade does not act as a credit provider, financial adviser, or credit bureau.</p>
             </div>
+            </CreditComingSoon>
         </DashboardLayout>
     );
 };

@@ -146,11 +146,14 @@ export function useOrders(
         const orderTotal = customerDetails.items
             ? customerDetails.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
             : cartTotal;
-        const storeId = customerDetails.storeId || (orderItems.length > 0 ? orderItems[0].storeId : user?.storeId) || MOCK_STORE_ID;
+        const storeId = USE_MOCK_DATA
+            ? (customerDetails.storeId || (orderItems.length > 0 ? orderItems[0].storeId : user?.storeId) || MOCK_STORE_ID)
+            : (customerDetails.storeId || (orderItems.length > 0 ? orderItems[0].storeId : user?.storeId));
         const store = stores.find(s => s.id === storeId);
         const storeName = store?.name || "Unknown Store";
 
         if (orderItems.length === 0) { toast.error("Cart is empty"); return; }
+        if (!USE_MOCK_DATA && !storeId) { toast.error("Could not determine store for this order. Please try again."); return; }
 
         if (USE_MOCK_DATA) {
             const newOrder: Order = {

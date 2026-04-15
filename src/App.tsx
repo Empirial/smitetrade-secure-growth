@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StoreProvider } from "./context/StoreContext";
 import { CreditProvider } from "./context/CreditContext";
 import AuthGuard from "./components/AuthGuard";
+import ComingSoonGuard from "./components/ComingSoonGuard";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { lazy, Suspense } from "react";
 
@@ -14,6 +15,7 @@ import { lazy, Suspense } from "react";
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const ComingSoon = lazy(() => import("./pages/ComingSoon"));
 const TestSetup = lazy(() => import("./pages/TestSetup"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -194,19 +196,19 @@ const App = () => (
                 <Route path="/customer/credit-status" element={<AuthGuard role="customer"><BehavioralReliabilityIndex /></AuthGuard>} />
                 <Route path="/customer/support" element={<AuthGuard role="customer"><CustomerSupport /></AuthGuard>} />
 
-                {/* Driver Portal */}
-                <Route path="/driver/login" element={<DriverLogin />} />
-                <Route path="/driver/register" element={<DriverRegister />} />
-                <Route path="/driver/dashboard" element={<AuthGuard role="driver"><DriverDashboard /></AuthGuard>} />
-                <Route path="/driver/orders" element={<AuthGuard role="driver"><DriverOrders /></AuthGuard>} />
-                <Route path="/driver/out-to-deliver" element={<AuthGuard role="driver"><DriverOutToDeliver /></AuthGuard>} />
-                <Route path="/driver/delivered" element={<AuthGuard role="driver"><DriverDelivered /></AuthGuard>} />
-                <Route path="/driver/route/:orderId" element={<AuthGuard role="driver"><DriverRoute /></AuthGuard>} />
-                <Route path="/driver/issues" element={<AuthGuard role="driver"><DriverIssues /></AuthGuard>} />
-                <Route path="/driver/wallet" element={<AuthGuard role="driver"><DriverWallet /></AuthGuard>} />
-                <Route path="/driver/profile" element={<AuthGuard role="driver"><DriverProfile /></AuthGuard>} />
-                <Route path="/driver/support" element={<AuthGuard role="driver"><DriverSupport /></AuthGuard>} />
-                <Route path="/driver/alerts" element={<AuthGuard role="driver"><DriverAlerts /></AuthGuard>} />
+                {/* Driver Portal — Coming Soon (admin bypass via ComingSoonGuard) */}
+                <Route path="/driver/login" element={<ComingSoonGuard portal="Driver"><DriverLogin /></ComingSoonGuard>} />
+                <Route path="/driver/register" element={<ComingSoonGuard portal="Driver"><DriverRegister /></ComingSoonGuard>} />
+                <Route path="/driver/dashboard" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverDashboard /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/orders" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverOrders /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/out-to-deliver" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverOutToDeliver /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/delivered" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverDelivered /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/route/:orderId" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverRoute /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/issues" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverIssues /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/wallet" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverWallet /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/profile" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverProfile /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/support" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverSupport /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/driver/alerts" element={<ComingSoonGuard portal="Driver"><AuthGuard role="driver"><DriverAlerts /></AuthGuard></ComingSoonGuard>} />
 
                 {/* Admin Portal */}
                 <Route path="/admin/login" element={<AdminLogin />} />
@@ -224,19 +226,19 @@ const App = () => (
                 <Route path="/admin/alerts" element={<AuthGuard role="admin"><AdminAlerts /></AuthGuard>} />
                 <Route path="/admin/suppliers" element={<AuthGuard role="admin"><AdminSuppliers /></AuthGuard>} />
 
-                {/* Lender Portal */}
-                <Route path="/lender/login" element={<LenderLogin />} />
-                <Route path="/lender/register" element={<LenderRegister />} />
-                <Route path="/lender/dashboard" element={<AuthGuard role="lender"><LenderDashboard /></AuthGuard>} />
-                <Route path="/lender/clients" element={<AuthGuard role="lender"><LenderClients /></AuthGuard>} />
-                <Route path="/lender/loans" element={<AuthGuard role="lender"><LenderLoans /></AuthGuard>} />
-                <Route path="/lender/collections" element={<AuthGuard role="lender"><LenderCollections /></AuthGuard>} />
-                <Route path="/lender/applications" element={<AuthGuard role="lender"><LenderApplications /></AuthGuard>} />
-                <Route path="/lender/profile" element={<AuthGuard role="lender"><LenderProfile /></AuthGuard>} />
-                <Route path="/lender/credit-check" element={<AuthGuard role="lender"><LenderCreditCheck /></AuthGuard>} />
-                <Route path="/lender/quote" element={<AuthGuard role="lender"><LoanQuote /></AuthGuard>} />
-                <Route path="/lender/support" element={<AuthGuard role="lender"><LenderSupport /></AuthGuard>} />
-                <Route path="/lender/alerts" element={<AuthGuard role="lender"><LenderAlerts /></AuthGuard>} />
+                {/* Lender Portal — Coming Soon (admin bypass via ComingSoonGuard) */}
+                <Route path="/lender/login" element={<ComingSoonGuard portal="Lender"><LenderLogin /></ComingSoonGuard>} />
+                <Route path="/lender/register" element={<ComingSoonGuard portal="Lender"><LenderRegister /></ComingSoonGuard>} />
+                <Route path="/lender/dashboard" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderDashboard /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/clients" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderClients /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/loans" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderLoans /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/collections" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderCollections /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/applications" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderApplications /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/profile" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderProfile /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/credit-check" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderCreditCheck /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/quote" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LoanQuote /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/support" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderSupport /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/lender/alerts" element={<ComingSoonGuard portal="Lender"><AuthGuard role="lender"><LenderAlerts /></AuthGuard></ComingSoonGuard>} />
 
                 <Route path="/payment/success" element={<PaymentSuccess />} />
                 <Route path="/payment/cancel" element={<PaymentCancel />} />

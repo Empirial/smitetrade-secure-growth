@@ -1,22 +1,24 @@
+import { auth } from '@/lib/firebase';
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
+const AI_CHAT_URL = 'https://us-central1-smitetrade-40643.cloudfunctions.net/aiChat';
+
 export async function sendChatMessage(
   messages: ChatMessage[],
   systemPrompt: string
 ): Promise<string> {
-  const apiKey = import.meta.env.VITE_CLAUDE_API_KEY;
-  if (!apiKey) throw new Error('Add VITE_CLAUDE_API_KEY to your .env file');
+  const idToken = await auth.currentUser?.getIdToken();
+  if (!idToken) throw new Error('You must be signed in to use the AI assistant.');
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch(AI_CHAT_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
+      Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
@@ -28,7 +30,7 @@ export async function sendChatMessage(
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error((err as any)?.error?.message ?? `API error ${response.status}`);
+    throw new Error((err as any)?.error ?? `Request failed (${response.status})`);
   }
 
   const data = await response.json();

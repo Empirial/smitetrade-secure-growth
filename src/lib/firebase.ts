@@ -1,8 +1,8 @@
 
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider, setPersistence, browserSessionPersistence } from "firebase/auth";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeAnalytics, isSupported } from "firebase/analytics";
+import { initializeAuth, getAuth, browserSessionPersistence, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -17,17 +17,28 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth(app);
-// Edge/Safari tracking prevention blocks IndexedDB (Firebase's default auth storage).
-// sessionStorage is not subject to tracking prevention, so auth survives page refreshes
-// within the same tab. The user will need to log in again after closing the tab/browser.
-setPersistence(auth, browserSessionPersistence);
+// Guard against Vite HMR re-executing this module — initializeApp and
+// initializeAuth both throw if called twice on the same app instance.
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+// Only initialize Analytics when the browser allows storage access.
+// Edge/Safari Tracking Prevention blocks storage for third-party origins,
+// which causes a flood of console warnings if Analytics initialises unconditionally.
+isSupported().then(yes => { if (yes) initializeAnalytics(app); }).catch(() => {});
+
+// initializeAuth sets browserSessionPersistence synchronously at creation time,
+// avoiding the race window that getAuth() + setPersistence() would create.
+// Falls back to getAuth() on HMR re-execution when auth is already initialized.
+let auth;
+try {
+  auth = initializeAuth(app, { persistence: browserSessionPersistence });
+} catch {
+  auth = getAuth(app);
+}
+
 const db = getFirestore(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { auth, db, storage, analytics, firebaseConfig, googleProvider };
+export { auth, db, storage, firebaseConfig, googleProvider };
 export default app;

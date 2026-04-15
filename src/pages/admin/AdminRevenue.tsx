@@ -11,6 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 
 import { DollarSign, TrendingUp, CreditCard, Banknote, Receipt } from "lucide-react";
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import CreditComingSoon from "@/components/CreditComingSoon";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -283,6 +284,7 @@ const AdminRevenue = () => {
                         </CardContent>
                     </Card>
 
+                    <CreditComingSoon>
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-base">
@@ -326,6 +328,7 @@ const AdminRevenue = () => {
                             )}
                         </CardContent>
                     </Card>
+                    </CreditComingSoon>
                 </div>
 
                 {/* ── Subscription Revenue Card (shown when real data present) ── */}

@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import SystemNotifications from "@/components/SystemNotifications";
 import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
+import CreditComingSoon from "@/components/CreditComingSoon";
 
 const AdminAlerts = () => {
     const { notifications, isRead, markAsRead, dismiss, markAllAsRead, createNotification, loading } = useNotifications();
@@ -161,36 +162,42 @@ const AdminAlerts = () => {
                 </div>
 
                 <div className="space-y-4">
-                    {localAlerts.map((alert) => (
-                        <Card key={alert.id} className={`transition-all border-l-4 overflow-hidden ${getBorderColor(alert.type, alert.read)}`}>
-                            <CardHeader className="p-4 pb-2">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-muted rounded-full shrink-0">{getIcon(alert.type)}</div>
-                                    <div>
-                                        <CardTitle className="text-base flex items-center gap-2">
-                                            {alert.title}
-                                            {!alert.read && <Badge variant="default" className="bg-emerald-600 text-[10px] h-4 px-1">New</Badge>}
-                                        </CardTitle>
-                                        <CardDescription className="text-xs">
-                                            {new Date(alert.date).toLocaleDateString()} at {new Date(alert.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </CardDescription>
+                    {localAlerts.map((alert) => {
+                        const isCreditAlert = alert.action?.route === "/admin/credit-overview";
+                        const cardContent = (
+                            <Card key={alert.id} className={`transition-all border-l-4 overflow-hidden ${getBorderColor(alert.type, alert.read)}`}>
+                                <CardHeader className="p-4 pb-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-muted rounded-full shrink-0">{getIcon(alert.type)}</div>
+                                        <div>
+                                            <CardTitle className="text-base flex items-center gap-2">
+                                                {alert.title}
+                                                {!alert.read && <Badge variant="default" className="bg-emerald-600 text-[10px] h-4 px-1">New</Badge>}
+                                            </CardTitle>
+                                            <CardDescription className="text-xs">
+                                                {new Date(alert.date).toLocaleDateString()} at {new Date(alert.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </CardDescription>
+                                        </div>
                                     </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-4 pt-2 pb-2 pl-[3.25rem]">
-                                <p className="text-sm text-muted-foreground">{alert.message}</p>
-                            </CardContent>
-                            <CardFooter className="p-4 pt-2 pl-[3.25rem]">
-                                {alert.action && (
-                                    <Button asChild variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
-                                        <Link to={alert.action.route} onClick={() => markLocalRead(alert.id)}>
-                                            {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
-                                        </Link>
-                                    </Button>
-                                )}
-                            </CardFooter>
-                        </Card>
-                    ))}
+                                </CardHeader>
+                                <CardContent className="p-4 pt-2 pb-2 pl-[3.25rem]">
+                                    <p className="text-sm text-muted-foreground">{alert.message}</p>
+                                </CardContent>
+                                <CardFooter className="p-4 pt-2 pl-[3.25rem]">
+                                    {alert.action && (
+                                        <Button asChild variant="link" className="p-0 h-auto text-primary hover:text-primary/80 font-medium text-sm">
+                                            <Link to={alert.action.route} onClick={() => markLocalRead(alert.id)}>
+                                                {alert.action.label} <Navigation className="ml-1 h-3 w-3" />
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </CardFooter>
+                            </Card>
+                        );
+                        return isCreditAlert
+                            ? <CreditComingSoon key={alert.id}>{cardContent}</CreditComingSoon>
+                            : cardContent;
+                    })}
                 </div>
 
                 <SystemNotifications

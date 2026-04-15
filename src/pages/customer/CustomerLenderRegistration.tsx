@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ const CustomerLenderRegistration = () => {
 
     return (
         <DashboardLayout role="customer">
+            <CreditComingSoon>
             <div className="max-w-3xl mx-auto space-y-8">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Lender Registration</h1>
@@ -165,6 +167,7 @@ const CustomerLenderRegistration = () => {
                     </CardFooter>
                 </Card>
             </div>
+            </CreditComingSoon>
         </DashboardLayout>
     );
 };

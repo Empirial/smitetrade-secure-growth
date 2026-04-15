@@ -47,15 +47,19 @@ export function useProducts(user: User | null, currentStore: Store | null, store
     }, [user, currentStore?.id, storesResolved]);
 
     const addProduct = async (productData: Omit<Product, 'id' | 'status'>) => {
-        const storeId = currentStore?.id ?? user?.storeId ?? MOCK_STORE_ID;
+        const storeId = currentStore?.id ?? user?.storeId;
         const storeName = currentStore?.name || user?.storeName || "Unknown Store";
         const status = productData.stock > 20 ? 'In Stock' : productData.stock > 0 ? 'Low Stock' : 'Out of Stock';
 
         if (USE_MOCK_DATA) {
-            const newProduct: Product = { ...productData, id: "mock-prod-" + Date.now(), status, storeId, storeName };
+            const newProduct: Product = { ...productData, id: "mock-prod-" + Date.now(), status, storeId: storeId ?? MOCK_STORE_ID, storeName };
             setProducts(prev => [...prev, newProduct]);
             setAllProducts(prev => [...prev, newProduct]);
             toast.success("Product added (Mock)");
+            return;
+        }
+        if (!storeId) {
+            toast.error("No active store found. Please select a store and try again.");
             return;
         }
         try {

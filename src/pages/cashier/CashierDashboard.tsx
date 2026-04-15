@@ -8,6 +8,7 @@ import { useStore } from "@/context/StoreContext";
 import { useState } from "react";
 import { Order } from "@/types";
 import { toast } from "sonner";
+import CreditComingSoon from "@/components/CreditComingSoon";
 
 const CashierDashboard = () => {
     const { orders } = useStore();
@@ -54,6 +55,7 @@ const CashierDashboard = () => {
                         </CardContent>
                     </Card>
                 </Link>
+                <CreditComingSoon>
                 <Link to="/cashier/credit-review">
                     <Card className="hover:border-amber-500 transition-colors cursor-pointer h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -66,6 +68,7 @@ const CashierDashboard = () => {
                         </CardContent>
                     </Card>
                 </Link>
+                </CreditComingSoon>
             </div>
 
             <Card className="border-slate-800 bg-slate-900 text-white">

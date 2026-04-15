@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import CreditComingSoon from "@/components/CreditComingSoon";
 
 const AdminDashboard = () => {
     const { suppliers, staff, stores, orders, products, customers } = useStore();
@@ -102,6 +103,7 @@ const AdminDashboard = () => {
                             <p className="text-xs text-muted-foreground">{totalOrders} orders · Avg R{avgOrderValue.toFixed(0)}</p>
                         </CardContent>
                     </Card>
+                    <CreditComingSoon>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Lending Portfolio</CardTitle>
@@ -112,6 +114,7 @@ const AdminDashboard = () => {
                             <p className="text-xs text-muted-foreground">{activeLoans} active loans</p>
                         </CardContent>
                     </Card>
+                    </CreditComingSoon>
                 </div>
 
                 {/* Charts Row */}

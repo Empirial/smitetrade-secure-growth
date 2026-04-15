@@ -7,6 +7,7 @@ import { useCredit } from "@/context/CreditContext";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from "recharts";
 import { Banknote, TrendingDown, Users, ShieldCheck } from "lucide-react";
+import CreditComingSoon from "@/components/CreditComingSoon";
 
 const AdminCreditOverview = () => {
     const { loans, borrowers } = useCredit();
@@ -40,6 +41,7 @@ const AdminCreditOverview = () => {
 
     return (
         <DashboardLayout role="admin">
+            <CreditComingSoon>
             <div className="space-y-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Credit & Lending Overview</h1>
@@ -151,6 +153,7 @@ const AdminCreditOverview = () => {
                     </Card>
                 </div>
             </div>
+            </CreditComingSoon>
         </DashboardLayout>
     );
 };

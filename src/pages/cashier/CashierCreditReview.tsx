@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useCredit } from "@/context/CreditContext";
 import { Borrower } from "@/types";
+import CreditComingSoon from "@/components/CreditComingSoon";
 
 const CashierCreditReview = () => {
     const { borrowers } = useCredit(); // Use shared data
@@ -37,6 +38,7 @@ const CashierCreditReview = () => {
 
     return (
         <DashboardLayout role="cashier">
+            <CreditComingSoon>
             <div className="max-w-2xl mx-auto space-y-6">
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold">Customer Credit Lookup</h1>
@@ -156,6 +158,7 @@ const CashierCreditReview = () => {
             <div className="text-xs text-muted-foreground text-center max-w-2xl mx-auto space-y-1 pt-8 mt-8 border-t">
                 <p className="font-semibold">Smitetrade provides Behavioural Reliability Index insights for decision-support purposes only.</p>
             </div>
+            </CreditComingSoon>
         </DashboardLayout>
     );
 };

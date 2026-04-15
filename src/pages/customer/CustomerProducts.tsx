@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -470,6 +471,7 @@ const CustomerProducts = () => {
                                             <CreditCard className="h-4 w-4" /> Card (Paystack)
                                         </Label>
                                     </div>
+                                    <CreditComingSoon>
                                     <div className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer has-[:checked]:border-primary">
                                         <RadioGroupItem value="credit" id="po-credit" />
                                         <Label htmlFor="po-credit" className="flex items-center gap-2 cursor-pointer font-normal">
@@ -479,6 +481,7 @@ const CustomerProducts = () => {
                                             </span>
                                         </Label>
                                     </div>
+                                    </CreditComingSoon>
                                     <div className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer has-[:checked]:border-primary">
                                         <RadioGroupItem value="wallet" id="po-wallet" />
                                         <Label htmlFor="po-wallet" className="flex items-center gap-2 cursor-pointer font-normal">

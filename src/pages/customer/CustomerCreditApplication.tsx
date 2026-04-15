@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import CreditComingSoon from "@/components/CreditComingSoon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +84,7 @@ const CustomerCreditApplication = () => {
 
     return (
         <DashboardLayout role="customer">
+            <CreditComingSoon>
             <div className="space-y-8">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Lender Marketplace</h1>
@@ -368,6 +370,7 @@ const CustomerCreditApplication = () => {
                     </Dialog>
                 </div>
             </div>
+            </CreditComingSoon>
         </DashboardLayout>
     );
 };

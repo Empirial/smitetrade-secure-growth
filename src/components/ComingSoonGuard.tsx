@@ -5,12 +5,13 @@ import ComingSoon from "@/pages/ComingSoon";
 interface ComingSoonGuardProps {
   children: ReactNode;
   portal: string;
+  allowAdminPreview?: boolean;
 }
 
-const ComingSoonGuard = ({ children, portal }: ComingSoonGuardProps) => {
+const ComingSoonGuard = ({ children, portal, allowAdminPreview = true }: ComingSoonGuardProps) => {
   const { user } = useStore();
 
-  if (user?.role === "admin") {
+  if (allowAdminPreview && user?.role === "admin") {
     return <>{children}</>;
   }
 

@@ -11,7 +11,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 
 import { DollarSign, TrendingUp, CreditCard, Banknote, Receipt } from "lucide-react";
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import CreditComingSoon from "@/components/CreditComingSoon";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -39,31 +38,10 @@ interface DisplayTransaction {
     type: string;
 }
 
-// ─── Fallback mock data (shown only when Firestore returns 0 results) ────────
-
-const MOCK_WEEKLY_REVENUE = [
-    { week: "W1 Feb", revenue: 15200 },
-    { week: "W2 Feb", revenue: 18400 },
-    { week: "W3 Feb", revenue: 12800 },
-    { week: "W4 Feb", revenue: 21600 },
-    { week: "W1 Mar", revenue: 19200 },
-    { week: "W2 Mar", revenue: 24100 },
-];
-
 const MOCK_PAYMENT_METHODS = [
-    { method: "Card (PayStack)", value: 45, fill: "hsl(199, 89%, 48%)" },
-    { method: "Cash", value: 30, fill: "hsl(142, 76%, 36%)" },
-    { method: "Credit (BRI)", value: 15, fill: "hsl(48, 96%, 53%)" },
+    { method: "Card (PayStack)", value: 55, fill: "hsl(199, 89%, 48%)" },
+    { method: "Cash", value: 35, fill: "hsl(142, 76%, 36%)" },
     { method: "Split", value: 10, fill: "hsl(280, 65%, 60%)" },
-];
-
-const MOCK_TRANSACTIONS: DisplayTransaction[] = [
-    { id: "TXN-001", date: "2026-03-08", reference: "SMITE-PF-001", amount: 350,  portal: "Customer",  status: "completed", provider: "payfast",  type: "payment" },
-    { id: "TXN-002", date: "2026-03-08", reference: "SMITE-PF-002", amount: 1200, portal: "Owner",     status: "completed", provider: "payfast",  type: "subscription" },
-    { id: "TXN-003", date: "2026-03-07", reference: "SMITE-PF-003", amount: 580,  portal: "Lender",    status: "completed", provider: "payfast",  type: "payment" },
-    { id: "TXN-004", date: "2026-03-07", reference: "SMITE-PF-004", amount: 90,   portal: "Customer",  status: "failed",    provider: "payfast",  type: "payment" },
-    { id: "TXN-005", date: "2026-03-07", reference: "SMITE-PF-005", amount: 2100, portal: "Customer",  status: "completed", provider: "payfast",  type: "payment" },
-    { id: "TXN-006", date: "2026-03-06", reference: "SMITE-PF-006", amount: 450,  portal: "Cashier",   status: "completed", provider: "payfast",  type: "payment" },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -112,8 +90,7 @@ const AdminRevenue = () => {
                 if (cancelled) return;
 
                 if (snap.empty) {
-                    setUsingMock(true);
-                    setPayfastTxns(MOCK_TRANSACTIONS);
+                    setUsingMock(false);
                 } else {
                     const rows: DisplayTransaction[] = snap.docs.map((doc) => {
                         const d = doc.data() as FirestoreTransaction;
@@ -133,10 +110,6 @@ const AdminRevenue = () => {
                 }
             } catch (err) {
                 console.error("AdminRevenue: Firestore fetch failed", err);
-                if (!cancelled) {
-                    setUsingMock(true);
-                    setPayfastTxns(MOCK_TRANSACTIONS);
-                }
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -169,16 +142,23 @@ const AdminRevenue = () => {
     const successfulPayments = orders.filter(o => o.status === "Delivered" || o.status === "Paid").length;
     const totalPayments = orders.length;
 
-    const totalRevenue = payfastRevenue || ordersTotal || 72300;
-    const txnCount = completedTxns.length || totalPayments || 73;
-    const successRate = txnCount > 0
+    const totalRevenue = payfastRevenue || ordersTotal;
+    const txnCount = completedTxns.length || totalPayments;
+    const successRate = payfastTxns.length > 0
         ? ((completedTxns.length / payfastTxns.length) * 100).toFixed(1)
         : totalPayments > 0
             ? ((successfulPayments / totalPayments) * 100).toFixed(1)
-            : "93.2";
-    const avgOrderValue = txnCount > 0
-        ? (totalRevenue / txnCount).toFixed(0)
-        : "990";
+            : null;
+    const avgOrderValue = txnCount > 0 ? (totalRevenue / txnCount).toFixed(0) : null;
+
+    // ── Daily revenue from orders (used when no PayFast weekly data) ──
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dailyRevenueData = days.map(day => ({
+        day,
+        revenue: orders
+            .filter(o => days[new Date(o.date).getDay()] === day)
+            .reduce((sum, o) => sum + o.total, 0),
+    }));
 
     const chartConfig = {
         revenue: { label: "Revenue (R)", color: "hsl(142, 76%, 36%)" },
@@ -237,7 +217,7 @@ const AdminRevenue = () => {
                                 <TrendingUp className="h-4 w-4 text-emerald-500" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">{successRate}%</div>
+                                <div className="text-2xl font-bold">{successRate != null ? `${successRate}%` : "—"}</div>
                             </CardContent>
                         </Card>
                         <Card>
@@ -246,7 +226,7 @@ const AdminRevenue = () => {
                                 <CreditCard className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">R {avgOrderValue}</div>
+                                <div className="text-2xl font-bold">{avgOrderValue != null ? `R ${avgOrderValue}` : "—"}</div>
                             </CardContent>
                         </Card>
                         <Card>
@@ -265,16 +245,16 @@ const AdminRevenue = () => {
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-base">Weekly Revenue Trend</CardTitle>
+                            <CardTitle className="text-base">Revenue by Day of Week</CardTitle>
                         </CardHeader>
                         <CardContent>
                             {loading ? (
                                 <Skeleton className="h-[280px] w-full" />
                             ) : (
                                 <ChartContainer config={chartConfig} className="h-[280px] w-full">
-                                    <BarChart data={MOCK_WEEKLY_REVENUE}>
+                                    <BarChart data={dailyRevenueData}>
                                         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                                        <XAxis dataKey="week" className="text-xs" />
+                                        <XAxis dataKey="day" className="text-xs" />
                                         <YAxis />
                                         <ChartTooltip content={<ChartTooltipContent />} />
                                         <Bar dataKey="revenue" fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} />
@@ -284,7 +264,7 @@ const AdminRevenue = () => {
                         </CardContent>
                     </Card>
 
-                    <CreditComingSoon>
+
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-base">
@@ -328,7 +308,6 @@ const AdminRevenue = () => {
                             )}
                         </CardContent>
                     </Card>
-                    </CreditComingSoon>
                 </div>
 
                 {/* ── Subscription Revenue Card (shown when real data present) ── */}

@@ -149,7 +149,7 @@ const App = () => (
                 <Route path="/owner/dashboard" element={<AuthGuard role="owner"><OwnerDashboard /></AuthGuard>} />
                 <Route path="/owner/pos" element={<AuthGuard role="owner"><OwnerPOS /></AuthGuard>} />
                 <Route path="/owner/profile" element={<AuthGuard role="owner"><OwnerProfile /></AuthGuard>} />
-                <Route path="/owner/lending" element={<AuthGuard role="owner"><OwnerLending /></AuthGuard>} />
+                <Route path="/owner/lending" element={<ComingSoonGuard portal="Credit" allowAdminPreview={false}><AuthGuard role="owner"><OwnerLending /></AuthGuard></ComingSoonGuard>} />
                 <Route path="/owner/inventory" element={<AuthGuard role="owner"><OwnerInventory /></AuthGuard>} />
                 <Route path="/owner/staff" element={<AuthGuard role="owner"><OwnerStaff /></AuthGuard>} />
                 <Route path="/owner/reports" element={<AuthGuard role="owner"><OwnerReports /></AuthGuard>} />
@@ -160,7 +160,7 @@ const App = () => (
                 <Route path="/owner/alerts" element={<AuthGuard role="owner"><OwnerAlerts /></AuthGuard>} />
                 <Route path="/owner/analytics" element={<AuthGuard role="owner"><OwnerAnalytics /></AuthGuard>} />
                 <Route path="/owner/expenses" element={<AuthGuard role="owner"><OwnerExpenses /></AuthGuard>} />
-                <Route path="/owner/credit-review" element={<AuthGuard role="owner"><OwnerCreditReview /></AuthGuard>} />
+                <Route path="/owner/credit-review" element={<ComingSoonGuard portal="Credit" allowAdminPreview={false}><AuthGuard role="owner"><OwnerCreditReview /></AuthGuard></ComingSoonGuard>} />
                 <Route path="/owner/stock-adjustment" element={<AuthGuard role="owner"><OwnerStockAdjustment /></AuthGuard>} />
                 <Route path="/owner/support" element={<AuthGuard role="owner"><OwnerSupport /></AuthGuard>} />
 
@@ -170,7 +170,7 @@ const App = () => (
                 <Route path="/cashier/dashboard" element={<AuthGuard role="cashier"><CashierDashboard /></AuthGuard>} />
                 <Route path="/cashier/pos" element={<AuthGuard role="cashier"><CashierPOS /></AuthGuard>} />
                 <Route path="/cashier/scanner" element={<AuthGuard role="cashier"><CashierScanner /></AuthGuard>} />
-                <Route path="/cashier/credit-review" element={<AuthGuard role="cashier"><CashierCreditReview /></AuthGuard>} />
+                <Route path="/cashier/credit-review" element={<ComingSoonGuard portal="Credit" allowAdminPreview={false}><AuthGuard role="cashier"><CashierCreditReview /></AuthGuard></ComingSoonGuard>} />
                 <Route path="/cashier/checkout" element={<AuthGuard role="cashier"><CashierCheckout /></AuthGuard>} />
                 <Route path="/cashier/shift" element={<AuthGuard role="cashier"><CashierShift /></AuthGuard>} />
                 <Route path="/cashier/receipts" element={<AuthGuard role="cashier"><CashierReceipts /></AuthGuard>} />
@@ -186,14 +186,14 @@ const App = () => (
                 <Route path="/customer/checkout" element={<AuthGuard role="customer"><CustomerCheckout /></AuthGuard>} />
                 <Route path="/customer/payment" element={<AuthGuard role="customer"><CustomerPayment /></AuthGuard>} />
                 <Route path="/customer/tracking" element={<AuthGuard role="customer"><CustomerTracking /></AuthGuard>} />
-                <Route path="/customer/credit-review" element={<AuthGuard role="customer"><CustomerCreditReview /></AuthGuard>} />
-                <Route path="/customer/apply-credit" element={<AuthGuard role="customer"><CustomerCreditApplication /></AuthGuard>} />
-                <Route path="/customer/lender-registration" element={<AuthGuard role="customer"><CustomerLenderRegistration /></AuthGuard>} />
+                <Route path="/customer/credit-review" element={<ComingSoonGuard portal="Credit" allowAdminPreview={false}><AuthGuard role="customer"><CustomerCreditReview /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/customer/apply-credit" element={<ComingSoonGuard portal="Credit" allowAdminPreview={false}><AuthGuard role="customer"><CustomerCreditApplication /></AuthGuard></ComingSoonGuard>} />
+                <Route path="/customer/lender-registration" element={<ComingSoonGuard portal="Credit" allowAdminPreview={false}><AuthGuard role="customer"><CustomerLenderRegistration /></AuthGuard></ComingSoonGuard>} />
                 <Route path="/customer/alerts" element={<AuthGuard role="customer"><CustomerAlerts /></AuthGuard>} />
                 <Route path="/customer/profile" element={<AuthGuard role="customer"><CustomerProfile /></AuthGuard>} />
                 <Route path="/customer/orders" element={<AuthGuard role="customer"><CustomerOrders /></AuthGuard>} />
                 <Route path="/customer/orders/:id" element={<AuthGuard role="customer"><CustomerOrderDetails /></AuthGuard>} />
-                <Route path="/customer/credit-status" element={<AuthGuard role="customer"><BehavioralReliabilityIndex /></AuthGuard>} />
+                <Route path="/customer/credit-status" element={<ComingSoonGuard portal="Credit" allowAdminPreview={false}><AuthGuard role="customer"><BehavioralReliabilityIndex /></AuthGuard></ComingSoonGuard>} />
                 <Route path="/customer/support" element={<AuthGuard role="customer"><CustomerSupport /></AuthGuard>} />
 
                 {/* Driver Portal — Coming Soon (admin bypass via ComingSoonGuard) */}
@@ -221,7 +221,7 @@ const App = () => (
                 <Route path="/admin/analytics" element={<AuthGuard role="admin"><AdminAnalytics /></AuthGuard>} />
                 <Route path="/admin/stores" element={<AuthGuard role="admin"><AdminStores /></AuthGuard>} />
                 <Route path="/admin/revenue" element={<AuthGuard role="admin"><AdminRevenue /></AuthGuard>} />
-                <Route path="/admin/credit-overview" element={<AuthGuard role="admin"><AdminCreditOverview /></AuthGuard>} />
+                <Route path="/admin/credit-overview" element={<ComingSoonGuard portal="Credit" allowAdminPreview={false}><AuthGuard role="admin"><AdminCreditOverview /></AuthGuard></ComingSoonGuard>} />
                 <Route path="/admin/support" element={<AuthGuard role="admin"><AdminSupport /></AuthGuard>} />
                 <Route path="/admin/alerts" element={<AuthGuard role="admin"><AdminAlerts /></AuthGuard>} />
                 <Route path="/admin/suppliers" element={<AuthGuard role="admin"><AdminSuppliers /></AuthGuard>} />

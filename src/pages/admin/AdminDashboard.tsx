@@ -2,60 +2,43 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore } from "@/context/StoreContext";
-import { useCredit } from "@/context/CreditContext";
-import { Users, Store, Banknote, Activity, TrendingUp, ShoppingCart, CreditCard } from "lucide-react";
+import { Users, Store, TrendingUp, ShoppingCart, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import CreditComingSoon from "@/components/CreditComingSoon";
-
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 const AdminDashboard = () => {
-    const { suppliers, staff, stores, orders, products, customers } = useStore();
-    const { borrowers, loans } = useCredit();
+    const { staff, stores, orders, products, customers } = useStore();
 
-    const totalUsers = customers.length + staff.length + borrowers.length;
-    const activeLoans = loans.filter(l => l.status === 'active').length;
-    const totalPortfolio = loans.reduce((sum, l) => sum + l.amount, 0);
+    const totalUsers = customers.length + staff.length;
     const totalRevenue = orders.filter(o => o.status === 'Delivered' || o.status === 'Paid').reduce((sum, o) => sum + o.total, 0);
     const totalOrders = orders.length;
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    // Mock daily transaction data for charts
-    const dailyTransactions = [
-        { day: "Mon", orders: 24, revenue: 4200 },
-        { day: "Tue", orders: 18, revenue: 3100 },
-        { day: "Wed", orders: 31, revenue: 5800 },
-        { day: "Thu", orders: 27, revenue: 4600 },
-        { day: "Fri", orders: 42, revenue: 7200 },
-        { day: "Sat", orders: 55, revenue: 9400 },
-        { day: "Sun", orders: 38, revenue: 6100 },
-    ];
-
-    const userGrowth = [
-        { month: "Oct", users: 85 },
-        { month: "Nov", users: 102 },
-        { month: "Dec", users: 118 },
-        { month: "Jan", users: 134 },
-        { month: "Feb", users: 155 },
-        { month: "Mar", users: totalUsers },
-    ];
+    // Orders grouped by day of week (real data)
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dailyTransactions = days.map(day => {
+        const dayOrders = orders.filter(o => days[new Date(o.date).getDay()] === day);
+        return {
+            day,
+            orders: dayOrders.length,
+            revenue: dayOrders.reduce((sum, o) => sum + o.total, 0),
+        };
+    });
 
     const orderStatusData = [
-        { name: "Delivered", value: orders.filter(o => o.status === 'Delivered').length || 12, fill: "hsl(142, 76%, 36%)" },
-        { name: "Pending", value: orders.filter(o => o.status === 'Pending').length || 5, fill: "hsl(48, 96%, 53%)" },
-        { name: "Cancelled", value: 2, fill: "hsl(0, 84%, 60%)" },
-        { name: "In Transit", value: orders.filter(o => o.status === 'Out for Delivery').length || 3, fill: "hsl(199, 89%, 48%)" },
-    ];
+        { name: "Delivered", value: orders.filter(o => o.status === 'Delivered').length, fill: "hsl(142, 76%, 36%)" },
+        { name: "Pending", value: orders.filter(o => o.status === 'Pending').length, fill: "hsl(48, 96%, 53%)" },
+        { name: "Cancelled", value: orders.filter(o => o.status === 'Cancelled').length, fill: "hsl(0, 84%, 60%)" },
+        { name: "In Transit", value: orders.filter(o => o.status === 'Out for Delivery').length, fill: "hsl(199, 89%, 48%)" },
+    ].filter(d => d.value > 0);
 
-    const recentActivity = [
-        { type: "order", message: "New order #1042 placed — R350", time: "12 min ago" },
-        { type: "user", message: "New customer registered: Thandi M.", time: "28 min ago" },
-        { type: "payment", message: "PayStack payment confirmed — R1,200", time: "45 min ago" },
-        { type: "store", message: "Store 'Kasi Fresh' updated inventory", time: "1h ago" },
-        { type: "loan", message: "Loan #loan_1 payment received — R500", time: "2h ago" },
-        { type: "alert", message: "Low stock alert: Bread (3 remaining)", time: "3h ago" },
-    ];
+    const recentOrders = orders.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+    const recentActivity = recentOrders.map(o => ({
+        type: o.status === 'Delivered' || o.status === 'Paid' ? 'payment' : 'order',
+        message: `Order #${o.id.slice(-6).toUpperCase()} — ${o.customerName} · R${o.total.toLocaleString()} · ${o.status}`,
+        time: new Date(o.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }));
 
     const chartConfig = {
         orders: { label: "Orders", color: "hsl(199, 89%, 48%)" },
@@ -80,7 +63,7 @@ const AdminDashboard = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{totalUsers}</div>
-                            <p className="text-xs text-muted-foreground">+12% from last month</p>
+                            <p className="text-xs text-muted-foreground">{customers.length} customers · {staff.length} staff</p>
                         </CardContent>
                     </Card>
                     <Card>
@@ -89,7 +72,7 @@ const AdminDashboard = () => {
                             <Store className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stores.length || 5}</div>
+                            <div className="text-2xl font-bold">{stores.length}</div>
                             <p className="text-xs text-muted-foreground">{products.length} products listed</p>
                         </CardContent>
                     </Card>
@@ -103,18 +86,16 @@ const AdminDashboard = () => {
                             <p className="text-xs text-muted-foreground">{totalOrders} orders · Avg R{avgOrderValue.toFixed(0)}</p>
                         </CardContent>
                     </Card>
-                    <CreditComingSoon>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Lending Portfolio</CardTitle>
-                            <Banknote className="h-4 w-4 text-emerald-500" />
+                            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+                            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">R {totalPortfolio.toLocaleString()}</div>
-                            <p className="text-xs text-muted-foreground">{activeLoans} active loans</p>
+                            <div className="text-2xl font-bold">{totalOrders}</div>
+                            <p className="text-xs text-muted-foreground">{orders.filter(o => o.status === 'Pending').length} pending</p>
                         </CardContent>
                     </Card>
-                    </CreditComingSoon>
                 </div>
 
                 {/* Charts Row */}
@@ -139,19 +120,24 @@ const AdminDashboard = () => {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-base">User Growth</CardTitle>
-                            <CardDescription>Monthly registered users</CardDescription>
+                            <CardTitle className="text-base">Order Status Breakdown</CardTitle>
+                            <CardDescription>Distribution across all orders</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                                <LineChart data={userGrowth}>
-                                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                                    <XAxis dataKey="month" className="text-xs" />
-                                    <YAxis className="text-xs" />
-                                    <ChartTooltip content={<ChartTooltipContent />} />
-                                    <Line type="monotone" dataKey="users" stroke="hsl(48, 96%, 53%)" strokeWidth={2} dot={{ fill: "hsl(48, 96%, 53%)" }} />
-                                </LineChart>
-                            </ChartContainer>
+                            {orderStatusData.length === 0 ? (
+                                <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">No orders yet.</div>
+                            ) : (
+                                <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                                    <PieChart>
+                                        <Pie data={orderStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={({ name, value }) => `${name}: ${value}`}>
+                                            {orderStatusData.map((entry, i) => (
+                                                <Cell key={i} fill={entry.fill} />
+                                            ))}
+                                        </Pie>
+                                        <ChartTooltip content={<ChartTooltipContent />} />
+                                    </PieChart>
+                                </ChartContainer>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -165,23 +151,23 @@ const AdminDashboard = () => {
                             <CardDescription>Latest platform events</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                {recentActivity.map((item, i) => (
-                                    <div key={i} className="flex items-center">
-                                        <span className={`h-2 w-2 rounded-full mr-2 ${
-                                            item.type === 'order' ? 'bg-blue-500' :
-                                            item.type === 'payment' ? 'bg-emerald-500' :
-                                            item.type === 'user' ? 'bg-yellow-500' :
-                                            item.type === 'alert' ? 'bg-red-500' :
-                                            'bg-muted-foreground'
-                                        }`} />
-                                        <div className="ml-4 space-y-1 flex-1">
-                                            <p className="text-sm leading-none">{item.message}</p>
+                            {recentActivity.length === 0 ? (
+                                <p className="text-sm text-muted-foreground py-4 text-center">No orders yet.</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {recentActivity.map((item, i) => (
+                                        <div key={i} className="flex items-center">
+                                            <span className={`h-2 w-2 rounded-full mr-2 ${
+                                                item.type === 'payment' ? 'bg-emerald-500' : 'bg-blue-500'
+                                            }`} />
+                                            <div className="ml-4 space-y-1 flex-1">
+                                                <p className="text-sm leading-none">{item.message}</p>
+                                            </div>
+                                            <div className="ml-auto text-xs text-muted-foreground">{item.time}</div>
                                         </div>
-                                        <div className="ml-auto text-xs text-muted-foreground">{item.time}</div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -203,9 +189,6 @@ const AdminDashboard = () => {
                             </Button>
                             <Button variant="outline" className="justify-start" asChild>
                                 <Link to="/admin/users"><Users className="mr-2 h-4 w-4" /> Manage Users</Link>
-                            </Button>
-                            <Button variant="outline" className="justify-start" asChild>
-                                <Link to="/admin/credit-overview"><Banknote className="mr-2 h-4 w-4" /> Credit Overview</Link>
                             </Button>
                         </CardContent>
                     </Card>

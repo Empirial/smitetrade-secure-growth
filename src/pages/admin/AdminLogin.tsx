@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,12 +11,16 @@ import { validateRequired, validatePassword, hasErrors } from "@/utils/validatio
 
 const AdminLogin = () => {
     const navigate = useNavigate();
-    const { login } = useStore();
+    const { login, user } = useStore();
     const [id, setId] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({ id: null as string | null, password: null as string | null });
     const [authError, setAuthError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user?.role === "admin") navigate("/admin/dashboard", { replace: true });
+    }, [user, navigate]);
 
     const validate = () => {
         const newErrors = {

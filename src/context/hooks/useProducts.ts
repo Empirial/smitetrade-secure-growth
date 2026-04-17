@@ -30,7 +30,7 @@ export function useProducts(user: User | null, currentStore: Store | null, store
             const unsub = onSnapshot(q, (snapshot) => {
                 setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[]);
             });
-            const allQ = query(collection(db, "products"), orderBy("name"));
+            const allQ = query(collection(db, "products"), where("storeId", "==", activeStoreId), orderBy("name"));
             const unsubAll = onSnapshot(allQ, (snapshot) => {
                 setAllProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[]);
             });

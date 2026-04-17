@@ -5,7 +5,6 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useStore } from "@/context/StoreContext";
-import { toast } from "sonner";
 import { Briefcase, AlertCircle } from "lucide-react";
 
 const GoogleIcon = () => (

@@ -29,7 +29,9 @@ const LenderRegister = () => {
         try {
             await loginWithGoogle('lender');
             navigate("/lender/dashboard");
-        } catch { } finally {
+        } catch (_err) {
+            // loginWithGoogle handles its own error toasts
+        } finally {
             setGoogleLoading(false);
         }
     };

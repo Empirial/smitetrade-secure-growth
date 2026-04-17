@@ -2,7 +2,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { initializeAnalytics, isSupported } from "firebase/analytics";
-import { initializeAuth, getAuth, browserSessionPersistence, GoogleAuthProvider } from "firebase/auth";
+import { initializeAuth, getAuth, browserSessionPersistence, browserPopupRedirectResolver, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -31,7 +31,7 @@ isSupported().then(yes => { if (yes) initializeAnalytics(app); }).catch(() => {}
 // Falls back to getAuth() on HMR re-execution when auth is already initialized.
 let auth;
 try {
-  auth = initializeAuth(app, { persistence: browserSessionPersistence });
+  auth = initializeAuth(app, { persistence: browserSessionPersistence, popupRedirectResolver: browserPopupRedirectResolver });
 } catch {
   auth = getAuth(app);
 }

@@ -107,20 +107,6 @@ const OwnerDashboard = () => {
                     icon={Users}
                     color="text-blue-500"
                 />
-                <CreditComingSoon>
-                <Link to="/owner/credit-review" className="h-full">
-                    <Card className="hover:border-indigo-500 transition-all cursor-pointer h-full border-dashed border-2 flex flex-col justify-between">
-                        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 gap-2">
-                            <CardTitle className="text-sm font-medium leading-tight">Credit Check</CardTitle>
-                            <Users className="h-4 w-4 shrink-0 text-indigo-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">Lookup</div>
-                            <p className="text-xs text-muted-foreground">Check BRI Score</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-                </CreditComingSoon>
             </div>
 
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 mt-4">

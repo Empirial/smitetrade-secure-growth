@@ -240,66 +240,6 @@ const CustomerProfile = () => {
 
                 {/* Dashboard Widgets */}
                 <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-                    <CreditComingSoon>
-                    <Card className="bg-emerald-50 border-emerald-100">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-emerald-800">BRI Score</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-xl font-bold text-emerald-700">
-                                {isCreditLoading ? "..." : (profile ? (profile.tier === 'Gold' ? 'Pays On Time' : profile.tier === 'Silver' ? 'Pays But delays' : 'Does not pay at all') : "N/A")}
-                            </div>
-                            <p className="text-xs text-emerald-600 mt-1">Category</p>
-                            <Button size="sm" variant="link" className="px-0 text-emerald-800" asChild>
-                                <Link to="/customer/credit-review">View Details &rarr;</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                    </CreditComingSoon>
-                    <CreditComingSoon>
-                    <Card className="bg-blue-50 border-blue-100">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-emerald-800">Store Credit Balance</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-emerald-700">
-                                {isCreditLoading ? "..." : `R ${(profile?.balance || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
-                            </div>
-                            <p className="text-xs text-emerald-600 mt-1">Current amount owed.</p>
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button size="sm" variant="link" className="px-0 text-emerald-800">
-                                        View Details &rarr;
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-md">
-                                    <DialogHeader>
-                                        <DialogTitle className="text-xl">Store Credit Details</DialogTitle>
-                                        <DialogDescription>
-                                            This credit is used for food and essentials at participating spaza shops. Pay this balance to maintain your Store Tier.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="flex flex-col gap-4 py-4">
-                                        <div className="p-4 bg-red-50 rounded-lg border border-red-100 flex justify-between items-center">
-                                            <div>
-                                                <p className="text-sm font-medium text-red-800">Current Balance Owed</p>
-                                                <p className="text-xs text-red-600">Must be paid</p>
-                                            </div>
-                                            <div className="text-2xl font-bold text-red-600">
-                                                {isCreditLoading ? "..." : `R ${(profile?.balance || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end gap-2">
-                                        <Button className="bg-emerald-600 hover:bg-emerald-700" asChild>
-                                            <Link to="/customer/payment">Make a Payment</Link>
-                                        </Button>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </CardContent>
-                    </Card>
-                    </CreditComingSoon>
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Recent Orders</CardTitle>

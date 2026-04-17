@@ -14,18 +14,10 @@ import { db } from "@/lib/firebase";
 const AdminStores = () => {
     const { stores, products, orders } = useStore();
 
-    // Build store data from context + mock enrichment
-    const storeData = (stores.length > 0 ? stores : [
-        { id: "s1", name: "Soweto Central Spaza", ownerId: "u1", address: "12 Vilakazi St", suburb: "Soweto", city: "Johannesburg", province: "Gauteng", status: "Active" },
-        { id: "s2", name: "Kasi Fresh Market", ownerId: "u2", address: "45 Main Rd", suburb: "Khayelitsha", city: "Cape Town", province: "Western Cape", status: "Active" },
-        { id: "s3", name: "Township Goods", ownerId: "u3", address: "7 Mandela Ave", suburb: "Mamelodi", city: "Pretoria", province: "Gauteng", status: "Suspended" },
-        { id: "s4", name: "Mzansi Market", ownerId: "u4", address: "22 Freedom St", suburb: "Umlazi", city: "Durban", province: "KZN", status: "Active" },
-        { id: "s5", name: "Ubuntu Store", ownerId: "u5", address: "3 Hope Rd", suburb: "Alexandra", city: "Johannesburg", province: "Gauteng", status: "Active" },
-    ]).map(store => ({
+    const storeData = stores.map(store => ({
         ...store,
         productCount: products.filter(p => p.storeId === store.id).length || "—",
-        totalSales: orders.filter(o => (o as any).storeId === store.id).reduce((sum, o) => sum + o.total, 0) || 0,
-        owner: "Store Owner",
+        totalSales: orders.filter(o => (o as any).storeId === store.id).reduce((sum, o) => sum + o.total, 0),
     }));
 
     const [storeStatuses, setStoreStatuses] = useState<Record<string, string>>({});
@@ -100,7 +92,11 @@ const AdminStores = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {storeData.map(store => {
+                                {storeData.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No stores registered yet.</TableCell>
+                                    </TableRow>
+                                ) : storeData.map(store => {
                                     const status = getStatus(store);
                                     return (
                                         <TableRow key={store.id}>

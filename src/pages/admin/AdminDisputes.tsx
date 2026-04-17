@@ -1,25 +1,47 @@
 
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const INITIAL_DISPUTES = [
-    { id: "1", type: "Fraud Flag", desc: "Multiple high-value transactions from same IP in 5 mins", status: "Pending", priority: "High" },
-    { id: "2", type: "Delivery Complaint", desc: "Customer claims driver never arrived (Order #1023)", status: "Investigating", priority: "Medium" },
-    { id: "3", type: "Late Delivery", desc: "Customer A: Order arrived over 2 hours late", status: "Open", priority: "Low" },
-    { id: "4", type: "Wrong Address", desc: "Driver B delivered to incorrect location", status: "Resolved", priority: "Low" },
-];
+interface Dispute {
+    id: string;
+    type: string;
+    desc: string;
+    status: string;
+    priority: string;
+}
 
 const AdminDisputes = () => {
-    const [disputes, setDisputes] = useState(INITIAL_DISPUTES);
+    const [disputes, setDisputes] = useState<Dispute[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const handleAction = (id: string, action: string) => {
-        setDisputes(prev => prev.map(d => d.id === id ? { ...d, status: action } : d));
-        toast.success(`Dispute #${id} marked as ${action}.`);
+    useEffect(() => {
+        const unsub = onSnapshot(collection(db, "disputes"), (snap) => {
+            setDisputes(snap.docs.map(d => ({
+                id: d.id,
+                type: d.data().type || "General",
+                desc: d.data().description || d.data().desc || "",
+                status: d.data().status || "Open",
+                priority: d.data().priority || "Low",
+            })));
+            setIsLoading(false);
+        }, () => setIsLoading(false));
+        return () => unsub();
+    }, []);
+
+    const handleAction = async (id: string, action: string) => {
+        try {
+            await updateDoc(doc(db, "disputes", id), { status: action });
+            toast.success(`Dispute marked as ${action}.`);
+        } catch {
+            toast.error("Failed to update dispute.");
+        }
     };
 
     return (
@@ -59,52 +81,57 @@ const AdminDisputes = () => {
                         <CardDescription>Review and resolve open cases.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead>Priority</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {disputes.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell className="font-medium">
-                                            <div className="flex items-center gap-2">
-                                                <AlertCircle className={`h-4 w-4 ${item.priority === 'High' ? 'text-red-500' : 'text-slate-400'}`} />
-                                                {item.type}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{item.desc}</TableCell>
-                                        <TableCell>
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${item.priority === 'High' ? 'bg-red-500/10 text-red-400' :
-                                                item.priority === 'Medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-muted text-muted-foreground'
-                                                }`}>
-                                                {item.priority}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>{item.status}</TableCell>
-                                        <TableCell className="text-right">
-                                            {item.status !== 'Resolved' && (
-                                                <div className="flex justify-end gap-2">
-                                                    <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleAction(item.id, 'Resolved')}>
-                                                        <CheckCircle className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleAction(item.id, 'Rejected')}>
-                                                        <XCircle className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        </div>
+                        {isLoading ? (
+                            <p className="text-center py-8 text-muted-foreground">Loading disputes...</p>
+                        ) : disputes.length === 0 ? (
+                            <p className="text-center py-8 text-muted-foreground">No disputes filed yet.</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Description</TableHead>
+                                            <TableHead>Priority</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {disputes.map((item) => (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="font-medium">
+                                                    <div className="flex items-center gap-2">
+                                                        <AlertCircle className={`h-4 w-4 ${item.priority === 'High' ? 'text-red-500' : 'text-slate-400'}`} />
+                                                        {item.type}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{item.desc}</TableCell>
+                                                <TableCell>
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${item.priority === 'High' ? 'bg-red-500/10 text-red-400' :
+                                                        item.priority === 'Medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-muted text-muted-foreground'}`}>
+                                                        {item.priority}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>{item.status}</TableCell>
+                                                <TableCell className="text-right">
+                                                    {item.status !== 'Resolved' && (
+                                                        <div className="flex justify-end gap-2">
+                                                            <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleAction(item.id, 'Resolved')}>
+                                                                <CheckCircle className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleAction(item.id, 'Rejected')}>
+                                                                <XCircle className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

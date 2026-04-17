@@ -75,7 +75,8 @@
       "Bash(find src/pages -name \"*.tsx\" -exec wc -l {} +)",
       "Bash(node -e \"require\\('./lib/index.js'\\)\")",
       "Bash(node -e \"const pkg = require\\('./node_modules/firebase-functions/package.json'\\); console.log\\(pkg.version\\)\")",
-      "Bash(firebase functions:log --only aiChat)"
+      "Bash(firebase functions:log --only aiChat)",
+      "Bash(git -C \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth\" diff HEAD~1 -- src/context/CreditContext.tsx)"
     ]
   },
   "enableAllProjectMcpServers": true,

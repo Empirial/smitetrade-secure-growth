@@ -302,33 +302,6 @@ const CustomerCheckout = () => {
                                                 </div>
                                             </Label>
                                         </div>
-                                        <CreditComingSoon>
-                                        <div>
-                                            <RadioGroupItem value="credit" id="credit" className="peer sr-only" />
-                                            <Label
-                                                htmlFor="credit"
-                                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                                            >
-                                                <div className="flex w-full items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <Banknote className="mb-3 h-6 w-6" />
-                                                        <span className="font-semibold">Lender Credit</span>
-                                                    </div>
-                                                    <span className="text-xs text-muted-foreground">Pay Later</span>
-                                                </div>
-                                                <div className="w-full mt-2 space-y-1">
-                                                    <div className="flex justify-between text-xs">
-                                                        <span>Available Limit:</span>
-                                                        <span className="font-mono">R {profile ? (profile.creditLimit - profile.balance).toFixed(2) : '0.00'}</span>
-                                                    </div>
-                                                    <div className="flex justify-between text-xs">
-                                                        <span>Current Balance:</span>
-                                                        <span className="font-mono text-red-500">R {profile?.balance.toFixed(2)}</span>
-                                                    </div>
-                                                </div>
-                                            </Label>
-                                        </div>
-                                        </CreditComingSoon>
                                         <div>
                                             <RadioGroupItem value="wallet" id="wallet" className="peer sr-only" />
                                             <Label

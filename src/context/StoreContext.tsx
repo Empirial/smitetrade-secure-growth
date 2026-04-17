@@ -165,6 +165,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         products.products, products.allProducts,
         orders.orders, orders.cart, orders.cartTotal,
         staffData.staff, staffData.shifts, staffData.currentShift,
+        staffData.addStaff, staffData.updateStaff, staffData.deleteStaff,
+        staffData.startShift, staffData.endShift, staffData.recordCashDrop,
         suppliers.suppliers,
         customers.customers, customers.expenses,
         issues.issues,

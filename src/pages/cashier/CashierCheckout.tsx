@@ -258,12 +258,12 @@ const CashierCheckout = () => {
                                         <h3 className="text-3xl font-bold text-blue-900 mb-2">R {total.toFixed(2)}</h3>
                                         <p className="text-blue-700">Please process this amount on the physical card terminal.</p>
                                     </div>
-                                    {/* TODO: Integrate with physical card terminal */}
+                                    <p className="text-sm text-blue-600 font-medium">Process the amount on the physical card terminal, then confirm below.</p>
                                     <Button
                                         className="w-full h-14 text-lg bg-blue-600 hover:bg-blue-700"
                                         onClick={handlePay}
                                     >
-                                        Mark as Card Payment
+                                        Confirm Card Payment
                                     </Button>
                                 </div>
                             </CardHeader>

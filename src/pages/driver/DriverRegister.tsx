@@ -28,7 +28,9 @@ const DriverRegister = () => {
         try {
             await loginWithGoogle('driver');
             navigate("/driver/orders");
-        } catch { } finally {
+        } catch (_err) {
+            // loginWithGoogle handles its own error toasts
+        } finally {
             setGoogleLoading(false);
         }
     };

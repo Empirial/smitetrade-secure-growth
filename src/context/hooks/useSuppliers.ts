@@ -25,6 +25,10 @@ export function useSuppliers(user: User | null, currentStore: Store | null, stor
 
     const addSupplier = async (supplierData: Omit<Supplier, 'id' | 'status'>) => {
         const storeId = currentStore?.id ?? user?.storeId;
+        if (!storeId) {
+            toast.error("No active store found. Please refresh and try again.");
+            throw new Error("storeId is undefined");
+        }
         if (USE_MOCK_DATA) {
             setSuppliers(prev => [...prev, { ...supplierData, id: `supp-${Date.now()}`, status: 'Active', storeId }]);
             toast.success("Supplier added successfully (Mock)");

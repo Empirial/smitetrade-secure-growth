@@ -28,7 +28,9 @@ const CustomerRegister = () => {
         try {
             await loginWithGoogle('customer');
             navigate("/customer/products");
-        } catch { } finally {
+        } catch (_err) {
+            // loginWithGoogle handles its own error toasts
+        } finally {
             setGoogleLoading(false);
         }
     };

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { collection, onSnapshot, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -26,69 +28,52 @@ interface Application {
 }
 
 const AdminApplications = () => {
-    const [applications, setApplications] = useState<Application[]>([
-        {
-            id: "1", name: "Thabo's Spaza", owner: "Thabo Molefe", location: "Soweto, Zone 6", date: "2026-03-05", status: "Pending",
-            email: "thabo@email.com", phone: "072 345 6789",
-            description: "General spaza shop selling groceries, snacks, and household items. Located on a busy street corner with high foot traffic.",
-            documents: [
-                { name: "ID Document", submitted: true },
-                { name: "Proof of Address", submitted: true },
-                { name: "Business Registration", submitted: false },
-                { name: "Health & Safety Certificate", submitted: false },
-            ],
-            messages: []
-        },
-        {
-            id: "2", name: "Mama Grace Provisions", owner: "Grace Nkosi", location: "Diepkloof", date: "2026-03-04", status: "Pending",
-            email: "grace.nkosi@email.com", phone: "083 456 7890",
-            description: "Family-owned provision store specializing in fresh produce, bread, and dairy products.",
-            documents: [
-                { name: "ID Document", submitted: true },
-                { name: "Proof of Address", submitted: true },
-                { name: "Business Registration", submitted: true },
-                { name: "Health & Safety Certificate", submitted: true },
-            ],
-            messages: []
-        },
-        {
-            id: "3", name: "Alex Corner Store", owner: "David Zulu", location: "Alexandra", date: "2026-03-03", status: "Rejected",
-            email: "david.z@email.com", phone: "061 567 8901",
-            description: "Corner store selling general merchandise and airtime.",
-            documents: [
-                { name: "ID Document", submitted: true },
-                { name: "Proof of Address", submitted: false },
-                { name: "Business Registration", submitted: false },
-                { name: "Health & Safety Certificate", submitted: false },
-            ],
-            messages: [
-                { from: "Admin", message: "Missing required documents: Proof of Address, Business Registration, and Health & Safety Certificate. Please resubmit.", date: "2026-03-03" }
-            ]
-        },
-    ]);
-
+    const [applications, setApplications] = useState<Application[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedApp, setSelectedApp] = useState<Application | null>(null);
     const [replyText, setReplyText] = useState("");
 
-    const handleAction = (id: string, action: "Approved" | "Rejected") => {
-        setApplications(prev => prev.map(a => a.id === id ? { ...a, status: action } : a));
-        if (selectedApp?.id === id) {
-            setSelectedApp(prev => prev ? { ...prev, status: action } : null);
+    useEffect(() => {
+        const unsub = onSnapshot(collection(db, "applications"), (snap) => {
+            setApplications(snap.docs.map((d) => ({
+                id: d.id,
+                name: d.data().name || d.data().storeName || "Unnamed Store",
+                owner: d.data().owner || d.data().ownerName || "",
+                location: d.data().location || d.data().address || "",
+                date: d.data().date || (d.data().createdAt as string)?.split?.("T")[0] || "",
+                status: d.data().status || "Pending",
+                email: d.data().email || "",
+                phone: d.data().phone || "",
+                description: d.data().description || "",
+                documents: d.data().documents || [],
+                messages: d.data().messages || [],
+            })));
+            setIsLoading(false);
+        }, () => setIsLoading(false));
+        return () => unsub();
+    }, []);
+
+    const handleAction = async (id: string, action: "Approved" | "Rejected") => {
+        try {
+            await updateDoc(doc(db, "applications", id), { status: action });
+            if (selectedApp?.id === id) setSelectedApp(prev => prev ? { ...prev, status: action } : null);
+            toast.success(`Application ${action.toLowerCase()} successfully.`);
+        } catch {
+            toast.error("Failed to update application.");
         }
-        toast.success(`Application ${action.toLowerCase()} successfully.`);
     };
 
-    const sendMessage = (id: string) => {
+    const sendMessage = async (id: string) => {
         if (!replyText.trim()) return;
         const newMsg = { from: "Admin", message: replyText, date: new Date().toISOString().split("T")[0] };
-        setApplications(prev => prev.map(a =>
-            a.id === id ? { ...a, messages: [...a.messages, newMsg] } : a
-        ));
-        if (selectedApp?.id === id) {
-            setSelectedApp(prev => prev ? { ...prev, messages: [...prev.messages, newMsg] } : null);
+        try {
+            await updateDoc(doc(db, "applications", id), { messages: arrayUnion(newMsg) });
+            if (selectedApp?.id === id) setSelectedApp(prev => prev ? { ...prev, messages: [...prev.messages, newMsg] } : null);
+            setReplyText("");
+            toast.success("Message sent to applicant.");
+        } catch {
+            toast.error("Failed to send message.");
         }
-        setReplyText("");
-        toast.success("Message sent to applicant.");
     };
 
     const missingDocs = (app: Application) => app.documents.filter(d => !d.submitted);
@@ -98,6 +83,11 @@ const AdminApplications = () => {
             <h1 className="text-3xl font-bold tracking-tight mb-6">Store Applications</h1>
             <p className="text-muted-foreground mb-4">Review new Spaza Shop registration requests.</p>
 
+            {isLoading ? (
+                <p className="text-muted-foreground py-8 text-center">Loading applications...</p>
+            ) : applications.length === 0 ? (
+                <p className="text-muted-foreground py-8 text-center">No store applications yet.</p>
+            ) : null}
             <div className="grid gap-4">
                 {applications.map((app) => (
                     <Card key={app.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedApp(app)}>

@@ -94,9 +94,8 @@ service cloud.firestore {
     // 📦 PRODUCTS
     // ─────────────────────────────────────────────
     match /products/{productId} {
-      // Products are a public catalogue — any authenticated user can browse.
-      // This also unblocks cross-store allProducts queries used by the customer portal.
-      allow read: if isAuth();
+      // Customers can browse across all stores; other roles restricted to their own store.
+      allow read: if isAuth() && (isCustomer() || isAdmin() || canAccessStore(resource.data.storeId));
       allow create: if isAuth() && (isOwner() || isCashier() || isAdmin()) &&
         canAccessStore(request.resource.data.storeId);
       allow update: if isAuth() && (isOwner() || isCashier() || isAdmin()) &&
@@ -116,7 +115,7 @@ service cloud.firestore {
         isDriver() ||   // drivers query all Ready orders across stores
         isLender()      // lenders need order history for loan decisions
       );
-      allow create: if isAuth() && canAccessStore(request.resource.data.storeId);
+      allow create: if isAuth() && request.resource.data.storeId != null && canAccessStore(request.resource.data.storeId);
       allow update: if isAuth() && (
         isAdmin() ||
         (canAccessStore(resource.data.storeId) && isStoreIdImmutable()) ||
@@ -246,7 +245,7 @@ service cloud.firestore {
     match /loan_applications/{appId} {
       allow read: if isAuth() && (
         resource.data.userId == uid() ||
-        isLender() ||
+        (isLender() && (resource.data.status == 'pending' || resource.data.lenderId == uid())) ||
         isAdmin()
       );
       allow create: if isAuth();
@@ -311,7 +310,7 @@ service cloud.firestore {
     match /applications/{appId} {
       allow read: if isAuth() && (
         resource.data.userId == uid() ||
-        isLender() ||
+        (isLender() && (resource.data.status == 'pending' || resource.data.lenderId == uid())) ||
         isAdmin()
       );
       allow create: if isAuth();
@@ -431,6 +430,15 @@ service cloud.firestore {
     match /audit_logs/{logId} {
       allow read: if isAdmin();
       allow write: if false;
+    }
+
+    // ─────────────────────────────────────────────
+    // 🔧 ADMIN SEED (one-time bootstrap flag)
+    // ─────────────────────────────────────────────
+    match /admin_seed/{doc} {
+      allow read: if true;
+      // Only writable if the seed document doesn't exist yet (prevents re-seeding)
+      allow write: if !exists(/databases/$(database)/documents/admin_seed/status);
     }
   }
 }

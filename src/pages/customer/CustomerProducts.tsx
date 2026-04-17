@@ -471,17 +471,6 @@ const CustomerProducts = () => {
                                             <CreditCard className="h-4 w-4" /> Card (Paystack)
                                         </Label>
                                     </div>
-                                    <CreditComingSoon>
-                                    <div className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer has-[:checked]:border-primary">
-                                        <RadioGroupItem value="credit" id="po-credit" />
-                                        <Label htmlFor="po-credit" className="flex items-center gap-2 cursor-pointer font-normal">
-                                            <Banknote className="h-4 w-4" /> Lender Credit
-                                            <span className="ml-auto text-xs text-muted-foreground">
-                                                Available: R {profile ? (profile.creditLimit - profile.balance).toFixed(2) : "0.00"}
-                                            </span>
-                                        </Label>
-                                    </div>
-                                    </CreditComingSoon>
                                     <div className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer has-[:checked]:border-primary">
                                         <RadioGroupItem value="wallet" id="po-wallet" />
                                         <Label htmlFor="po-wallet" className="flex items-center gap-2 cursor-pointer font-normal">

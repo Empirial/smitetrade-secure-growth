@@ -7,24 +7,19 @@ import { Separator } from "@/components/ui/separator";
 import { Activity, CreditCard, DollarSign, Server, MapPin, Clock, ShoppingCart, User } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
 
-const mockTransactions = [
-    { id: 1, store: "Thabo's Spaza", terminal: 882, items: 3, amount: 145, time: "Just now", customer: "Sipho Mthembu", phone: "072 345 6789", method: "Cash", address: "12 Vilakazi St, Soweto", products: ["Bread", "Milk", "Sugar"] },
-    { id: 2, store: "Mama Joy's Corner", terminal: 441, items: 5, amount: 87, time: "2 min ago", customer: "Nomsa Dlamini", phone: "083 221 4455", method: "Card", address: "45 Main Rd, Alex", products: ["Rice", "Cooking Oil", "Soap", "Matches", "Candles"] },
-    { id: 3, store: "Lucky's Mini Mart", terminal: 223, items: 2, amount: 52, time: "5 min ago", customer: "John Mokoena", phone: "061 998 7766", method: "Credit", address: "8 Church St, Tembisa", products: ["Airtime", "Chips"] },
-    { id: 4, store: "Busi's Shop", terminal: 667, items: 4, amount: 198, time: "8 min ago", customer: "Grace Nkosi", phone: "079 112 3344", method: "Cash", address: "23 Freedom Ave, Khayelitsha", products: ["Mealie Meal", "Chicken", "Tomatoes", "Onions"] },
-    { id: 5, store: "Siyanda General", terminal: 115, items: 1, amount: 35, time: "12 min ago", customer: "Mandla Zulu", phone: "084 556 7788", method: "Card", address: "7 Station Rd, Gugulethu", products: ["Cigarettes"] },
-];
-
 const AdminPOSMonitor = () => {
-    const [selected, setSelected] = useState<typeof mockTransactions[0] | null>(null);
     const { stores, orders } = useStore();
+    const [selectedId, setSelectedId] = useState<string | null>(null);
 
-    const activeTerminals = stores.length > 0 ? stores.length : "N/A";
-    const recentOrders = orders.filter(o => o.status !== 'Cancelled');
-    const recentOrdersCount = recentOrders.length > 0 ? recentOrders.length : "N/A";
-    const recentVolume = recentOrders.length > 0
-        ? `R ${recentOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString()}`
-        : "N/A";
+    const recentOrders = orders
+        .filter(o => o.status !== 'Cancelled')
+        .slice()
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 20);
+
+    const selected = recentOrders.find(o => o.id === selectedId) ?? null;
+
+    const totalVolume = recentOrders.reduce((sum, o) => sum + o.total, 0);
 
     return (
         <DashboardLayout role="admin">
@@ -37,7 +32,7 @@ const AdminPOSMonitor = () => {
                         <Server className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{activeTerminals}</div>
+                        <div className="text-2xl font-bold">{stores.length || "—"}</div>
                         <p className="text-xs text-muted-foreground">Registered stores</p>
                     </CardContent>
                 </Card>
@@ -47,7 +42,7 @@ const AdminPOSMonitor = () => {
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{recentOrdersCount}</div>
+                        <div className="text-2xl font-bold">{recentOrders.length || "—"}</div>
                         <p className="text-xs text-muted-foreground">Non-cancelled orders</p>
                     </CardContent>
                 </Card>
@@ -57,7 +52,7 @@ const AdminPOSMonitor = () => {
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">N/A</div>
+                        <div className="text-2xl font-bold">—</div>
                         <p className="text-xs text-muted-foreground">No telemetry source</p>
                     </CardContent>
                 </Card>
@@ -67,7 +62,7 @@ const AdminPOSMonitor = () => {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{recentVolume}</div>
+                        <div className="text-2xl font-bold">{totalVolume > 0 ? `R ${totalVolume.toLocaleString()}` : "—"}</div>
                         <p className="text-xs text-muted-foreground">From all orders</p>
                     </CardContent>
                 </Card>
@@ -78,76 +73,86 @@ const AdminPOSMonitor = () => {
                     <CardTitle>Live Transaction Feed</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-4">
-                        {mockTransactions.map((tx) => (
-                            <div
-                                key={tx.id}
-                                onClick={() => setSelected(tx)}
-                                className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0 cursor-pointer rounded-md px-2 py-1 hover:bg-accent/50 transition-colors"
-                            >
-                                <div>
-                                    <p className="font-medium text-sm">{tx.store} (Terminal #{tx.terminal})</p>
-                                    <p className="text-xs text-muted-foreground">Sale • Items: {tx.items} • Customer: {tx.customer}</p>
+                    {recentOrders.length === 0 ? (
+                        <p className="text-center py-8 text-muted-foreground">No orders yet.</p>
+                    ) : (
+                        <div className="space-y-4">
+                            {recentOrders.map((order) => (
+                                <div
+                                    key={order.id}
+                                    onClick={() => setSelectedId(order.id)}
+                                    className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0 cursor-pointer rounded-md px-2 py-1 hover:bg-accent/50 transition-colors"
+                                >
+                                    <div>
+                                        <p className="font-medium text-sm">{order.customerName}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {order.items.length} item(s) · {order.status}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-bold text-sm">R {order.total.toLocaleString()}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {new Date(order.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="font-bold text-sm">R {tx.amount}.00</p>
-                                    <p className="text-xs text-muted-foreground">{tx.time}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
-            <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+            <Dialog open={!!selected} onOpenChange={(open) => !open && setSelectedId(null)}>
                 <DialogContent className="w-full max-w-[95vw] sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Transaction Details</DialogTitle>
-                        <DialogDescription>Terminal #{selected?.terminal} — {selected?.time}</DialogDescription>
+                        <DialogTitle>Order Details</DialogTitle>
+                        <DialogDescription>
+                            Order #{selected?.id.slice(-6).toUpperCase()} · {selected ? new Date(selected.date).toLocaleString() : ""}
+                        </DialogDescription>
                     </DialogHeader>
                     {selected && (
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
                                 <User className="h-5 w-5 text-muted-foreground" />
                                 <div>
-                                    <p className="font-semibold text-sm">{selected.customer}</p>
-                                    <p className="text-xs text-muted-foreground">{selected.phone}</p>
+                                    <p className="font-semibold text-sm">{selected.customerName}</p>
                                 </div>
-                                <Badge variant="outline" className="ml-auto">{selected.method}</Badge>
+                                <Badge variant="outline" className="ml-auto">{selected.status}</Badge>
                             </div>
 
                             <Separator />
 
                             <div className="flex items-start gap-3">
-                                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                                <div>
-                                    <p className="text-sm font-medium">{selected.store}</p>
-                                    <p className="text-xs text-muted-foreground">{selected.address}</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3">
                                 <ShoppingCart className="h-5 w-5 text-muted-foreground mt-0.5" />
                                 <div>
-                                    <p className="text-sm font-medium">Items ({selected.items})</p>
+                                    <p className="text-sm font-medium">Items ({selected.items.length})</p>
                                     <div className="flex flex-wrap gap-1 mt-1">
-                                        {selected.products.map((p) => (
-                                            <Badge key={p} variant="secondary" className="text-xs">{p}</Badge>
+                                        {selected.items.map((item, i) => (
+                                            <Badge key={i} variant="secondary" className="text-xs">
+                                                {item.name} ×{item.quantity}
+                                            </Badge>
                                         ))}
                                     </div>
                                 </div>
                             </div>
 
+                            {selected.deliveryAddress && (
+                                <div className="flex items-start gap-3">
+                                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                    <p className="text-sm">{selected.deliveryAddress}</p>
+                                </div>
+                            )}
+
                             <div className="flex items-center gap-3">
                                 <Clock className="h-5 w-5 text-muted-foreground" />
-                                <p className="text-sm">{selected.time}</p>
+                                <p className="text-sm">{new Date(selected.date).toLocaleString()}</p>
                             </div>
 
                             <Separator />
 
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Total</span>
-                                <span className="text-lg font-bold">R {selected.amount}.00</span>
+                                <span className="text-lg font-bold">R {selected.total.toLocaleString()}</span>
                             </div>
                         </div>
                     )}

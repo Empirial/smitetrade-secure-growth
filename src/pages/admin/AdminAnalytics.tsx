@@ -2,48 +2,38 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore } from "@/context/StoreContext";
-import { useCredit } from "@/context/CreditContext";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 
 const AdminAnalytics = () => {
     const { orders, stores, customers, staff } = useStore();
-    const { borrowers } = useCredit();
 
-    // User growth by month (mock trend)
-    const userGrowthData = [
-        { week: "W1", signups: 12 },
-        { week: "W2", signups: 18 },
-        { week: "W3", signups: 8 },
-        { week: "W4", signups: 22 },
-        { week: "W5", signups: 15 },
-        { week: "W6", signups: 28 },
-    ];
+    // Orders per day of week (real data as signup proxy)
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const userGrowthData = days.map(week => ({
+        week,
+        signups: orders.filter(o => days[new Date(o.date).getDay()] === week).length,
+    }));
 
-    // Revenue by store (mock)
-    const revenueByStore = [
-        { store: "Soweto Central", revenue: 24500 },
-        { store: "Kasi Fresh", revenue: 18200 },
-        { store: "Township Goods", revenue: 12800 },
-        { store: "Mzansi Market", revenue: 9500 },
-        { store: "Ubuntu Store", revenue: 7200 },
-    ];
+    // Revenue by store — derived from real orders
+    const revenueByStore = stores.map(s => ({
+        store: s.name,
+        revenue: orders.filter(o => (o as any).storeId === s.id && (o.status === 'Delivered' || o.status === 'Paid')).reduce((sum, o) => sum + o.total, 0),
+    })).filter(s => s.revenue > 0);
 
-    // Order status distribution
+    // Order status distribution (real data)
     const orderStatusData = [
-        { name: "Delivered", value: orders.filter(o => o.status === 'Delivered').length || 45, fill: "hsl(142, 76%, 36%)" },
-        { name: "Pending", value: orders.filter(o => o.status === 'Pending').length || 12, fill: "hsl(48, 96%, 53%)" },
-        { name: "In Transit", value: orders.filter(o => o.status === 'Out for Delivery').length || 8, fill: "hsl(199, 89%, 48%)" },
-        { name: "Cancelled", value: 3, fill: "hsl(0, 84%, 60%)" },
-    ];
+        { name: "Delivered", value: orders.filter(o => o.status === 'Delivered').length, fill: "hsl(142, 76%, 36%)" },
+        { name: "Pending", value: orders.filter(o => o.status === 'Pending').length, fill: "hsl(48, 96%, 53%)" },
+        { name: "In Transit", value: orders.filter(o => o.status === 'Out for Delivery').length, fill: "hsl(199, 89%, 48%)" },
+        { name: "Cancelled", value: orders.filter(o => o.status === 'Cancelled').length, fill: "hsl(0, 84%, 60%)" },
+    ].filter(d => d.value > 0);
 
-    // Users by role
+    // Users by role (active portals only)
     const usersByRole = [
-        { role: "Customers", count: customers.length || 95, fill: "hsl(199, 89%, 48%)" },
-        { role: "Owners", count: stores.length || 5, fill: "hsl(142, 76%, 36%)" },
-        { role: "Cashiers", count: staff.length || 12, fill: "hsl(48, 96%, 53%)" },
-        { role: "Drivers", count: 8, fill: "hsl(280, 65%, 60%)" },
-        { role: "Lenders", count: borrowers.length || 4, fill: "hsl(340, 82%, 52%)" },
+        { role: "Customers", count: customers.length, fill: "hsl(199, 89%, 48%)" },
+        { role: "Owners", count: stores.length, fill: "hsl(142, 76%, 36%)" },
+        { role: "Cashiers", count: staff.length, fill: "hsl(48, 96%, 53%)" },
     ];
 
     const chartConfig = {

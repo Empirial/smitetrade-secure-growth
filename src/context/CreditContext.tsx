@@ -270,15 +270,9 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
             const profileSnap = await getDoc(profileRef);
 
             if (profileSnap.exists()) {
-                const data = profileSnap.data() as CreditProfile;
-                // Recalculate BRI and limit from history on every load
-                if (data.paymentHistory?.length > 0) {
-                    const { score: briScore, tier } = calculateBRIFromHistory(data.paymentHistory);
-                    const creditLimit = calculateCreditLimit(tier, data.paymentHistory);
-                    setProfile({ ...data, briScore, tier, creditLimit });
-                } else {
-                    setProfile(data);
-                }
+                // recordPayment already persists calculated briScore/tier/creditLimit to Firestore.
+                // Trust the stored values — no need to recalculate on every load.
+                setProfile(profileSnap.data() as CreditProfile);
             } else {
                 const defaultProfile: CreditProfile = {
                     uid: user.uid,
@@ -309,7 +303,21 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
 
     // --- Firebase real-time listeners (live mode only) ---
     useEffect(() => {
-        if (!user || USE_MOCK_DATA) return;
+        if (!user || USE_MOCK_DATA) {
+            if (!user) {
+                setBorrowers([]);
+                setLoans([]);
+                setApplications([]);
+                setNotifications([]);
+            }
+            return;
+        }
+
+        // Reset before attaching new listeners — prevents ghost data from previous user
+        setBorrowers([]);
+        setLoans([]);
+        setApplications([]);
+        setNotifications([]);
 
         const unsubs: (() => void)[] = [];
 
@@ -348,7 +356,7 @@ export const CreditProvider = ({ children }: { children: ReactNode }) => {
         ));
 
         return () => unsubs.forEach(u => u());
-    }, [user]);
+    }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // --- addBorrower ---
     const addBorrower = async (name: string, phone: string, idNumber: string, photoFile?: File) => {

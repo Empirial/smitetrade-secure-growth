@@ -55,20 +55,6 @@ const CashierDashboard = () => {
                         </CardContent>
                     </Card>
                 </Link>
-                <CreditComingSoon>
-                <Link to="/cashier/credit-review">
-                    <Card className="hover:border-amber-500 transition-colors cursor-pointer h-full">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Credit Check</CardTitle>
-                            <CreditCard className="h-4 w-4 text-amber-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">Review Credit</div>
-                            <p className="text-xs text-muted-foreground">Lookup customer BRI Score</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-                </CreditComingSoon>
             </div>
 
             <Card className="border-slate-800 bg-slate-900 text-white">

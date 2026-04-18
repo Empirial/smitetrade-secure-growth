@@ -37,7 +37,7 @@ const AdminLogin = () => {
         if (!validate()) return;
         setIsLoading(true);
         try {
-            await login(id.includes("@") ? id : `${id}@admin.smitetrade.co.za`, password, "admin");
+            await login(id.includes("@") ? id : `${id}@smitetrade.co.za`, password, "admin");
             navigate("/admin/dashboard");
         } catch {
             setAuthError("Access denied. Invalid credentials or insufficient permissions.");

@@ -243,6 +243,8 @@ const App = () => (
                 <Route path="/payment/success" element={<PaymentSuccess />} />
                 <Route path="/payment/cancel" element={<PaymentCancel />} />
                 <Route path="/test-setup" element={<TestSetup />} />
+                {/* Exclude Firebase Auth internal iframe from React Router */}
+                <Route path="/__/*" element={null} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

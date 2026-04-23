@@ -27,7 +27,7 @@ const ForgotPassword = () => {
         setLoading(true);
         try {
             await sendPasswordResetEmail(auth, email, {
-                url: window.location.origin + "/login",
+                url: window.location.origin + "/reset-password",
                 handleCodeInApp: false,
             });
             setSent(true);

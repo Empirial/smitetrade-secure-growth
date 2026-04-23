@@ -56,13 +56,8 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 const OwnerSuppliers = () => {
-    const { suppliers, addSupplier, updateSupplier, deleteSupplier, user } = useStore();
+    const { suppliers, deleteSupplier, user } = useStore();
     const { pay, loading: payfastLoading } = usePayfast();
-
-    // Add/Edit supplier
-    const [isAddOpen, setIsAddOpen] = useState(false);
-    const [editSupplierId, setEditSupplierId] = useState<string | null>(null);
-    const [newSupplier, setNewSupplier] = useState({ name: "", products: "", contact: "" });
 
     // Platform suppliers
     const [platformSuppliers, setPlatformSuppliers] = useState<PlatformSupplier[]>([]);
@@ -109,38 +104,6 @@ const OwnerSuppliers = () => {
 
     const scrollLeft = () => scrollRef.current?.scrollBy({ left: -240, behavior: "smooth" });
     const scrollRight = () => scrollRef.current?.scrollBy({ left: 240, behavior: "smooth" });
-
-    // ── Add/Edit supplier ────────────────────────────────────────────────────────
-    const handleAddSupplier = () => {
-        if (!newSupplier.name || !newSupplier.products) return;
-
-        if (editSupplierId) {
-            updateSupplier(editSupplierId, {
-                name: newSupplier.name,
-                products: newSupplier.products,
-                contact: newSupplier.contact || "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za",
-            });
-        } else {
-            addSupplier({
-                name: newSupplier.name,
-                contact: newSupplier.contact || "SMITETRADE: 010 880 3456 | orders@smitetrade.co.za",
-                products: newSupplier.products,
-            });
-        }
-        closeAddSupplierDialog();
-    };
-
-    const closeAddSupplierDialog = () => {
-        setIsAddOpen(false);
-        setEditSupplierId(null);
-        setNewSupplier({ name: "", products: "", contact: "" });
-    };
-
-    const openEditSupplier = (supplier: Supplier) => {
-        setEditSupplierId(supplier.id);
-        setNewSupplier({ name: supplier.name, products: supplier.products || "", contact: supplier.contact || "" });
-        setIsAddOpen(true);
-    };
 
     // ── Place order (file upload) ─────────────────────────────────────────────
     const handlePlaceOrder = async () => {
@@ -252,44 +215,6 @@ const OwnerSuppliers = () => {
                         <p className="text-muted-foreground">Manage your supplier relationships and stock sources.</p>
                     </div>
                     <div className="flex gap-2 flex-wrap">
-
-                        {/* Add Supplier */}
-                        <Dialog open={isAddOpen} onOpenChange={(open) => {
-                            if (!open) closeAddSupplierDialog();
-                            else setIsAddOpen(true);
-                        }}>
-                            <DialogTrigger asChild>
-                                <Button variant="outline">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Supplier
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>{editSupplierId ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
-                                    <DialogDescription>
-                                        {editSupplierId ? "Update supplier details." : "Register a new supplier. All orders will be routed via Smitetrade."}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="name">Supplier Name</Label>
-                                        <Input id="name" value={newSupplier.name} onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })} />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="products">Main Products</Label>
-                                        <Input id="products" placeholder="e.g. Beverages, Cleaning Supplies" value={newSupplier.products} onChange={(e) => setNewSupplier({ ...newSupplier, products: e.target.value })} />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="contact">Contact Information</Label>
-                                        <Input id="contact" placeholder="e.g. 010 880 3456" value={newSupplier.contact} onChange={(e) => setNewSupplier({ ...newSupplier, contact: e.target.value })} />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button onClick={handleAddSupplier}>{editSupplierId ? "Save Changes" : "Register Supplier"}</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
 
                         {/* Place Order */}
                         <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
@@ -624,9 +549,6 @@ const OwnerSuppliers = () => {
                                                     </Button>
                                                     <Button variant="outline" size="sm" onClick={() => { setPreorderSupplierId(supplier.id); setIsPreorderOpen(true); }}>
                                                         Preorder
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => openEditSupplier(supplier)}>
-                                                        Edit
                                                     </Button>
                                                     <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => deleteSupplier(supplier.id)}>
                                                         Delete

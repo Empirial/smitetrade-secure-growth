@@ -4,7 +4,7 @@ import { auth, db } from '@/lib/firebase';
 import { getAuthErrorMessage } from '@/lib/authErrors';
 import {
     onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup,
-    signOut, createUserWithEmailAndPassword,
+    signOut, createUserWithEmailAndPassword, sendEmailVerification,
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc, setDoc, collection } from 'firebase/firestore';
 import { googleProvider } from '@/lib/firebase';
@@ -38,7 +38,7 @@ export function useAuth() {
                     // is a race window where listeners fire with an unverified token.
                     await firebaseUser.getIdToken(true);
                     if (userDoc.exists()) {
-                        const userData = { ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid } as User;
+                        const userData = { ...userDoc.data(), id: firebaseUser.uid, uid: firebaseUser.uid, emailVerified: firebaseUser.emailVerified } as User;
                         const intendedRole = loginRoleRef.current ?? (sessionStorage.getItem('smite_active_role') as UserRole | null);
                         loginRoleRef.current = null;
                         if (intendedRole) {
@@ -233,6 +233,15 @@ export function useAuth() {
             }
 
             isRegistering.current = false;
+
+            if (role === 'owner' || role === 'customer') {
+                await sendEmailVerification(firebaseUser!);
+                await signOut(auth);
+                setUser(null);
+                toast.success("Account created! Check your email to verify before logging in.");
+                return;
+            }
+
             setUser({ ...userData, id: firebaseUser!.uid, uid: firebaseUser!.uid });
             toast.success("Account created successfully!");
         } catch (error) {

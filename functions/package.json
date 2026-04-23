@@ -5,12 +5,14 @@
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },
-  "engines": { "node": "22" },
+  "engines": {
+    "node": "22"
+  },
   "main": "lib/index.js",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "firebase-admin": "^12.0.0",
-    "firebase-functions": "^5.0.0",
+    "firebase-functions": "^7.2.5",
     "md5": "^2.3.0"
   },
   "devDependencies": {

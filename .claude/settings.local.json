@@ -76,7 +76,10 @@
       "Bash(node -e \"require\\('./lib/index.js'\\)\")",
       "Bash(node -e \"const pkg = require\\('./node_modules/firebase-functions/package.json'\\); console.log\\(pkg.version\\)\")",
       "Bash(firebase functions:log --only aiChat)",
-      "Bash(git -C \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth\" diff HEAD~1 -- src/context/CreditContext.tsx)"
+      "Bash(git -C \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth\" diff HEAD~1 -- src/context/CreditContext.tsx)",
+      "Bash(firebase login:use info@smitetrade.co.za)",
+      "Bash(npm audit *)",
+      "Bash(wait *)"
     ]
   },
   "enableAllProjectMcpServers": true,

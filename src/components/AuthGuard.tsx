@@ -37,6 +37,11 @@ const AuthGuard = ({ children, role }: AuthGuardProps) => {
     return <Navigate to={loginPaths[user.role] || '/login'} replace />;
   }
 
+  // Block unverified owners and customers
+  if ((user.role === 'owner' || user.role === 'customer') && user.emailVerified === false) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   return <>{children}</>;
 };
 

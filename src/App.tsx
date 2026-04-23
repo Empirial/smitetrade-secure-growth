@@ -19,6 +19,7 @@ const ComingSoon = lazy(() => import("./pages/ComingSoon"));
 const TestSetup = lazy(() => import("./pages/TestSetup"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const SessionExpired = lazy(() => import("./pages/SessionExpired"));
 const Portals = lazy(() => import("./pages/Portals"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
@@ -140,6 +141,7 @@ const App = () => (
                 {/* Global (public) */}
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/session-expired" element={<SessionExpired />} />
                 <Route path="/portals" element={<Portals />} />
 

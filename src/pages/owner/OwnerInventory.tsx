@@ -262,7 +262,7 @@ const OwnerInventory = () => {
                             <DialogTitle>Scan Barcode</DialogTitle>
                             <DialogDescription>Point the camera at a barcode to auto-detect it.</DialogDescription>
                         </DialogHeader>
-                        <BarcodeScanner isActive={isScannerOpen} onScan={handleBarcodeDetected} />
+                        <BarcodeScanner isActive={isScannerOpen} onScan={handleBarcodeDetected} confirmLabel="Fill Product Form" />
                         <p className="text-center text-xs text-muted-foreground">
                             Align barcode within the frame — detects automatically. Supports EAN-13, UPC, Code 128, QR.
                         </p>

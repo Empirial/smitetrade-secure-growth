@@ -430,7 +430,7 @@ const CashierInventory = () => {
                         </div>
                         {scannerActive && (
                             <div className="space-y-2">
-                                <BarcodeScanner isActive={scannerActive} onScan={handleBarcodeScanned} />
+                                <BarcodeScanner isActive={scannerActive} onScan={handleBarcodeScanned} confirmLabel="Fill Product Form" />
                                 <p className="text-center text-xs text-muted-foreground">Align barcode within the frame — it detects automatically.</p>
                             </div>
                         )}

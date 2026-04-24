@@ -215,7 +215,7 @@ const CashierPOS = () => {
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
                                     {/* Live Camera View */}
-                                    <BarcodeScanner isActive={isCustomOpen} onScan={handleBarcodeLookup} />
+                                    <BarcodeScanner isActive={isCustomOpen} onScan={handleBarcodeLookup} confirmLabel="Add to Cart" />
                                     <div className="text-center text-xs text-slate-400 -mt-2">
                                         Align barcode within frame to auto-add item.
                                     </div>

@@ -152,7 +152,7 @@ const CashierScanner = () => {
 
                 {/* Camera Feed */}
                 <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
-                    <BarcodeScanner ref={videoRef} isActive={true} onScan={handleScan}>
+                    <BarcodeScanner ref={videoRef} isActive={true} onScan={handleScan} confirmLabel="Look Up Product">
                         <div className="absolute bottom-14 left-0 right-0 flex justify-center pointer-events-none">
                             <span className="text-xs text-white/80 bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full">
                                 Point at barcode — <span className="text-emerald-400 font-medium">detects automatically</span>

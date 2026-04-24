@@ -79,7 +79,8 @@
       "Bash(git -C \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth\" diff HEAD~1 -- src/context/CreditContext.tsx)",
       "Bash(firebase login:use info@smitetrade.co.za)",
       "Bash(npm audit *)",
-      "Bash(wait *)"
+      "Bash(wait *)",
+      "Bash(xargs grep *)"
     ]
   },
   "enableAllProjectMcpServers": true,

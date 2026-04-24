@@ -82,8 +82,7 @@ const BarcodeScanner = forwardRef<HTMLVideoElement, BarcodeScannerProps>(({ isAc
                         variant="outline"
                         size="sm"
                         className="mt-2 text-slate-800"
-                        onClick={() => { setError(null); start(); }}
-                    >
+                        onClick={() => { setError(null); start(); }}                    >
                         Retry
                     </Button>
                 </div>

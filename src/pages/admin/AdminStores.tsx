@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/context/StoreContext";
-import { Store, Eye, Ban, CheckCircle } from "lucide-react";
+import { Store, Eye, Ban, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -24,12 +24,12 @@ const AdminStores = () => {
 
     const getStatus = (store: any) => storeStatuses[store.id] || store.status || "Active";
 
-    const toggleStatus = async (storeId: string, currentStatus: string) => {
-        const newStatus = currentStatus === "Active" ? "Suspended" : "Active";
+    const setStatus = async (storeId: string, currentStatus: string, newStatus: string) => {
         setStoreStatuses(prev => ({ ...prev, [storeId]: newStatus }));
         try {
             await updateDoc(doc(db, "stores", storeId), { status: newStatus });
-            toast.success(`Store ${newStatus === "Active" ? "activated" : "suspended"}`);
+            const label = newStatus === "Active" ? "approved" : newStatus === "Suspended" ? "suspended" : newStatus.toLowerCase();
+            toast.success(`Store ${label}`);
         } catch (error) {
             setStoreStatuses(prev => ({ ...prev, [storeId]: currentStatus }));
             toast.error("Failed to update store status.");
@@ -44,7 +44,7 @@ const AdminStores = () => {
                     <p className="text-muted-foreground">View and manage all registered stores on the platform.</p>
                 </div>
 
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Stores</CardTitle>
@@ -52,6 +52,15 @@ const AdminStores = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{storeData.length}</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                            <Clock className="h-4 w-4 text-yellow-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{storeData.filter(s => getStatus(s) === "Pending").length}</div>
                         </CardContent>
                     </Card>
                     <Card>
@@ -105,14 +114,32 @@ const AdminStores = () => {
                                             <TableCell className="text-center">{store.productCount}</TableCell>
                                             <TableCell className="text-right">R {store.totalSales.toLocaleString()}</TableCell>
                                             <TableCell className="text-center">
-                                                <Badge variant={status === "Active" ? "default" : "destructive"}>
+                                                <Badge variant={
+                                                    status === "Active" ? "default"
+                                                    : status === "Pending" ? "outline"
+                                                    : "destructive"
+                                                } className={status === "Pending" ? "border-yellow-500 text-yellow-500" : undefined}>
                                                     {status}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button size="sm" variant="ghost" onClick={() => toggleStatus(store.id, status)}>
-                                                    {status === "Active" ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                                                </Button>
+                                                <div className="flex gap-1 justify-end">
+                                                    {status === "Pending" && (
+                                                        <Button size="sm" variant="ghost" className="text-emerald-500 hover:text-emerald-600" onClick={() => setStatus(store.id, status, "Active")}>
+                                                            <CheckCircle className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {status === "Active" && (
+                                                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive/80" onClick={() => setStatus(store.id, status, "Suspended")}>
+                                                            <Ban className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {status === "Suspended" && (
+                                                        <Button size="sm" variant="ghost" className="text-emerald-500 hover:text-emerald-600" onClick={() => setStatus(store.id, status, "Active")}>
+                                                            <CheckCircle className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     );

@@ -203,7 +203,7 @@ export function useAuth() {
                         await setDoc(storeRef, {
                             ownerId: firebaseUser!.uid, name: storeName,
                             address: "", suburb: "", city: "", province: "",
-                            status: "Active", createdAt: new Date().toISOString()
+                            status: "Pending", createdAt: new Date().toISOString()
                         });
                         updates.storeId = storeId;
                         updates.storeName = storeName;
@@ -226,7 +226,7 @@ export function useAuth() {
                 await setDoc(storeRef, {
                     ownerId: firebaseUser!.uid, name: storeName,
                     address: "", suburb: "", city: "", province: "",
-                    status: "Active", createdAt: new Date().toISOString()
+                    status: "Pending", createdAt: new Date().toISOString()
                 });
                 await updateDoc(doc(db, "users", firebaseUser!.uid), { storeId });
                 userData.storeId = storeId;

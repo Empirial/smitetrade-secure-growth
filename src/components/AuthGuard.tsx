@@ -18,7 +18,7 @@ const loginPaths: Record<UserRole, string> = {
 };
 
 const AuthGuard = ({ children, role }: AuthGuardProps) => {
-  const { user, isLoading } = useStore();
+  const { user, isLoading, currentStore } = useStore();
 
   if (isLoading) {
     return (
@@ -40,6 +40,11 @@ const AuthGuard = ({ children, role }: AuthGuardProps) => {
   // Block unverified owners and customers
   if ((user.role === 'owner' || user.role === 'customer') && user.emailVerified === false) {
     return <Navigate to="/verify-email" replace />;
+  }
+
+  // Block owners whose store is still awaiting admin approval
+  if (user.role === 'owner' && currentStore?.status === 'Pending') {
+    return <Navigate to="/owner/pending" replace />;
   }
 
   return <>{children}</>;

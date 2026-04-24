@@ -45,6 +45,7 @@ const OwnerCreditReview = lazy(() => import("./pages/owner/OwnerCreditReview"));
 const OwnerStockAdjustment = lazy(() => import("./pages/owner/OwnerStockAdjustment"));
 const OwnerSupport = lazy(() => import("./pages/owner/OwnerSupport"));
 const OwnerSubscription = lazy(() => import("./pages/owner/OwnerSubscription"));
+const OwnerPending = lazy(() => import("./pages/owner/OwnerPending"));
 
 // Cashier
 const CashierLogin = lazy(() => import("./pages/cashier/CashierLogin"));
@@ -148,6 +149,7 @@ const App = () => (
                 {/* Owner Portal — Login/Register are public */}
                 <Route path="/owner/login" element={<OwnerLogin />} />
                 <Route path="/owner/register" element={<OwnerRegister />} />
+                <Route path="/owner/pending" element={<OwnerPending />} />
                 <Route path="/owner/dashboard" element={<AuthGuard role="owner"><OwnerDashboard /></AuthGuard>} />
                 <Route path="/owner/pos" element={<AuthGuard role="owner"><OwnerPOS /></AuthGuard>} />
                 <Route path="/owner/profile" element={<AuthGuard role="owner"><OwnerProfile /></AuthGuard>} />

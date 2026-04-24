@@ -85,8 +85,13 @@ service cloud.firestore {
         isAdmin()
       );
       allow create: if isAuth() && (isOwner() || isAdmin()) &&
-        request.resource.data.ownerId == uid();
-      allow update: if isAuth() && (resource.data.ownerId == uid() || isAdmin());
+        request.resource.data.ownerId == uid() &&
+        (isAdmin() || request.resource.data.status == 'Pending');
+      allow update: if isAuth() && (
+        isAdmin() ||
+        (resource.data.ownerId == uid() &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']))
+      );
       allow delete: if isAdmin();
     }
 

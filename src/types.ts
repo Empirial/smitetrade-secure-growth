@@ -65,6 +65,8 @@ export interface Store {
     createdAt: string;
     lat?: number;
     lng?: number;
+    payoutDetails?: PayoutDetails;
+    payfastMerchantId?: string;
 }
 
 export interface Product {
@@ -231,4 +233,22 @@ export interface Expense {
     description: string;
     loggedBy: string;
     storeId?: string;
+}
+
+export interface PayoutDetails {
+    accountHolder: string;
+    bankName: string;
+    accountNumber: string;
+    branchCode: string;
+    accountType: 'Cheque' | 'Savings';
+}
+
+export interface StorePayout {
+    id: string;
+    storeId: string;
+    storeName: string;
+    amount: number;
+    note?: string;
+    paidAt: string;
+    processedBy: string;
 }

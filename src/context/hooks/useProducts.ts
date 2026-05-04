@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
@@ -46,7 +46,7 @@ export function useProducts(user: User | null, currentStore: Store | null, store
         return () => unsub();
     }, [user, currentStore?.id, storesResolved]);
 
-    const addProduct = async (productData: Omit<Product, 'id' | 'status'>) => {
+    const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'status'>) => {
         const storeId = currentStore?.id ?? user?.storeId;
         const storeName = currentStore?.name || user?.storeName || "Unknown Store";
         const status = productData.stock > 20 ? 'In Stock' : productData.stock > 0 ? 'Low Stock' : 'Out of Stock';
@@ -69,9 +69,9 @@ export function useProducts(user: User | null, currentStore: Store | null, store
             toast.error("Failed to add product");
             throw error;
         }
-    };
+    }, [currentStore, user]);
 
-    const updateProduct = async (id: string, updates: Partial<Product>) => {
+    const updateProduct = useCallback(async (id: string, updates: Partial<Product>) => {
         if (USE_MOCK_DATA) {
             const fn = (prev: Product[]) => prev.map(p => {
                 if (p.id !== id) return p;
@@ -96,9 +96,9 @@ export function useProducts(user: User | null, currentStore: Store | null, store
             toast.error("Failed to update product");
             throw error;
         }
-    };
+    }, []);
 
-    const deleteProduct = async (id: string) => {
+    const deleteProduct = useCallback(async (id: string) => {
         if (USE_MOCK_DATA) {
             setProducts(prev => prev.filter(p => p.id !== id));
             setAllProducts(prev => prev.filter(p => p.id !== id));
@@ -112,7 +112,7 @@ export function useProducts(user: User | null, currentStore: Store | null, store
             toast.error("Failed to delete product");
             throw error;
         }
-    };
+    }, []);
 
     return { products, allProducts, addProduct, updateProduct, deleteProduct };
 }

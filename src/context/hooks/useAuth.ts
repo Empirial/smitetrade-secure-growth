@@ -6,7 +6,7 @@ import {
     onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup,
     signOut, createUserWithEmailAndPassword, sendEmailVerification,
 } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, collection, addDoc } from 'firebase/firestore';
 import { googleProvider } from '@/lib/firebase';
 import { MOCK_USER, MOCK_LENDER, USE_MOCK_DATA, MOCK_STORE_ID } from '@/lib/constants';
 import { User, UserRole } from '@/types';
@@ -200,10 +200,17 @@ export function useAuth() {
                     if (role === 'owner' && storeName && !storeId) {
                         const storeRef = doc(collection(db, "stores"));
                         storeId = storeRef.id;
+                        const createdAt = new Date().toISOString();
                         await setDoc(storeRef, {
                             ownerId: firebaseUser!.uid, name: storeName,
                             address: "", suburb: "", city: "", province: "",
-                            status: "Pending", createdAt: new Date().toISOString()
+                            status: "Pending", createdAt
+                        });
+                        await addDoc(collection(db, "applications"), {
+                            storeId, ownerId: firebaseUser!.uid,
+                            name: storeName, owner: existingData.name || name, email,
+                            phone: "", location: "", description: "", documents: [], messages: [],
+                            status: "Pending", date: createdAt.split("T")[0], createdAt
                         });
                         updates.storeId = storeId;
                         updates.storeName = storeName;
@@ -223,10 +230,17 @@ export function useAuth() {
             if (role === 'owner' && storeName) {
                 const storeRef = doc(collection(db, "stores"));
                 const storeId = storeRef.id;
+                const createdAt = new Date().toISOString();
                 await setDoc(storeRef, {
                     ownerId: firebaseUser!.uid, name: storeName,
                     address: "", suburb: "", city: "", province: "",
-                    status: "Pending", createdAt: new Date().toISOString()
+                    status: "Pending", createdAt
+                });
+                await addDoc(collection(db, "applications"), {
+                    storeId, ownerId: firebaseUser!.uid,
+                    name: storeName, owner: name, email,
+                    phone: "", location: "", description: "", documents: [], messages: [],
+                    status: "Pending", date: createdAt.split("T")[0], createdAt
                 });
                 await updateDoc(doc(db, "users", firebaseUser!.uid), { storeId });
                 userData.storeId = storeId;

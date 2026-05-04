@@ -14,13 +14,17 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, Phone, Trash2, KeyRound, CheckCircle2, ExternalLink, MapPin, Tag } from "lucide-react";
+import { Building2, Plus, Phone, Trash2, KeyRound, CheckCircle2, ExternalLink, MapPin, Tag, Wallet, Banknote, CreditCard, ChevronDown } from "lucide-react";
 import FieldError from "@/components/ui/FieldError";
 import { validateRequired, validateEmail, validatePhone, validatePassword, validatePasswordMatch, hasErrors } from "@/utils/validation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc, collection, query, where, onSnapshot } from "firebase/firestore";
+import { USE_MOCK_DATA } from "@/lib/constants";
+import { PayoutDetails } from "@/types";
 
 const OwnerProfile = () => {
-    const { user, updateUser, stores: contextStores, currentStore, switchStore } = useStore();
+    const { user, updateUser, stores: contextStores, currentStore, switchStore, orders } = useStore();
     const { toast } = useToast();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -165,6 +169,48 @@ const OwnerProfile = () => {
         }
     };
 
+    // Payout State
+    const [payoutDetails, setPayoutDetails] = useState<PayoutDetails>({
+        accountHolder: '', bankName: '', accountNumber: '', branchCode: '', accountType: 'Cheque'
+    });
+    const [payfastMerchantId, setPayfastMerchantId] = useState('');
+    const [totalPaidOut, setTotalPaidOut] = useState(0);
+    const [showPayfastSection, setShowPayfastSection] = useState(false);
+    const [isSavingPayout, setIsSavingPayout] = useState(false);
+
+    useEffect(() => {
+        if (!currentStore) return;
+        const store = currentStore as any;
+        if (store.payoutDetails) setPayoutDetails(store.payoutDetails);
+        if (store.payfastMerchantId) { setPayfastMerchantId(store.payfastMerchantId); setShowPayfastSection(true); }
+    }, [currentStore?.id]);
+
+    useEffect(() => {
+        if (!currentStore?.id || USE_MOCK_DATA) return;
+        const q = query(collection(db, 'payouts'), where('storeId', '==', currentStore.id));
+        return onSnapshot(q, snap => {
+            setTotalPaidOut(snap.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0));
+        });
+    }, [currentStore?.id]);
+
+    const earnings = orders.filter(o => o.status === 'Delivered').reduce((sum, o) => sum + o.total, 0);
+    const outstanding = Math.max(0, earnings - totalPaidOut);
+
+    const handleSavePayoutDetails = async () => {
+        if (!currentStore?.id) return;
+        setIsSavingPayout(true);
+        try {
+            const updateData: Record<string, unknown> = { payoutDetails };
+            if (payfastMerchantId.trim()) updateData.payfastMerchantId = payfastMerchantId.trim();
+            await updateDoc(doc(db, 'stores', currentStore.id), updateData);
+            toast({ title: 'Payout Details Saved', description: 'Your payout information has been updated.' });
+        } catch {
+            toast({ title: 'Error', description: 'Failed to save payout details.', variant: 'destructive' });
+        } finally {
+            setIsSavingPayout(false);
+        }
+    };
+
     // Password & Security State
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -276,6 +322,7 @@ const OwnerProfile = () => {
                 <TabsList>
                     <TabsTrigger value="account">Account</TabsTrigger>
                     <TabsTrigger value="store">Stores</TabsTrigger>
+                    <TabsTrigger value="payouts">Payouts</TabsTrigger>
                     <TabsTrigger value="security">Security</TabsTrigger>
                 </TabsList>
 
@@ -513,6 +560,119 @@ const OwnerProfile = () => {
                                 {isLoading ? "Saving..." : "Save All Stores"}
                             </Button>
                         </CardFooter>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="payouts" className="space-y-6">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+                        <Card className="bg-emerald-500/10 border-emerald-500/20">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-emerald-400 flex justify-between">Total Earned <Wallet className="h-4 w-4" /></CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-emerald-300">R {earnings.toFixed(2)}</div>
+                                <p className="text-xs text-emerald-400 mt-1">From delivered orders</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-sky-500/10 border-sky-500/20">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-sky-400 flex justify-between">Paid Out <Banknote className="h-4 w-4" /></CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-sky-300">R {totalPaidOut.toFixed(2)}</div>
+                                <p className="text-xs text-sky-400 mt-1">Processed by admin</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-amber-500/10 border-amber-500/20">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-amber-400 flex justify-between">Outstanding <CreditCard className="h-4 w-4" /></CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-amber-300">R {outstanding.toFixed(2)}</div>
+                                <p className="text-xs text-amber-400 mt-1">Awaiting payout</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Bank Payout Details</CardTitle>
+                            <CardDescription>Where should your earnings be sent? Admin uses these to process your EFT payouts.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label>Account Holder Name</Label>
+                                <Input placeholder="Full name as on bank account" value={payoutDetails.accountHolder} onChange={e => setPayoutDetails({ ...payoutDetails, accountHolder: e.target.value })} />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>Bank Name</Label>
+                                    <Select value={payoutDetails.bankName} onValueChange={v => setPayoutDetails({ ...payoutDetails, bankName: v })}>
+                                        <SelectTrigger><SelectValue placeholder="Select Bank" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ABSA">ABSA</SelectItem>
+                                            <SelectItem value="FNB">First National Bank (FNB)</SelectItem>
+                                            <SelectItem value="Standard Bank">Standard Bank</SelectItem>
+                                            <SelectItem value="Nedbank">Nedbank</SelectItem>
+                                            <SelectItem value="Capitec">Capitec</SelectItem>
+                                            <SelectItem value="Investec">Investec</SelectItem>
+                                            <SelectItem value="TymeBank">TymeBank</SelectItem>
+                                            <SelectItem value="African Bank">African Bank</SelectItem>
+                                            <SelectItem value="Other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Account Type</Label>
+                                    <Select value={payoutDetails.accountType} onValueChange={v => setPayoutDetails({ ...payoutDetails, accountType: v as 'Cheque' | 'Savings' })}>
+                                        <SelectTrigger><SelectValue placeholder="Account Type" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Cheque">Cheque / Current</SelectItem>
+                                            <SelectItem value="Savings">Savings</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>Account Number</Label>
+                                    <Input placeholder="e.g. 1234567890" value={payoutDetails.accountNumber} onChange={e => setPayoutDetails({ ...payoutDetails, accountNumber: e.target.value })} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Branch Code</Label>
+                                    <Input placeholder="e.g. 250655" value={payoutDetails.branchCode} onChange={e => setPayoutDetails({ ...payoutDetails, branchCode: e.target.value })} />
+                                </div>
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Button onClick={handleSavePayoutDetails} disabled={isSavingPayout}>
+                                {isSavingPayout ? 'Saving...' : 'Save Payout Details'}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <button onClick={() => setShowPayfastSection(!showPayfastSection)} className="flex items-center justify-between w-full text-left">
+                                <div>
+                                    <CardTitle className="text-base">Have a PayFast account? (Optional)</CardTitle>
+                                    <CardDescription className="text-sm mt-1">Enter your PayFast Merchant ID if you have your own account.</CardDescription>
+                                </div>
+                                <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${showPayfastSection ? 'rotate-180' : ''}`} />
+                            </button>
+                        </CardHeader>
+                        {showPayfastSection && (
+                            <CardContent className="space-y-4 pt-0">
+                                <div className="grid gap-2">
+                                    <Label>PayFast Merchant ID</Label>
+                                    <Input placeholder="e.g. 12345678" value={payfastMerchantId} onChange={e => setPayfastMerchantId(e.target.value)} />
+                                    <p className="text-xs text-muted-foreground">Visible to admin when processing your payouts.</p>
+                                </div>
+                                <Button onClick={handleSavePayoutDetails} disabled={isSavingPayout} variant="outline">
+                                    {isSavingPayout ? 'Saving...' : 'Save PayFast Details'}
+                                </Button>
+                            </CardContent>
+                        )}
                     </Card>
                 </TabsContent>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import {
@@ -95,47 +95,39 @@ export function useOrders(
 
     const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    // Cart actions
-    const addToCart = (product: Product) => {
-        const existing = cart.find(item => item.id === product.id);
-        if (existing) {
-            if (existing.storeId !== product.storeId) {
-                toast.error("You can only order from one store at a time. Clear your cart first.");
-                return;
+    const addToCart = useCallback((product: Product) => {
+        setCart(prev => {
+            const existing = prev.find(item => item.id === product.id);
+            if (existing) {
+                if (existing.storeId !== product.storeId) {
+                    toast.error("You can only order from one store at a time. Clear your cart first.");
+                    return prev;
+                }
+                toast.success(`Added ${product.name} to cart`);
+                return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
             }
-            setCart(prev => prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
+            if (prev.length > 0 && prev[0].storeId !== product.storeId) {
+                toast.error("You can only order from one store at a time. Clear your cart first.");
+                return prev;
+            }
             toast.success(`Added ${product.name} to cart`);
-            return;
-        }
-        if (cart.length > 0 && cart[0].storeId !== product.storeId) {
-            toast.error("You can only order from one store at a time. Clear your cart first.");
-            return;
-        }
-        setCart(prev => [...prev, { ...product, quantity: 1 }]);
-        toast.success(`Added ${product.name} to cart`);
-    };
+            return [...prev, { ...product, quantity: 1 }];
+        });
+    }, []);
 
-    const removeFromCart = (productId: string) => setCart(prev => prev.filter(item => item.id !== productId));
+    const removeFromCart = useCallback((productId: string) => {
+        setCart(prev => prev.filter(item => item.id !== productId));
+    }, []);
 
-    const updateCartQuantity = (productId: string, delta: number) => {
+    const updateCartQuantity = useCallback((productId: string, delta: number) => {
         setCart(prev => prev.map(item =>
             item.id === productId ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
         ));
-    };
+    }, []);
 
-    const clearCart = () => setCart([]);
+    const clearCart = useCallback(() => setCart([]), []);
 
-    // ALGORITHM 8: Least-busy driver assignment
-    const findBestAvailableDriver = (): StaffMember | null => {
-        const activeDrivers = staff.filter(s => s.role === 'driver' && s.status === 'Active');
-        if (activeDrivers.length === 0) return null;
-        const activeDeliveries = orders.filter(o => o.status === 'Out for Delivery');
-        return activeDrivers
-            .map(d => ({ driver: d, load: activeDeliveries.filter(o => o.driverId === d.id).length }))
-            .sort((a, b) => a.load - b.load)[0].driver;
-    };
-
-    const placeOrder = async (customerDetails: {
+    const placeOrder = useCallback(async (customerDetails: {
         name: string;
         address: string;
         items?: CartItem[];
@@ -150,7 +142,9 @@ export function useOrders(
             ? (customerDetails.storeId || (orderItems.length > 0 ? orderItems[0].storeId : user?.storeId) || MOCK_STORE_ID)
             : (customerDetails.storeId || (orderItems.length > 0 ? orderItems[0].storeId : user?.storeId));
         const store = stores.find(s => s.id === storeId);
-        const storeName = store?.name || "Unknown Store";
+        // Customers have an empty stores array (they don't own stores), so fall back to
+        // the storeName stored on the product itself, which is always set by the owner.
+        const storeName = store?.name || (orderItems[0] as any)?.storeName || "Unknown Store";
 
         if (orderItems.length === 0) { toast.error("Cart is empty"); return; }
         if (!USE_MOCK_DATA && !storeId) { toast.error("Could not determine store for this order. Please try again."); return; }
@@ -210,10 +204,16 @@ export function useOrders(
             toast.error("Failed to place order. Please try again.");
             throw error;
         }
-    };
+    }, [cart, cartTotal, stores, user, clearCart]);
 
-    const updateOrderStatus = async (orderId: string, status: Order['status']) => {
-        const bestDriver = status === 'Ready' ? findBestAvailableDriver() : null;
+    const updateOrderStatus = useCallback(async (orderId: string, status: Order['status']) => {
+        const activeDrivers = staff.filter(s => s.role === 'driver' && s.status === 'Active');
+        const bestDriver = status === 'Ready' && activeDrivers.length > 0
+            ? activeDrivers
+                .map(d => ({ driver: d, load: orders.filter(o => o.status === 'Out for Delivery' && o.driverId === d.id).length }))
+                .sort((a, b) => a.load - b.load)[0].driver
+            : null;
+
         if (USE_MOCK_DATA) {
             setOrders(prev => prev.map(o =>
                 o.id === orderId ? { ...o, status, ...(bestDriver ? { driverId: bestDriver.id } : {}) } : o
@@ -232,9 +232,9 @@ export function useOrders(
             toast.error("Failed to update order");
             throw error;
         }
-    };
+    }, [orders, staff]);
 
-    const assignDriver = async (orderId: string, driverId: string) => {
+    const assignDriver = useCallback(async (orderId: string, driverId: string) => {
         if (USE_MOCK_DATA) {
             setOrders(prev => prev.map(o => o.id === orderId ? { ...o, driverId, status: 'Out for Delivery' } : o));
             toast.info("Order assigned to driver (Mock)");
@@ -247,7 +247,7 @@ export function useOrders(
             toast.error("Failed to assign driver");
             throw error;
         }
-    };
+    }, []);
 
     return {
         orders, cart, cartTotal,

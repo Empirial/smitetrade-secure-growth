@@ -1,9 +1,18 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Clock, LogOut, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/context/StoreContext";
 
 const OwnerPending = () => {
     const { currentStore, logout } = useStore();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (currentStore?.status === "Active") {
+            navigate("/owner/dashboard", { replace: true });
+        }
+    }, [currentStore?.status, navigate]);
 
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">

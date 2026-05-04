@@ -1,38 +1,39 @@
-import { auth } from '@/lib/firebase';
-
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
-const AI_CHAT_URL = 'https://us-central1-smitetrade-40643.cloudfunctions.net/aiChat';
+const NVIDIA_API_URL = 'https://integrate.developer.nvidia.com/v1/chat/completions';
+const NVIDIA_MODEL = 'meta/llama-3.3-70b-instruct';
 
 export async function sendChatMessage(
   messages: ChatMessage[],
   systemPrompt: string
 ): Promise<string> {
-  const idToken = await auth.currentUser?.getIdToken();
-  if (!idToken) throw new Error('You must be signed in to use the AI assistant.');
+  const apiKey = import.meta.env.VITE_NVIDIA_API_KEY;
+  if (!apiKey) throw new Error('NVIDIA API key not configured.');
 
-  const response = await fetch(AI_CHAT_URL, {
+  const response = await fetch(NVIDIA_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 512,
-      system: systemPrompt,
-      messages,
+      model: NVIDIA_MODEL,
+      max_tokens: 768,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages,
+      ],
     }),
   });
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error((err as any)?.error ?? `Request failed (${response.status})`);
+    throw new Error((err as any)?.message ?? `Request failed (${response.status})`);
   }
 
   const data = await response.json();
-  return (data.content[0] as { text: string }).text;
+  return data.choices[0].message.content as string;
 }

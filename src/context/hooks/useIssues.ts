@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
@@ -19,7 +19,7 @@ export function useIssues(user: User | null, storesResolved: boolean) {
         return () => unsub();
     }, [user, storesResolved]);
 
-    const reportIssue = async (issueData: Omit<Issue, 'id' | 'timestamp' | 'status'>) => {
+    const reportIssue = useCallback(async (issueData: Omit<Issue, 'id' | 'timestamp' | 'status'>) => {
         const payload = { ...issueData, timestamp: new Date().toISOString(), status: 'Open' as const };
         if (USE_MOCK_DATA) {
             setIssues(prev => [{ ...payload, id: `issue-${Date.now()}` } as Issue, ...prev]);
@@ -33,7 +33,7 @@ export function useIssues(user: User | null, storesResolved: boolean) {
             toast.error("Failed to report issue");
             throw error;
         }
-    };
+    }, []);
 
     return { issues, reportIssue };
 }

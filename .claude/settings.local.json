@@ -80,7 +80,20 @@
       "Bash(firebase login:use info@smitetrade.co.za)",
       "Bash(npm audit *)",
       "Bash(wait *)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(rm \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth/src/lib/paystack.ts\")",
+      "Bash(rm \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth/src/hooks/usePaystack.ts\")",
+      "Bash(npm uninstall *)",
+      "Bash(firebase functions:config:get --project smitetrade-40643)",
+      "Bash(git rm *)",
+      "WebFetch(domain:developer.paypal.com)",
+      "Bash(where node:*)",
+      "Bash(firebase functions:config:get)",
+      "Bash(grep -i \"paypal_client_secret\\\\|PAYPAL_CLIENT_SECRET\" \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth/.env\")",
+      "Bash(grep -i \"paypal_client_secret\\\\|PAYPAL_CLIENT_SECRET\" \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth/functions/.env\")",
+      "Bash(grep -i \"paypal_client_secret\\\\|PAYPAL_CLIENT_SECRET\" \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth/functions/.env.local\")",
+      "Bash(firebase apphosting:secrets:grantaccess)",
+      "Bash(firebase functions:secrets:access PAYPAL_CLIENT_SECRET)"
     ]
   },
   "enableAllProjectMcpServers": true,

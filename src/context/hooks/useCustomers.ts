@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import {
@@ -36,7 +36,7 @@ export function useCustomers(user: User | null, currentStore: Store | null, stor
         return () => unsubs.forEach(u => u());
     }, [user, currentStore?.id, storesResolved]);
 
-    const addCustomer = async (customer: Omit<Customer, 'id' | 'totalSpend' | 'tabBalance' | 'lastVisit'>) => {
+    const addCustomer = useCallback(async (customer: Omit<Customer, 'id' | 'totalSpend' | 'tabBalance' | 'lastVisit'>) => {
         const storeId = currentStore?.id ?? user?.storeId;
         if (USE_MOCK_DATA) {
             setCustomers(prev => [...prev, {
@@ -56,9 +56,9 @@ export function useCustomers(user: User | null, currentStore: Store | null, stor
             toast.error("Failed to add customer");
             throw error;
         }
-    };
+    }, [currentStore, user]);
 
-    const updateCustomer = async (id: string, updates: Partial<Customer>) => {
+    const updateCustomer = useCallback(async (id: string, updates: Partial<Customer>) => {
         if (USE_MOCK_DATA) {
             setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
             toast.success("Customer updated (Mock)");
@@ -71,9 +71,9 @@ export function useCustomers(user: User | null, currentStore: Store | null, stor
             toast.error("Failed to update customer");
             throw error;
         }
-    };
+    }, []);
 
-    const settleCustomerTab = async (id: string, amount: number) => {
+    const settleCustomerTab = useCallback(async (id: string, amount: number) => {
         if (USE_MOCK_DATA) {
             setCustomers(prev => prev.map(c =>
                 c.id === id ? { ...c, tabBalance: Math.max(0, c.tabBalance - amount) } : c
@@ -94,9 +94,9 @@ export function useCustomers(user: User | null, currentStore: Store | null, stor
             toast.error("Failed to settle tab");
             throw error;
         }
-    };
+    }, []);
 
-    const addExpense = async (expense: Omit<Expense, 'id' | 'date' | 'loggedBy'>) => {
+    const addExpense = useCallback(async (expense: Omit<Expense, 'id' | 'date' | 'loggedBy'>) => {
         const storeId = currentStore?.id ?? user?.storeId;
         if (!storeId) {
             console.error("[addExpense] storeId is undefined — currentStore:", currentStore, "user.storeId:", user?.storeId);
@@ -119,9 +119,9 @@ export function useCustomers(user: User | null, currentStore: Store | null, stor
             toast.error("Failed to log expense");
             throw error;
         }
-    };
+    }, [currentStore, user]);
 
-    const deleteExpense = async (id: string) => {
+    const deleteExpense = useCallback(async (id: string) => {
         if (USE_MOCK_DATA) {
             setExpenses(prev => prev.filter(e => e.id !== id));
             toast.success("Expense removed (Mock)");
@@ -134,7 +134,7 @@ export function useCustomers(user: User | null, currentStore: Store | null, stor
             toast.error("Failed to delete expense");
             throw error;
         }
-    };
+    }, []);
 
     return { customers, expenses, addCustomer, updateCustomer, settleCustomerTab, addExpense, deleteExpense };
 }

@@ -160,17 +160,17 @@ export function ChatBot({ role }: ChatBotProps) {
           storeName: currentStore?.name || "your store",
           userName: user?.name || "Owner",
           productCount: products.length,
-          pendingOrders: orders.filter(o => o.status === "pending").length,
-          completedRevenue: orders.filter(o => o.status === "completed").reduce((s, o) => s + (o.total ?? 0), 0),
+          pendingOrders: orders.filter(o => o.status === "Pending").length,
+          completedRevenue: orders.filter(o => o.status === "Delivered").reduce((s, o) => s + (o.total ?? 0), 0),
           staffCount: staff?.length ?? 0,
-          lowStockItems: products.filter(p => (p.quantity ?? 0) < 5).map(p => p.name),
+          lowStockItems: products.filter(p => (p.stock ?? 0) < 5).map(p => p.name),
         });
 
       case "customer":
         return buildCustomerPrompt({
           userName: user?.name || "Customer",
           orderCount: orders.length,
-          pendingOrders: orders.filter(o => o.status === "pending").length,
+          pendingOrders: orders.filter(o => o.status === "Pending").length,
           categories: [...new Set(products.map(p => (p as any).category || 'General'))].slice(0, 6) as string[],
         });
 
@@ -182,10 +182,10 @@ export function ChatBot({ role }: ChatBotProps) {
         return buildCashierPrompt({
           userName: user?.name || "Cashier",
           storeName: currentStore?.name || "your store",
-          pendingOrders: orders.filter(o => o.status === "pending").length,
-          totalProductsSold: todayOrders.filter(o => o.status === "completed").reduce((s, o) => s + ((o as any).items?.length ?? 0), 0),
+          pendingOrders: orders.filter(o => o.status === "Pending").length,
+          totalProductsSold: todayOrders.filter(o => o.status === "Delivered").reduce((s, o) => s + ((o as any).items?.length ?? 0), 0),
           shiftActive: !!(staff as any)?.currentShift,
-          todaySales: todayOrders.filter(o => o.status === "completed").reduce((s, o) => s + (o.total ?? 0), 0),
+          todaySales: todayOrders.filter(o => o.status === "Delivered").reduce((s, o) => s + (o.total ?? 0), 0),
         });
       }
 
@@ -193,9 +193,9 @@ export function ChatBot({ role }: ChatBotProps) {
         const myOrders = orders.filter(o => (o as any).driverId === user?.uid || (o as any).assignedDriver === user?.uid);
         return buildDriverPrompt({
           userName: user?.name || "Driver",
-          activeDeliveries: myOrders.filter(o => o.status === "out_for_delivery").length,
-          pendingDeliveries: myOrders.filter(o => o.status === "pending" || o.status === "ready").length,
-          completedDeliveries: myOrders.filter(o => o.status === "delivered" || o.status === "completed").length,
+          activeDeliveries: myOrders.filter(o => o.status === "Out for Delivery").length,
+          pendingDeliveries: myOrders.filter(o => o.status === "Pending" || o.status === "Ready").length,
+          completedDeliveries: myOrders.filter(o => o.status === "Delivered").length,
         });
       }
 
@@ -214,8 +214,8 @@ export function ChatBot({ role }: ChatBotProps) {
           userName: user?.name || "Admin",
           totalStores: (stores as any)?.length ?? 0,
           totalOrders: orders.length,
-          pendingOrders: orders.filter(o => o.status === "pending").length,
-          totalRevenue: orders.filter(o => o.status === "completed").reduce((s, o) => s + (o.total ?? 0), 0),
+          pendingOrders: orders.filter(o => o.status === "Pending").length,
+          totalRevenue: orders.filter(o => o.status === "Delivered").reduce((s, o) => s + (o.total ?? 0), 0),
           totalStaff: staff?.length ?? 0,
         });
     }

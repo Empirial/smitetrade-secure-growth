@@ -108,6 +108,7 @@ const AdminCreditOverview = lazy(() => import("./pages/admin/AdminCreditOverview
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
 const AdminAlerts = lazy(() => import("./pages/admin/AdminAlerts"));
 const AdminSuppliers = lazy(() => import("./pages/admin/AdminSuppliers"));
+const AdminPayouts = lazy(() => import("./pages/admin/AdminPayouts"));
 
 // Lender
 const LenderLogin = lazy(() => import("./pages/lender/LenderLogin"));
@@ -229,6 +230,7 @@ const App = () => (
                 <Route path="/admin/support" element={<AuthGuard role="admin"><AdminSupport /></AuthGuard>} />
                 <Route path="/admin/alerts" element={<AuthGuard role="admin"><AdminAlerts /></AuthGuard>} />
                 <Route path="/admin/suppliers" element={<AuthGuard role="admin"><AdminSuppliers /></AuthGuard>} />
+                <Route path="/admin/payouts" element={<AuthGuard role="admin"><AdminPayouts /></AuthGuard>} />
 
                 {/* Lender Portal — Coming Soon (admin bypass via ComingSoonGuard) */}
                 <Route path="/lender/login" element={<ComingSoonGuard portal="Lender"><LenderLogin /></ComingSoonGuard>} />

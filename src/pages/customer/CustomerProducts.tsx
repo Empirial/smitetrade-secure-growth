@@ -468,7 +468,7 @@ const CustomerProducts = () => {
                                     <div className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer has-[:checked]:border-primary">
                                         <RadioGroupItem value="card" id="po-card" />
                                         <Label htmlFor="po-card" className="flex items-center gap-2 cursor-pointer font-normal">
-                                            <CreditCard className="h-4 w-4" /> Card (Paystack)
+                                            <CreditCard className="h-4 w-4" /> Card (PayFast)
                                         </Label>
                                     </div>
                                     <div className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer has-[:checked]:border-primary">

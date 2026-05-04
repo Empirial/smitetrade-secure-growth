@@ -158,18 +158,23 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         // issues
         issues: issues.issues,
         reportIssue: issues.reportIssue,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }), [
         auth.user, auth.isLoading,
         sel.stores, sel.currentStore,
         products.products, products.allProducts,
+        products.addProduct, products.updateProduct, products.deleteProduct,
         orders.orders, orders.cart, orders.cartTotal,
+        orders.addToCart, orders.removeFromCart, orders.updateCartQuantity,
+        orders.clearCart, orders.placeOrder, orders.updateOrderStatus, orders.assignDriver,
         staffData.staff, staffData.shifts, staffData.currentShift,
         staffData.addStaff, staffData.updateStaff, staffData.deleteStaff,
         staffData.startShift, staffData.endShift, staffData.recordCashDrop,
         suppliers.suppliers,
+        suppliers.addSupplier, suppliers.updateSupplier, suppliers.deleteSupplier,
         customers.customers, customers.expenses,
-        issues.issues,
+        customers.addCustomer, customers.updateCustomer, customers.settleCustomerTab,
+        customers.addExpense, customers.deleteExpense,
+        issues.issues, issues.reportIssue,
     ]);
 
     return (

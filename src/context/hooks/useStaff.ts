@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { auth, db, firebaseConfig } from '@/lib/firebase';
 import { initializeApp, deleteApp } from 'firebase/app';
@@ -56,7 +56,7 @@ export function useStaff(user: User | null, currentStore: Store | null, storesRe
         return () => unsubs.forEach(u => u());
     }, [user, currentStore?.id, storesResolved]);
 
-    const addStaff = async (staffData: Omit<StaffMember, 'id'>) => {
+    const addStaff = useCallback(async (staffData: Omit<StaffMember, 'id'>) => {
         const storeId = currentStore?.id ?? user?.storeId;
         if (USE_MOCK_DATA) {
             setStaff(prev => [...prev, { ...staffData, id: `staff-${Date.now()}`, storeId }]);
@@ -103,9 +103,9 @@ export function useStaff(user: User | null, currentStore: Store | null, storesRe
             toast.error(msg);
             throw error;
         }
-    };
+    }, [currentStore, user]);
 
-    const updateStaff = async (id: string, updates: Partial<StaffMember>) => {
+    const updateStaff = useCallback(async (id: string, updates: Partial<StaffMember>) => {
         if (USE_MOCK_DATA) {
             setStaff(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
             toast.success("Staff profile updated (Mock)");
@@ -118,9 +118,9 @@ export function useStaff(user: User | null, currentStore: Store | null, storesRe
             toast.error("Failed to update staff");
             throw error;
         }
-    };
+    }, []);
 
-    const deleteStaff = async (id: string) => {
+    const deleteStaff = useCallback(async (id: string) => {
         if (USE_MOCK_DATA) {
             setStaff(prev => prev.filter(m => m.id !== id));
             toast.success("Staff member removed (Mock)");
@@ -133,9 +133,9 @@ export function useStaff(user: User | null, currentStore: Store | null, storesRe
             toast.error("Failed to delete staff");
             throw error;
         }
-    };
+    }, []);
 
-    const startShift = async (float: number) => {
+    const startShift = useCallback(async (float: number) => {
         if (currentShift) { toast.error("Shift already active"); return; }
         const newShiftData = {
             cashierId: user?.uid || 'unknown',
@@ -159,9 +159,9 @@ export function useStaff(user: User | null, currentStore: Store | null, storesRe
             toast.error("Failed to start shift");
             throw error;
         }
-    };
+    }, [currentShift, user, currentStore]);
 
-    const endShift = async (closingCash: number) => {
+    const endShift = useCallback(async (closingCash: number) => {
         if (!currentShift) return;
         const closedData = { endTime: new Date().toISOString(), closingCash, status: 'Closed' };
         if (USE_MOCK_DATA) {
@@ -178,9 +178,9 @@ export function useStaff(user: User | null, currentStore: Store | null, storesRe
             toast.error("Failed to close shift");
             throw error;
         }
-    };
+    }, [currentShift]);
 
-    const recordCashDrop = async (amount: number, reason: string) => {
+    const recordCashDrop = useCallback(async (amount: number, reason: string) => {
         if (!currentShift) { toast.error("No active shift to record drop against."); return; }
         if (USE_MOCK_DATA) {
             toast.success(`Cash drop of R${amount.toFixed(2)} recorded for: ${reason} (Mock)`);
@@ -195,7 +195,7 @@ export function useStaff(user: User | null, currentStore: Store | null, storesRe
             toast.error("Failed to record cash drop");
             throw error;
         }
-    };
+    }, [currentShift]);
 
     return { staff, shifts, currentShift, addStaff, updateStaff, deleteStaff, startShift, endShift, recordCashDrop };
 }

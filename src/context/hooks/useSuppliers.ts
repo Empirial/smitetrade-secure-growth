@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
@@ -23,7 +23,7 @@ export function useSuppliers(user: User | null, currentStore: Store | null, stor
         return () => unsub();
     }, [user, currentStore?.id, storesResolved]);
 
-    const addSupplier = async (supplierData: Omit<Supplier, 'id' | 'status'>) => {
+    const addSupplier = useCallback(async (supplierData: Omit<Supplier, 'id' | 'status'>) => {
         const storeId = currentStore?.id ?? user?.storeId;
         if (!storeId) {
             toast.error("No active store found. Please refresh and try again.");
@@ -41,9 +41,9 @@ export function useSuppliers(user: User | null, currentStore: Store | null, stor
             toast.error("Failed to add supplier");
             throw error;
         }
-    };
+    }, [currentStore, user]);
 
-    const updateSupplier = async (id: string, updates: Partial<Supplier>) => {
+    const updateSupplier = useCallback(async (id: string, updates: Partial<Supplier>) => {
         if (USE_MOCK_DATA) {
             setSuppliers(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
             toast.success("Supplier updated (Mock)");
@@ -56,9 +56,9 @@ export function useSuppliers(user: User | null, currentStore: Store | null, stor
             toast.error("Failed to update supplier");
             throw error;
         }
-    };
+    }, []);
 
-    const deleteSupplier = async (id: string) => {
+    const deleteSupplier = useCallback(async (id: string) => {
         if (USE_MOCK_DATA) {
             setSuppliers(prev => prev.filter(s => s.id !== id));
             toast.success("Supplier removed (Mock)");
@@ -71,7 +71,7 @@ export function useSuppliers(user: User | null, currentStore: Store | null, stor
             toast.error("Failed to delete supplier");
             throw error;
         }
-    };
+    }, []);
 
     return { suppliers, addSupplier, updateSupplier, deleteSupplier };
 }

@@ -72,7 +72,7 @@ LIVE: Support form — saves ticket to support_tickets Firestore collection with
 UI-ONLY: Ticket history (if shown) is display only.`,
 
   "/owner/subscription": `Manage the store's SmiteTrade subscription plan.
-LIVE: Plan selection — initiates Paystack payment flow. Current plan and billing status loaded from store document. Cancel subscription button — updates store subscription status in Firestore.
+LIVE: Plan selection — initiates PayFast payment flow. Current plan and billing status loaded from store document. Cancel subscription button — updates store subscription status in Firestore.
 UI-ONLY: Feature comparison table is display only.`,
 
   "/owner/analytics": `Advanced analytics and business intelligence for the owner.
@@ -128,7 +128,7 @@ LIVE: Cart items from StoreContext. Update quantity — adjusts cart. Remove ite
 UI-ONLY: Promo code input is not wired.`,
 
   "/customer/checkout": `Order placement and payment page.
-LIVE: Delivery address form. Payment method selection (cash / Paystack). Place Order — creates order in Firestore via placeOrder(), clears cart. Paystack card payment — initiates Paystack popup.
+LIVE: Delivery address form. Payment method selection (cash / PayFast). Place Order — creates order in Firestore via placeOrder(), clears cart. PayFast card payment — initiates PayFast redirect.
 UI-ONLY: Estimated delivery time is display only.`,
 
   "/customer/orders": `List of all orders placed by this customer.
@@ -249,8 +249,8 @@ UI-ONLY: Benchmark comparison data is display only.`,
 LIVE: Stores list from Firestore. View store details. Suspend/Activate store — updates store status in Firestore. Delete store — removes store document (hard delete).
 UI-ONLY: Onboarding checklist per store is display only.`,
 
-  "/admin/revenue": `Platform revenue tracking and Paystack reconciliation.
-LIVE: Revenue records from Firestore. Payment status and transaction IDs from Paystack integration. Export CSV.
+  "/admin/revenue": `Platform revenue tracking and PayFast reconciliation.
+LIVE: Revenue records from Firestore. Payment status and transaction IDs from PayFast integration. Export CSV.
 UI-ONLY: Forecasting chart is display only.`,
 
   "/admin/credit-overview": `Platform-wide credit and lending overview.

@@ -65,8 +65,12 @@ const AdminStores = () => {
         }
     };
 
-    const ownerStores = selectedStore
-        ? storeData.filter(s => (s as any).ownerId === (selectedStore as any).ownerId)
+    // Snapshot the selected store so dialog content stays stable during close animation
+    const dialogStore = selectedStore;
+    const dialogStatus = dialogStore ? getStatus(dialogStore) : '';
+
+    const ownerStores = dialogStore
+        ? storeData.filter(s => (s as any).ownerId === (dialogStore as any).ownerId)
         : [];
 
     return (
@@ -193,7 +197,7 @@ const AdminStores = () => {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Store className="h-5 w-5" />
-                            {selectedStore?.name}
+                            {dialogStore?.name}
                         </DialogTitle>
                     </DialogHeader>
 
@@ -201,19 +205,19 @@ const AdminStores = () => {
                         {/* Store details */}
                         <div className="space-y-1 text-sm">
                             <p className="text-muted-foreground">
-                                {[(selectedStore as any)?.address, (selectedStore as any)?.suburb, (selectedStore as any)?.city, (selectedStore as any)?.province]
+                                {[(dialogStore as any)?.address, (dialogStore as any)?.suburb, (dialogStore as any)?.city, (dialogStore as any)?.province]
                                     .filter(Boolean).join(", ") || "No address on file"}
                             </p>
                             <div className="flex items-center gap-2 pt-1">
                                 <Badge variant={
-                                    getStatus(selectedStore) === "Active" ? "default"
-                                    : getStatus(selectedStore) === "Pending" ? "outline"
+                                    dialogStatus === "Active" ? "default"
+                                    : dialogStatus === "Pending" ? "outline"
                                     : "destructive"
-                                } className={getStatus(selectedStore) === "Pending" ? "border-yellow-500 text-yellow-500" : undefined}>
-                                    {getStatus(selectedStore)}
+                                } className={dialogStatus === "Pending" ? "border-yellow-500 text-yellow-500" : undefined}>
+                                    {dialogStatus}
                                 </Badge>
                                 <span className="text-muted-foreground text-xs">
-                                    Since {selectedStore?.createdAt ? new Date(selectedStore.createdAt).toLocaleDateString() : "—"}
+                                    Since {dialogStore?.createdAt ? new Date(dialogStore.createdAt).toLocaleDateString() : "—"}
                                 </span>
                             </div>
                         </div>
@@ -257,7 +261,7 @@ const AdminStores = () => {
                                     </p>
                                     <div className="space-y-2">
                                         {ownerStores
-                                            .filter(s => s.id !== selectedStore?.id)
+                                            .filter(s => s.id !== dialogStore?.id)
                                             .map(s => {
                                                 const st = getStatus(s);
                                                 return (

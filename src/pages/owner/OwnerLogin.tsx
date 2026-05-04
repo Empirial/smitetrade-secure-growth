@@ -20,7 +20,7 @@ import { validateEmail, validatePassword, hasErrors } from "@/utils/validation";
 
 const OwnerLogin = () => {
     const navigate = useNavigate();
-    const { login, loginWithGoogle, user } = useStore();
+    const { login, loginWithGoogle, user, currentStore } = useStore();
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [formData, setFormData] = useState({ email: "", password: "" });
@@ -28,8 +28,15 @@ const OwnerLogin = () => {
     const [authError, setAuthError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (user?.role === "owner") navigate("/owner/dashboard", { replace: true });
-    }, [user, navigate]);
+        if (!user || user.role !== "owner") return;
+        // Wait for store to load before deciding where to send the owner
+        if (currentStore === null) return;
+        if (currentStore.status === "Pending") {
+            navigate("/owner/pending", { replace: true });
+        } else {
+            navigate("/owner/dashboard", { replace: true });
+        }
+    }, [user, currentStore, navigate]);
 
     const validate = () => {
         const newErrors = {

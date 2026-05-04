@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.aiChat = exports.payfastITN = void 0;
+exports.paypalCaptureOrder = exports.paypalCreateOrder = exports.aiChat = exports.payfastITN = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
 const v2_1 = require("firebase-functions/v2");
@@ -42,6 +42,8 @@ const crypto = __importStar(require("crypto"));
 const querystring = __importStar(require("querystring"));
 const https = __importStar(require("https"));
 const anthropicKey = (0, params_1.defineSecret)('ANTHROPIC_API_KEY');
+const paypalClientId = (0, params_1.defineSecret)('PAYPAL_CLIENT_ID');
+const paypalClientSecret = (0, params_1.defineSecret)('PAYPAL_CLIENT_SECRET');
 admin.initializeApp();
 const db = admin.firestore();
 // ─── Config — set these env vars in Firebase Console or .env.local ──────────
@@ -223,6 +225,187 @@ exports.aiChat = (0, https_1.onRequest)({ cors: true, secrets: [anthropicKey] },
     catch (err) {
         v2_1.logger.error('AI chat error', err);
         res.status(500).json({ error: 'AI request failed' });
+    }
+});
+// ─── PayPal Helpers ───────────────────────────────────────────────────────────
+const PAYPAL_API = process.env.PAYPAL_SANDBOX !== 'false'
+    ? 'https://api-m.sandbox.paypal.com'
+    : 'https://api-m.paypal.com';
+async function getPayPalAccessToken() {
+    const credentials = Buffer.from(`${paypalClientId.value()}:${paypalClientSecret.value()}`).toString('base64');
+    const res = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Basic ${credentials}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'grant_type=client_credentials',
+    });
+    if (!res.ok)
+        throw new Error(`PayPal auth failed: ${res.status}`);
+    const data = await res.json();
+    return data.access_token;
+}
+// ─── PayPal: Create Order ─────────────────────────────────────────────────────
+exports.paypalCreateOrder = (0, https_1.onRequest)({ cors: true, secrets: [paypalClientId, paypalClientSecret] }, async (req, res) => {
+    if (req.method !== 'POST') {
+        res.status(405).send('Method Not Allowed');
+        return;
+    }
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!idToken) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+    }
+    try {
+        await admin.auth().verifyIdToken(idToken);
+    }
+    catch {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
+    }
+    const { amount, itemName, itemDescription, portal, storeId, orderId, currency = 'USD' } = req.body;
+    if (!amount || !itemName) {
+        res.status(400).json({ error: 'amount and itemName are required' });
+        return;
+    }
+    try {
+        const accessToken = await getPayPalAccessToken();
+        const orderRes = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                intent: 'CAPTURE',
+                purchase_units: [{
+                        reference_id: orderId || `SMITE-${Date.now()}`,
+                        custom_id: JSON.stringify({ portal, storeId, orderId }),
+                        description: itemDescription || itemName,
+                        amount: {
+                            currency_code: currency,
+                            value: Number(amount).toFixed(2),
+                        },
+                    }],
+            }),
+        });
+        if (!orderRes.ok) {
+            const err = await orderRes.text();
+            v2_1.logger.error('PayPal create order error', { err });
+            res.status(502).json({ error: 'PayPal order creation failed' });
+            return;
+        }
+        const order = await orderRes.json();
+        v2_1.logger.info('PayPal order created', { id: order.id });
+        res.status(200).json({ id: order.id, status: order.status });
+    }
+    catch (err) {
+        v2_1.logger.error('paypalCreateOrder error', err);
+        res.status(500).json({ error: 'Internal error' });
+    }
+});
+// ─── PayPal: Capture Order ────────────────────────────────────────────────────
+exports.paypalCaptureOrder = (0, https_1.onRequest)({ cors: true, secrets: [paypalClientId, paypalClientSecret] }, async (req, res) => {
+    if (req.method !== 'POST') {
+        res.status(405).send('Method Not Allowed');
+        return;
+    }
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!idToken) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+    }
+    try {
+        await admin.auth().verifyIdToken(idToken);
+    }
+    catch {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
+    }
+    const { paypalOrderId } = req.body;
+    if (!paypalOrderId) {
+        res.status(400).json({ error: 'paypalOrderId is required' });
+        return;
+    }
+    try {
+        const accessToken = await getPayPalAccessToken();
+        const captureRes = await fetch(`${PAYPAL_API}/v2/checkout/orders/${paypalOrderId}/capture`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!captureRes.ok) {
+            const err = await captureRes.text();
+            v2_1.logger.error('PayPal capture error', { err });
+            res.status(502).json({ error: 'PayPal capture failed' });
+            return;
+        }
+        const capture = await captureRes.json();
+        const unit = capture.purchase_units?.[0];
+        const meta = unit?.custom_id ? JSON.parse(unit.custom_id) : {};
+        const captured = unit?.payments?.captures?.[0];
+        const amountValue = parseFloat(captured?.amount?.value || '0');
+        const currency = captured?.amount?.currency_code || 'USD';
+        const { portal, storeId, orderId } = meta;
+        // Write to Firestore — same schema as PayFast transactions
+        const txData = {
+            reference: capture.id,
+            status: capture.status === 'COMPLETED' ? 'completed' : 'pending',
+            paypalStatus: capture.status,
+            amountGross: amountValue,
+            currency,
+            provider: 'paypal',
+            portal: portal || '',
+            storeId: storeId || '',
+            orderId: orderId || '',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        await db.collection('transactions').add(txData);
+        // Per-portal post-payment logic (mirrors PayFast ITN)
+        if (capture.status === 'COMPLETED') {
+            if (portal === 'subscription' && storeId) {
+                await db.collection('stores').doc(storeId).update({
+                    subscriptionStatus: 'active',
+                    subscriptionRef: capture.id,
+                    subscriptionUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+            }
+            if (portal === 'lender_disburse' && orderId) {
+                await db.collection('loans').doc(orderId).update({
+                    status: 'disbursed',
+                    disbursedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    disbursementRef: capture.id,
+                });
+            }
+            if (portal === 'lender_repayment' && orderId) {
+                await db.collection('loans').doc(orderId).update({
+                    lastPaymentRef: capture.id,
+                    lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
+                    lastPaymentAmount: amountValue,
+                });
+            }
+            if (portal === 'driver_payout' && storeId) {
+                await db.collection('driver_payouts').add({
+                    driverId: storeId,
+                    reference: capture.id,
+                    amount: amountValue,
+                    status: 'processed',
+                    processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+            }
+        }
+        v2_1.logger.info('PayPal order captured', { id: capture.id, status: capture.status, portal });
+        res.status(200).json({ id: capture.id, status: capture.status, portal, storeId, orderId });
+    }
+    catch (err) {
+        v2_1.logger.error('paypalCaptureOrder error', err);
+        res.status(500).json({ error: 'Internal error' });
     }
 });
 //# sourceMappingURL=index.js.map

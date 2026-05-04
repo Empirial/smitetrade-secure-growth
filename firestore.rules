@@ -120,7 +120,9 @@ service cloud.firestore {
         isDriver() ||   // drivers query all Ready orders across stores
         isLender()      // lenders need order history for loan decisions
       );
-      allow create: if isAuth() && request.resource.data.storeId != null && canAccessStore(request.resource.data.storeId);
+      // Customers can create orders for any store (they are buyers, not store members).
+      allow create: if isAuth() && request.resource.data.storeId != null &&
+        (canAccessStore(request.resource.data.storeId) || isCustomer());
       allow update: if isAuth() && (
         isAdmin() ||
         (canAccessStore(resource.data.storeId) && isStoreIdImmutable()) ||
@@ -163,6 +165,11 @@ service cloud.firestore {
     match /shifts/{shiftId} {
       allow read, write: if isAuth() &&
         canAccessStore(resource.data.storeId || request.resource.data.storeId);
+
+      // Cash drops are a subcollection of shifts — must be explicitly allowed.
+      match /cashDrops/{dropId} {
+        allow read, write: if isAuth() && (isOwner() || isCashier() || isAdmin());
+      }
     }
 
     // ─────────────────────────────────────────────
@@ -393,6 +400,18 @@ service cloud.firestore {
       allow create: if isAuth();
       allow update: if isAuth() && (isAdmin() || resource.data.userId == uid());
       allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────
+    // 💳 STORE PAYOUTS (admin → owner EFT records)
+    // ─────────────────────────────────────────────
+    match /payouts/{payoutId} {
+      allow read: if isAuth() && (
+        ownsStore(resource.data.storeId) ||
+        isAdmin()
+      );
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
     }
 
     // ─────────────────────────────────────────────

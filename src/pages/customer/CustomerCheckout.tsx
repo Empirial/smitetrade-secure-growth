@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { PayPalButton } from "@/components/PayPalButton";
 
 const ALLOWED_POSTAL_CODES = [1818, 1804, 1868];
 
@@ -24,7 +25,7 @@ const CustomerCheckout = () => {
     const { profile, purchaseOnCredit, simulatePayment } = useCredit();
 
     const [step, setStep] = useState(1);
-    const [paymentMethod, setPaymentMethod] = useState("card");
+    const [paymentMethod, setPaymentMethod] = useState("paypal");
     const [deliveryMethod, setDeliveryMethod] = useState("pickup");
 
     const FULFILLMENT_LABELS: Record<string, string> = {
@@ -285,6 +286,24 @@ const CustomerCheckout = () => {
                                 <CardContent>
                                     <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="grid grid-cols-1 gap-4">
                                         <div>
+                                            <RadioGroupItem value="paypal" id="paypal" className="peer sr-only" />
+                                            <Label
+                                                htmlFor="paypal"
+                                                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                            >
+                                                <div className="flex w-full items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <CreditCard className="mb-3 h-6 w-6 text-blue-500" />
+                                                        <span className="font-semibold">PayPal</span>
+                                                    </div>
+                                                    <span className="text-xs text-emerald-500 font-medium">Recommended</span>
+                                                </div>
+                                                <div className="w-full text-xs text-muted-foreground mt-2">
+                                                    Pay with your PayPal account or card. Amount charged in ZAR.
+                                                </div>
+                                            </Label>
+                                        </div>
+                                        <div>
                                             <RadioGroupItem value="card" id="card" className="peer sr-only" />
                                             <Label
                                                 htmlFor="card"
@@ -293,12 +312,12 @@ const CustomerCheckout = () => {
                                                 <div className="flex w-full items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <CreditCard className="mb-3 h-6 w-6" />
-                                                        <span className="font-semibold">Credit/Debit Card</span>
+                                                        <span className="font-semibold">Bank Card (PayFast)</span>
                                                     </div>
-                                                    <span className="text-xs text-muted-foreground">Instant</span>
+                                                    <span className="text-xs text-muted-foreground">ZAR</span>
                                                 </div>
                                                 <div className="w-full text-xs text-muted-foreground mt-2">
-                                                    Pay securely via PayFast with your bank card.
+                                                    Pay securely via PayFast with your SA bank card.
                                                 </div>
                                             </Label>
                                         </div>
@@ -327,6 +346,23 @@ const CustomerCheckout = () => {
                                             </Label>
                                         </div>
                                     </RadioGroup>
+                                    {paymentMethod === 'paypal' && (
+                                        <div className="mt-4">
+                                            <PayPalButton
+                                                amount={cartTotal + 20}
+                                                itemName="SmiteTrade Order"
+                                                portal="customer"
+                                                storeId={selectedStore}
+                                                onSuccess={async ({ status }) => {
+                                                    if (status === 'COMPLETED') {
+                                                        await completeOrder();
+                                                    }
+                                                }}
+                                                onError={() => toast.error("PayPal payment failed. Please try again.")}
+                                                onCancel={() => toast.info("PayPal payment cancelled.")}
+                                            />
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>
@@ -366,11 +402,11 @@ const CustomerCheckout = () => {
                                     <Button onClick={() => setStep(3)} className="flex-1 btn-scale">
                                         Proceed to Payment <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
-                                ) : (
+                                ) : paymentMethod !== 'paypal' ? (
                                     <Button onClick={handleCheckout} disabled={payfastLoading} className="flex-1 btn-scale bg-emerald-600 hover:bg-emerald-700">
                                         {payfastLoading ? "Redirecting..." : `Pay R ${(cartTotal + 20).toFixed(2)}`}
                                     </Button>
-                                )}
+                                ) : null}
                             </CardFooter>
                         </Card>
                     </div>

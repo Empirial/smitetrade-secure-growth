@@ -57,12 +57,15 @@ export function useStores(user: User | null, isLoading: boolean) {
             (user.storeId && stores.find(s => s.id === user.storeId)) ||
             stores[0];
 
-        if (!preferred || currentStore?.id === preferred.id) {
-            // Already on the right store — mark as resolved
+        if (!preferred) {
             setStoresResolved(true);
             return;
         }
-        setCurrentStore(preferred);
+        // Update currentStore when: switching to a different store, or when
+        // the same store's status changed (e.g., admin approved a pending store).
+        if (currentStore?.id !== preferred.id || currentStore?.status !== preferred.status) {
+            setCurrentStore(preferred);
+        }
         setStoresResolved(true);
     }, [user, stores, currentStore?.id]);
 

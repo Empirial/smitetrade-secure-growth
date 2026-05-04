@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, arrayUnion, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 
 interface Application {
     id: string;
+    storeId?: string;
+    ownerId?: string;
     name: string;
     owner: string;
     location: string;
@@ -37,6 +39,8 @@ const AdminApplications = () => {
         const unsub = onSnapshot(collection(db, "applications"), (snap) => {
             setApplications(snap.docs.map((d) => ({
                 id: d.id,
+                storeId: d.data().storeId || "",
+                ownerId: d.data().ownerId || "",
                 name: d.data().name || d.data().storeName || "Unnamed Store",
                 owner: d.data().owner || d.data().ownerName || "",
                 location: d.data().location || d.data().address || "",
@@ -56,6 +60,20 @@ const AdminApplications = () => {
     const handleAction = async (id: string, action: "Approved" | "Rejected") => {
         try {
             await updateDoc(doc(db, "applications", id), { status: action });
+
+            // Sync the store's status so the owner's access gate unlocks immediately.
+            const app = applications.find(a => a.id === id);
+            let storeId = app?.storeId;
+            if (!storeId && app?.ownerId) {
+                // Fallback: find the store by ownerId if storeId wasn't stored on the application.
+                const snap = await getDocs(query(collection(db, "stores"), where("ownerId", "==", app.ownerId)));
+                if (!snap.empty) storeId = snap.docs[0].id;
+            }
+            if (storeId) {
+                const storeStatus = action === "Approved" ? "Active" : "Rejected";
+                await updateDoc(doc(db, "stores", storeId), { status: storeStatus });
+            }
+
             if (selectedApp?.id === id) setSelectedApp(prev => prev ? { ...prev, status: action } : null);
             toast.success(`Application ${action.toLowerCase()} successfully.`);
         } catch {

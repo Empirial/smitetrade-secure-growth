@@ -22,7 +22,7 @@ const CustomerCheckout = () => {
     const navigate = useNavigate();
     const { placeOrder, cartTotal, cart, stores } = useStore();
     const activeStores = stores.filter(s => s.status === 'Active');
-    const { profile, purchaseOnCredit, simulatePayment } = useCredit();
+    const { profile, purchaseOnCredit } = useCredit();
 
     const [step, setStep] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState("paypal");

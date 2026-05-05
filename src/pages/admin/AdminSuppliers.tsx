@@ -11,15 +11,7 @@ import { Plus, Briefcase, Trash2 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import { toast } from "sonner";
-import { USE_MOCK_DATA } from "@/lib/constants";
 import { PlatformSupplier } from "@/types";
-
-const MOCK_PLATFORM_SUPPLIERS: PlatformSupplier[] = [
-    { id: "ps1", name: "Unilever SA", status: "Active", createdAt: new Date().toISOString() },
-    { id: "ps2", name: "Pioneer Foods", status: "Active", createdAt: new Date().toISOString() },
-    { id: "ps3", name: "Tiger Brands", status: "Active", createdAt: new Date().toISOString() },
-    { id: "ps4", name: "Clover SA", status: "Active", createdAt: new Date().toISOString() },
-];
 
 const AdminSuppliers = () => {
     const [suppliers, setSuppliers] = useState<PlatformSupplier[]>([]);
@@ -28,10 +20,6 @@ const AdminSuppliers = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (USE_MOCK_DATA) {
-            setSuppliers(MOCK_PLATFORM_SUPPLIERS);
-            return;
-        }
         const unsub = onSnapshot(collection(db, "platform_suppliers"), (snap) => {
             const data = snap.docs.map(d => ({ id: d.id, ...d.data() })) as PlatformSupplier[];
             setSuppliers(data);
@@ -43,20 +31,11 @@ const AdminSuppliers = () => {
         if (!newName.trim()) return;
         setIsSubmitting(true);
         try {
-            if (USE_MOCK_DATA) {
-                setSuppliers(prev => [...prev, {
-                    id: `ps${Date.now()}`,
-                    name: newName.trim(),
-                    status: "Active",
-                    createdAt: new Date().toISOString(),
-                }]);
-            } else {
-                await addDoc(collection(db, "platform_suppliers"), {
-                    name: newName.trim(),
-                    status: "Active",
-                    createdAt: new Date().toISOString(),
-                });
-            }
+            await addDoc(collection(db, "platform_suppliers"), {
+                name: newName.trim(),
+                status: "Active",
+                createdAt: new Date().toISOString(),
+            });
             toast.success(`${newName.trim()} added to platform suppliers`);
             setNewName("");
             setIsAddOpen(false);
@@ -69,11 +48,7 @@ const AdminSuppliers = () => {
 
     const handleDelete = async (supplier: PlatformSupplier) => {
         try {
-            if (USE_MOCK_DATA) {
-                setSuppliers(prev => prev.filter(s => s.id !== supplier.id));
-            } else {
-                await deleteDoc(doc(db, "platform_suppliers", supplier.id));
-            }
+            await deleteDoc(doc(db, "platform_suppliers", supplier.id));
             toast.success(`${supplier.name} removed`);
         } catch {
             toast.error("Failed to remove supplier");

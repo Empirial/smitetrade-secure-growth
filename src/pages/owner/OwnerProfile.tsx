@@ -20,7 +20,7 @@ import { validateRequired, validateEmail, validatePhone, validatePassword, valid
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc, collection, query, where, onSnapshot } from "firebase/firestore";
-import { USE_MOCK_DATA } from "@/lib/constants";
+import { getAuth, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import { PayoutDetails } from "@/types";
 
 const OwnerProfile = () => {
@@ -81,7 +81,7 @@ const OwnerProfile = () => {
                     postalCode: user.storeDetails?.postalCode || "",
                     phone: "",
                     managerName: "",
-                    status: "Active",
+                    status: "Pending",
                     description: "The best local spaza for all your daily essentials.",
                     shopEmail: "contact@store.co.za",
                     openingTime: "08:00",
@@ -143,7 +143,7 @@ const OwnerProfile = () => {
             city: "",
             province: "Gauteng",
             postalCode: "",
-            status: "Active",
+            status: "Pending",
             description: "",
             shopEmail: "",
             openingTime: "08:00",
@@ -230,7 +230,7 @@ const OwnerProfile = () => {
         return !hasErrors(errs);
     };
 
-    const handlePasswordChange = () => {
+    const handlePasswordChange = async () => {
         const errs = {
             currentPassword: validateRequired(currentPassword, "Current password"),
             newPassword: validatePassword(newPassword),
@@ -239,14 +239,27 @@ const OwnerProfile = () => {
         setPasswordErrors(errs);
         if (hasErrors(errs)) return;
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            const authUser = getAuth().currentUser;
+            if (!authUser || !authUser.email) throw new Error("Not authenticated");
+            const credential = EmailAuthProvider.credential(authUser.email, currentPassword);
+            await reauthenticateWithCredential(authUser, credential);
+            await updatePassword(authUser, newPassword);
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
             setPasswordErrors({ currentPassword: null, newPassword: null, confirmPassword: null });
             toast({ title: "Success", description: "Your password has been changed securely." });
-        }, 800);
+        } catch (error: unknown) {
+            const code = (error as { code?: string })?.code;
+            if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+                setPasswordErrors(prev => ({ ...prev, currentPassword: "Current password is incorrect." }));
+            } else {
+                toast({ title: "Error", description: "Failed to change password. Please try again.", variant: "destructive" });
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleDeleteAccount = () => {

@@ -93,7 +93,9 @@
       "Bash(grep -i \"paypal_client_secret\\\\|PAYPAL_CLIENT_SECRET\" \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth/functions/.env\")",
       "Bash(grep -i \"paypal_client_secret\\\\|PAYPAL_CLIENT_SECRET\" \"C:/Users/Lufuno Mphela/Documents/smitetrade-secure-growth/functions/.env.local\")",
       "Bash(firebase apphosting:secrets:grantaccess)",
-      "Bash(firebase functions:secrets:access PAYPAL_CLIENT_SECRET)"
+      "Bash(firebase functions:secrets:access PAYPAL_CLIENT_SECRET)",
+      "Bash(grep -E \"onClick\\\\s*$|onClick\\\\s*\\\\/>|onClick\\\\s*disabled\")",
+      "Bash(find src/pages -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\) -exec grep -l \"onClick\" {} \\\\;)"
     ]
   },
   "enableAllProjectMcpServers": true,
